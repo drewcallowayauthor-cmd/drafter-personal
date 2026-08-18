@@ -52,7 +52,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CompileServiceTests",
-            dependencies: ["CompileService"]
+            dependencies: ["CompileService", "DrafterTestSupport"]
         ),
 
         // MARK: - BackupService (Box mirror + git bundle scheduling)

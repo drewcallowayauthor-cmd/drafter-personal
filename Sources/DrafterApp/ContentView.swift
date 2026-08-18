@@ -1,3 +1,4 @@
+import AppKit
 import DrafterCore
 import GitService
 import ProjectStore
@@ -18,6 +19,8 @@ struct ContentView: View {
     @State private var regenerateConfirmation: (template: FrontBackMatterTemplate, displayName: String)?
     @State private var frontBackMatterError: String?
     @State private var isMetadataEditorPresented = false
+    @State private var isCompileSheetPresented = false
+    @State private var compiledResult: EPUBExportCoordinator.ExportResult?
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -42,6 +45,10 @@ struct ContentView: View {
             }
             ToolbarItem {
                 Button("Project Settings…") { isMetadataEditorPresented = true }
+                    .disabled(projectViewModel.metadata == nil)
+            }
+            ToolbarItem {
+                Button("Compile…") { isCompileSheetPresented = true }
                     .disabled(projectViewModel.metadata == nil)
             }
             ToolbarItem {
@@ -80,19 +87,53 @@ struct ContentView: View {
                 )
             }
         }
+        .sheet(isPresented: $isCompileSheetPresented) {
+            if let metadata = projectViewModel.metadata, let binderTree = projectViewModel.binderTree,
+                let workingTree = projectViewModel.workingTreeRoot
+            {
+                CompileSheet(
+                    metadata: metadata,
+                    binderTree: binderTree,
+                    workingTree: workingTree,
+                    onCancel: { isCompileSheetPresented = false },
+                    onCompiled: { result in compiledResult = result }
+                )
+            }
+        }
+        .alert(
+            "Compiled",
+            isPresented: Binding(get: { compiledResult != nil }, set: { if !$0 { compiledResult = nil } })
+        ) {
+            if let compiledResult {
+                Button("Reveal in Finder") {
+                    NSWorkspace.shared.activateFileViewerSelecting([compiledResult.outputURL])
+                }
+                Button("Open") { NSWorkspace.shared.open(compiledResult.outputURL) }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(compiledResult?.outputURL.lastPathComponent ?? "")
+        }
         .fileImporter(isPresented: $isImporterPresented, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result {
                 Task { await projectViewModel.open(root: url) }
             }
         }
         .onChange(of: selectedSceneURL) { _, newURL in
-            // Chapter folder rows are implicitly selectable too (ChapterNode is
-            // Identifiable, so List infers a tag from its id even without an explicit
-            // .tag()) — only actually open something for a real scene/document.
-            if let newURL, isOpenableScene(newURL) {
-                sceneEditor.open(url: newURL)
-            } else {
-                sceneEditor.close()
+            // Deferred to the next run-loop tick: this fires from inside AppKit's own
+            // NSTableView delegate callback for the selection change, and opening/
+            // closing the scene mutates @Observable state synchronously — which
+            // otherwise triggers "reentrant operation in NSTableView delegate" (a
+            // warning today, an assert in a future macOS per the console message).
+            DispatchQueue.main.async {
+                // Chapter folder rows are implicitly selectable too (ChapterNode is
+                // Identifiable, so List infers a tag from its id even without an
+                // explicit .tag()) — only actually open something for a real scene.
+                if let newURL, isOpenableScene(newURL) {
+                    sceneEditor.open(url: newURL)
+                } else {
+                    sceneEditor.close()
+                }
             }
         }
         .onChange(of: scenePhase) { _, newPhase in

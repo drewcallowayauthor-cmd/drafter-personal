@@ -64,6 +64,17 @@ struct HistoryPanel: View {
                 ProgressView().controlSize(.small)
             }
         }
+        .alert(
+            "Couldn't Complete Action",
+            isPresented: Binding(
+                get: { history.actionErrorMessage != nil },
+                set: { if !$0 { history.clearActionErrorMessage() } }
+            )
+        ) {
+            Button("OK") {}
+        } message: {
+            Text(history.actionErrorMessage ?? "")
+        }
         .sheet(item: $diffPresentation) { presentation in
             VStack(spacing: 0) {
                 DiffView(

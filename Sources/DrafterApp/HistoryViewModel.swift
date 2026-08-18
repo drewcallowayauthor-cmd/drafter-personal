@@ -10,6 +10,9 @@ import ProjectStore
 final class HistoryViewModel {
     private(set) var entries: [CommitLogEntry] = []
     private(set) var errorMessage: String?
+    /// Separate from `errorMessage` on purpose: a failed diff or restore shouldn't
+    /// blank out an already-successfully-loaded History list behind an error screen.
+    private(set) var actionErrorMessage: String?
     private(set) var isRestoring = false
     /// Set right after a successful restore so the UI can point the writer at the new
     /// file; cleared by the caller once it's handled.
@@ -25,10 +28,14 @@ final class HistoryViewModel {
 
     func load(sceneURL: URL, workingTree: URL) async {
         errorMessage = nil
+        // Cleared immediately, before the await below, not just on failure: leaving
+        // the previous scene's entries on screen during the async gap let a click land
+        // on a stale row, pairing an old commit's sha with the new scene's path — the
+        // exact shape of "path exists on disk, but not in <sha>" from git show.
+        entries = []
         do {
             entries = try await gitService.log(for: Self.relativePath(of: sceneURL, in: workingTree), in: workingTree)
         } catch {
-            entries = []
             errorMessage = String(describing: error)
         }
     }
@@ -54,12 +61,16 @@ final class HistoryViewModel {
             try fileWriter.write(Data(contents.utf8), to: restoredURL)
             restoredFileURL = restoredURL
         } catch {
-            errorMessage = String(describing: error)
+            actionErrorMessage = String(describing: error)
         }
     }
 
     func clearRestoredFileURL() {
         restoredFileURL = nil
+    }
+
+    func clearActionErrorMessage() {
+        actionErrorMessage = nil
     }
 
     /// The diff for §5.8's two-pane view: `entry`'s version of this scene against
@@ -72,7 +83,7 @@ final class HistoryViewModel {
             let oldBody = SceneFrontMatter.parse(rawOldContents).body
             return SceneDiff.diff(old: oldBody, new: currentBody)
         } catch {
-            errorMessage = String(describing: error)
+            actionErrorMessage = String(describing: error)
             return nil
         }
     }
