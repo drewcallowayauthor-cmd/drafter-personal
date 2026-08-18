@@ -150,6 +150,71 @@ struct ManuscriptAssemblerTests {
         #expect(assembled == "# The Last Shift\n\nTim Fleet\n\n# Copyright\n\nCopyright \u{00A9} 2026.")
     }
 
+    @Test("assembleFull joins front matter, manuscript, and back matter when both toggles are on")
+    func assembleFullJoinsAllThreeSections() throws {
+        let sceneURL = url("Manuscript/01 Arrival/01 Triage.md")
+        let frontURL = url("FrontMatter/02 Title Page.md")
+        let backURL = url("BackMatter/01 About the Author.md")
+        let chapter = ChapterNode(
+            url: url("Manuscript/01 Arrival"),
+            displayName: "Arrival",
+            scenes: [SceneNode(url: sceneURL, displayName: "Triage")],
+            isLooseFile: false
+        )
+        let tree = BinderTree(
+            manuscript: [chapter],
+            frontMatter: [SceneNode(url: frontURL, displayName: "Title Page")],
+            backMatter: [SceneNode(url: backURL, displayName: "About the Author")],
+            notes: []
+        )
+        var compile = ProjectMetadata.Compile()
+        compile.includeFrontMatter = true
+        compile.includeBackMatter = true
+        let contents: [URL: String] = [
+            sceneURL: scene("Manuscript text."),
+            frontURL: "# Title Page",
+            backURL: "# About the Author"
+        ]
+
+        let assembled = try ManuscriptAssembler.assembleFull(binderTree: tree, compile: compile, read: { contents[$0]! })
+
+        #expect(assembled.contains("# Title Page"))
+        #expect(assembled.contains("Manuscript text."))
+        #expect(assembled.contains("# About the Author"))
+        // Front matter must come first, back matter last.
+        let frontRange = assembled.range(of: "# Title Page")!
+        let bodyRange = assembled.range(of: "Manuscript text.")!
+        let backRange = assembled.range(of: "# About the Author")!
+        #expect(frontRange.lowerBound < bodyRange.lowerBound)
+        #expect(bodyRange.lowerBound < backRange.lowerBound)
+    }
+
+    @Test("assembleFull omits front and back matter when their toggles are off")
+    func assembleFullOmitsDisabledSections() throws {
+        let sceneURL = url("Manuscript/01 Arrival/01 Triage.md")
+        let frontURL = url("FrontMatter/02 Title Page.md")
+        let chapter = ChapterNode(
+            url: url("Manuscript/01 Arrival"),
+            displayName: "Arrival",
+            scenes: [SceneNode(url: sceneURL, displayName: "Triage")],
+            isLooseFile: false
+        )
+        let tree = BinderTree(
+            manuscript: [chapter],
+            frontMatter: [SceneNode(url: frontURL, displayName: "Title Page")],
+            backMatter: [],
+            notes: []
+        )
+        var compile = ProjectMetadata.Compile()
+        compile.includeFrontMatter = false
+        let contents: [URL: String] = [sceneURL: scene("Manuscript text."), frontURL: "# Title Page"]
+
+        let assembled = try ManuscriptAssembler.assembleFull(binderTree: tree, compile: compile, read: { contents[$0]! })
+
+        #expect(assembled.contains("# Title Page") == false)
+        #expect(assembled.contains("Manuscript text."))
+    }
+
     private func url(_ path: String) -> URL {
         URL(fileURLWithPath: "/tmp/fixture/\(path)")
     }

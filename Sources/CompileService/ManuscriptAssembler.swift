@@ -58,4 +58,20 @@ public enum ManuscriptAssembler {
         let (frontMatter, body) = SceneFrontMatter.parse(try read(url))
         return frontMatter.compile ? body : nil
     }
+
+    /// The full assembly every export target needs: front matter (if enabled) +
+    /// manuscript + back matter (if enabled), joined the same way regardless of which
+    /// target (EPUB, print, DOCX) consumes the result. Shared so the three export
+    /// coordinators don't each reimplement this toggle-checking.
+    public static func assembleFull(binderTree: BinderTree, compile: ProjectMetadata.Compile, read: SceneReader) throws -> String {
+        var parts: [String] = []
+        if compile.includeFrontMatter, !binderTree.frontMatter.isEmpty {
+            parts.append(try assembleMatter(binderTree.frontMatter, read: read))
+        }
+        parts.append(try assembleManuscript(binderTree: binderTree, compile: compile, read: read))
+        if compile.includeBackMatter, !binderTree.backMatter.isEmpty {
+            parts.append(try assembleMatter(binderTree.backMatter, read: read))
+        }
+        return parts.joined(separator: "\n\n")
+    }
 }

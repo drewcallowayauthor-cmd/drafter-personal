@@ -20,7 +20,7 @@ struct ContentView: View {
     @State private var frontBackMatterError: String?
     @State private var isMetadataEditorPresented = false
     @State private var isCompileSheetPresented = false
-    @State private var compiledResult: EPUBExportCoordinator.ExportResult?
+    @State private var compiledResult: CompileOutcome?
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {

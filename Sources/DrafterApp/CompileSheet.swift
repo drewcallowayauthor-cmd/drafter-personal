@@ -4,8 +4,22 @@ import DrafterCore
 import ProjectStore
 import SwiftUI
 
-/// §9.6's compile sheet, scoped to EPUB for now (Print PDF and DOCX are later
-/// milestones — M7). Front/back matter toggles, chapter title format, and scene
+/// Which format the compile sheet is currently set to produce.
+enum CompileTarget: String, CaseIterable, Identifiable {
+    case epub = "EPUB"
+    case printPDF = "Print PDF"
+    case docx = "DOCX"
+
+    var id: String { rawValue }
+}
+
+/// A minimal, target-agnostic result the three export coordinators all reduce to, so
+/// the sheet and its caller don't need to know which one actually ran.
+struct CompileOutcome: Equatable {
+    let outputURL: URL
+}
+
+/// §9.6's compile sheet. Front/back matter toggles, chapter title format, and scene
 /// separator default from the project's saved compile settings but are export-run
 /// scoped here, not written back to project.json; only "Project Settings…" does that.
 struct CompileSheet: View {
@@ -16,13 +30,17 @@ struct CompileSheet: View {
     /// Called on success right before the sheet closes itself — the parent shows the
     /// result as a separate alert from the main window rather than this sheet showing
     /// it inline, so it stays visible (and unmistakable) after this view is gone.
-    let onCompiled: (EPUBExportCoordinator.ExportResult) -> Void
+    let onCompiled: (CompileOutcome) -> Void
 
+    @State private var target: CompileTarget = .epub
     @State private var outputDirectory: URL
     @State private var chapterTitleFormat: String
     @State private var sceneSeparator: String
     @State private var includeFrontMatter: Bool
     @State private var includeBackMatter: Bool
+    @State private var trimSize: TrimSize
+    @State private var bodyFont: String
+    @State private var bodyPointSize: Double
     @State private var isOutputPickerPresented = false
     @State private var isCompiling = false
     @State private var compileError: String?
@@ -33,7 +51,7 @@ struct CompileSheet: View {
         binderTree: BinderTree,
         workingTree: URL,
         onCancel: @escaping () -> Void,
-        onCompiled: @escaping (EPUBExportCoordinator.ExportResult) -> Void
+        onCompiled: @escaping (CompileOutcome) -> Void
     ) {
         self.metadata = metadata
         self.binderTree = binderTree
@@ -46,6 +64,9 @@ struct CompileSheet: View {
         _sceneSeparator = State(initialValue: metadata.compile.sceneSeparator)
         _includeFrontMatter = State(initialValue: metadata.compile.includeFrontMatter)
         _includeBackMatter = State(initialValue: metadata.compile.includeBackMatter)
+        _trimSize = State(initialValue: TrimSize(rawValue: metadata.print.trimSize) ?? .fiveByEight)
+        _bodyFont = State(initialValue: metadata.print.bodyFont)
+        _bodyPointSize = State(initialValue: metadata.print.bodyPointSize)
     }
 
     private var firstHeadingPreview: String {
@@ -58,7 +79,11 @@ struct CompileSheet: View {
         VStack(spacing: 0) {
             Form {
                 Section("Target") {
-                    Text("EPUB").foregroundStyle(.secondary)
+                    Picker("Target", selection: $target) {
+                        ForEach(CompileTarget.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 }
 
                 Section("Output Location") {
@@ -82,6 +107,25 @@ struct CompileSheet: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField("Scene Separator", text: $sceneSeparator)
+                }
+
+                if target == .printPDF {
+                    Section("Print") {
+                        Picker("Trim Size", selection: $trimSize) {
+                            ForEach(TrimSize.allCases, id: \.self) { size in
+                                Text("\(size.widthInches, specifier: "%g")\" × \(size.heightInches, specifier: "%g")\"")
+                                    .tag(size)
+                            }
+                        }
+                        TextField("Body Font", text: $bodyFont)
+                        HStack {
+                            Text("Point Size")
+                            Spacer()
+                            TextField("", value: $bodyPointSize, format: .number)
+                                .frame(width: 60)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
                 }
 
                 Section("Estimate") {
@@ -117,7 +161,7 @@ struct CompileSheet: View {
                 try? WordCountAggregator.aggregate(binderTree: binderTree) { try String(contentsOf: $0, encoding: .utf8) }
             )?.project ?? 0
         }
-        .frame(minWidth: 480, idealWidth: 520, minHeight: 560, idealHeight: 620)
+        .frame(minWidth: 480, idealWidth: 520, minHeight: 560, idealHeight: 640)
     }
 
     @ViewBuilder
@@ -167,20 +211,57 @@ struct CompileSheet: View {
         exportMetadata.compile.sceneSeparator = sceneSeparator
         exportMetadata.compile.includeFrontMatter = includeFrontMatter
         exportMetadata.compile.includeBackMatter = includeBackMatter
+        exportMetadata.print.trimSize = trimSize.rawValue
+        exportMetadata.print.bodyFont = bodyFont
+        exportMetadata.print.bodyPointSize = bodyPointSize
 
-        let cssURL = try? EPUBStylesheetManager.ensureStylesheetExists(fileWriter: LiveAtomicFileWriter())
-
-        let coordinator = EPUBExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
         do {
-            let result = try await coordinator.export(
-                metadata: exportMetadata,
-                binderTree: binderTree,
-                workingTree: workingTree,
-                outputDirectory: outputDirectory,
-                pandocExecutableURL: pandocURL,
-                cssURL: cssURL
-            )
-            onCompiled(result)
+            let outcome: CompileOutcome
+            switch target {
+            case .epub:
+                let cssURL = try? EPUBStylesheetManager.ensureStylesheetExists(fileWriter: LiveAtomicFileWriter())
+                let coordinator = EPUBExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let result = try await coordinator.export(
+                    metadata: exportMetadata,
+                    binderTree: binderTree,
+                    workingTree: workingTree,
+                    outputDirectory: outputDirectory,
+                    pandocExecutableURL: pandocURL,
+                    cssURL: cssURL
+                )
+                outcome = CompileOutcome(outputURL: result.outputURL)
+
+            case .printPDF:
+                guard let typstURL = BinaryResolver.resolve(name: "typst") else {
+                    compileError = "typst isn't installed or couldn't be found (checked ~/.local/bin, "
+                        + "/opt/homebrew/bin, /usr/local/bin, and PATH)."
+                    return
+                }
+                let coordinator = PrintExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let result = try await coordinator.export(
+                    metadata: exportMetadata,
+                    binderTree: binderTree,
+                    workingTree: workingTree,
+                    outputDirectory: outputDirectory,
+                    pandocExecutableURL: pandocURL,
+                    typstExecutableURL: typstURL,
+                    trimSize: trimSize
+                )
+                outcome = CompileOutcome(outputURL: result.outputURL)
+
+            case .docx:
+                let coordinator = DOCXExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let result = try await coordinator.export(
+                    metadata: exportMetadata,
+                    binderTree: binderTree,
+                    workingTree: workingTree,
+                    outputDirectory: outputDirectory,
+                    pandocExecutableURL: pandocURL
+                )
+                outcome = CompileOutcome(outputURL: result.outputURL)
+            }
+
+            onCompiled(outcome)
             onCancel()
         } catch {
             compileError = String(describing: error)
