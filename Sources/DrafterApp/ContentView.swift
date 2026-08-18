@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var sceneEditor = SceneEditorViewModel()
     @State private var isImporterPresented = false
     @State private var selectedSceneURL: URL?
+    @State private var isTypewriterScrollingEnabled = true
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -19,6 +20,9 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem {
                 saveStatus
+            }
+            ToolbarItem {
+                Toggle("Typewriter Scrolling", systemImage: "align.vertical.center", isOn: $isTypewriterScrollingEnabled)
             }
             ToolbarItem {
                 Button("Open Project…") { isImporterPresented = true }
@@ -106,7 +110,7 @@ struct ContentView: View {
         if let error = sceneEditor.errorMessage {
             ContentUnavailableView("Couldn't Open Scene", systemImage: "exclamationmark.triangle", description: Text(error))
         } else if sceneEditor.document != nil {
-            SceneTextView(text: sceneBodyBinding)
+            SceneTextView(text: sceneBodyBinding, isTypewriterScrollingEnabled: isTypewriterScrollingEnabled)
         } else if let error = projectViewModel.errorMessage {
             ContentUnavailableView("Couldn't Open Project", systemImage: "exclamationmark.triangle", description: Text(error))
         } else if let metadata = projectViewModel.metadata {
