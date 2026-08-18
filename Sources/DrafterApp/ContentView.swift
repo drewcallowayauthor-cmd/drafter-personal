@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var sceneEditor = SceneEditorViewModel()
     @State private var isImporterPresented = false
     @State private var selectedSceneURL: URL?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationSplitView {
@@ -16,6 +17,9 @@ struct ContentView: View {
             detail
         }
         .toolbar {
+            ToolbarItem {
+                saveStatus
+            }
             ToolbarItem {
                 Button("Open Project…") { isImporterPresented = true }
             }
@@ -35,8 +39,24 @@ struct ContentView: View {
                 sceneEditor.close()
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            // "App loses focus" (§8.3 point 9) — flush any pending edit immediately
+            // rather than waiting out the debounce.
+            if newPhase != .active {
+                sceneEditor.saveNow()
+            }
+        }
         .task { await openDebugProjectIfRequested() }
         .frame(minWidth: 640, minHeight: 420)
+    }
+
+    @ViewBuilder
+    private var saveStatus: some View {
+        if let document = sceneEditor.document {
+            Text(document.isDirty ? "Unsaved" : "Saved")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder

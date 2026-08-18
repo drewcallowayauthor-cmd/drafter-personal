@@ -82,6 +82,10 @@ let package = Package(
             name: "DrafterApp",
             dependencies: ["DrafterCore", "GitService", "CompileService", "BackupService", "ProjectStore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "DrafterAppTests",
+            dependencies: ["DrafterApp", "DrafterTestSupport"]
         )
     ]
 )
