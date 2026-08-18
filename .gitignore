@@ -8,3 +8,4 @@ DerivedData/
 .index-build/
 Build/
 *.tmp
+/TestProjects/
