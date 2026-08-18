@@ -47,7 +47,7 @@ let package = Package(
         // MARK: - CompileService (assembly -> pandoc -> EPUB / typst -> PDF)
         .target(
             name: "CompileService",
-            dependencies: ["DrafterCore"],
+            dependencies: ["DrafterCore", "ProjectStore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
