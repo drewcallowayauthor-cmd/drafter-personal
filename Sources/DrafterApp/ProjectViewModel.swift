@@ -56,4 +56,19 @@ final class ProjectViewModel {
             errorMessage = String(describing: error)
         }
     }
+
+    /// Saves an edited copy of `project.json` (§4.5) — the metadata editor works on a
+    /// local draft and only calls this on explicit confirmation.
+    @discardableResult
+    func save(metadata: ProjectMetadata) async -> Bool {
+        guard let project else { return false }
+        do {
+            try await project.save(metadata: metadata)
+            self.metadata = metadata
+            return true
+        } catch {
+            errorMessage = String(describing: error)
+            return false
+        }
+    }
 }

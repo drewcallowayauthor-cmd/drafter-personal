@@ -1,3 +1,4 @@
+import DrafterCore
 import GitService
 import ProjectStore
 import SwiftUI
@@ -9,10 +10,14 @@ struct ContentView: View {
     @State private var projectViewModel = ProjectViewModel()
     @State private var sceneEditor = SceneEditorViewModel()
     @State private var historyViewModel: HistoryViewModel?
+    @State private var targetsViewModel = TargetsViewModel()
     @State private var isImporterPresented = false
     @State private var isInspectorPresented = true
     @State private var selectedSceneURL: URL?
     @State private var isTypewriterScrollingEnabled = true
+    @State private var regenerateConfirmation: (template: FrontBackMatterTemplate, displayName: String)?
+    @State private var frontBackMatterError: String?
+    @State private var isMetadataEditorPresented = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -32,12 +37,47 @@ struct ContentView: View {
                 Toggle("Typewriter", isOn: $isTypewriterScrollingEnabled)
             }
             ToolbarItem {
+                Button("Generate Front/Back Matter") { generateMissingFrontBackMatter() }
+                    .disabled(projectViewModel.metadata == nil)
+            }
+            ToolbarItem {
+                Button("Project Settings…") { isMetadataEditorPresented = true }
+                    .disabled(projectViewModel.metadata == nil)
+            }
+            ToolbarItem {
                 Button("Open Project…") { isImporterPresented = true }
             }
             ToolbarItem {
                 Button { isInspectorPresented.toggle() } label: {
                     Image(systemName: "sidebar.right")
                 }
+            }
+        }
+        .confirmationDialog(
+            "Regenerate “\(regenerateConfirmation?.displayName ?? "")” from Template?",
+            isPresented: Binding(get: { regenerateConfirmation != nil }, set: { if !$0 { regenerateConfirmation = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Regenerate", role: .destructive) { performRegenerate() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This overwrites any hand edits with the standard template content.")
+        }
+        .alert("Couldn't Generate Front/Back Matter", isPresented: Binding(get: { frontBackMatterError != nil }, set: { if !$0 { frontBackMatterError = nil } })) {
+            Button("OK") {}
+        } message: {
+            Text(frontBackMatterError ?? "")
+        }
+        .sheet(isPresented: $isMetadataEditorPresented) {
+            if let metadata = projectViewModel.metadata {
+                ProjectMetadataEditor(
+                    metadata: metadata,
+                    onSave: { updated in
+                        Task { await projectViewModel.save(metadata: updated) }
+                        isMetadataEditorPresented = false
+                    },
+                    onCancel: { isMetadataEditorPresented = false }
+                )
             }
         }
         .fileImporter(isPresented: $isImporterPresented, allowedContentTypes: [.folder]) { result in
@@ -70,6 +110,12 @@ struct ContentView: View {
         }
         .onChange(of: projectViewModel.workingTreeRoot) { _, _ in
             historyViewModel = projectViewModel.gitService.map { HistoryViewModel(gitService: $0) }
+            targetsViewModel.resetSession()
+        }
+        .onChange(of: projectViewModel.binderTree) { _, newTree in
+            if let newTree {
+                targetsViewModel.recalculate(binderTree: newTree)
+            }
         }
         .onChange(of: historyViewModel?.restoredFileURL) { _, newValue in
             guard newValue != nil else { return }
@@ -84,6 +130,7 @@ struct ContentView: View {
             // project (and its repo) finishes opening.
             sceneEditor.onSaved = { wordDelta in
                 projectViewModel.autocommitScheduler?.recordActivity(wordDelta: wordDelta)
+                targetsViewModel.recordSessionActivity(wordDelta: wordDelta)
             }
             await openDebugProjectIfRequested()
         }
@@ -101,6 +148,27 @@ struct ContentView: View {
 
     @ViewBuilder
     private var inspector: some View {
+        if projectViewModel.metadata != nil {
+            VStack(spacing: 0) {
+                TargetsPanel(
+                    totals: targetsViewModel.totals,
+                    targetWords: projectViewModel.metadata?.target.words ?? 0,
+                    sessionWords: targetsViewModel.sessionWords
+                )
+                Divider()
+                historySection
+            }
+        } else {
+            ContentUnavailableView(
+                "No Project Open",
+                systemImage: "chart.bar",
+                description: Text("Open a project to see word count targets and history.")
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var historySection: some View {
         if let historyViewModel, let sceneURL = selectedSceneURL, isOpenableScene(sceneURL),
             let workingTree = projectViewModel.workingTreeRoot
         {
@@ -138,12 +206,20 @@ struct ContentView: View {
                 }
                 if !tree.frontMatter.isEmpty {
                     Section("Front Matter") {
-                        ForEach(tree.frontMatter) { Text($0.displayName).tag($0.url) }
+                        ForEach(tree.frontMatter) { scene in
+                            Text(scene.displayName).tag(scene.url).contextMenu {
+                                regenerateMenuItem(for: scene)
+                            }
+                        }
                     }
                 }
                 if !tree.backMatter.isEmpty {
                     Section("Back Matter") {
-                        ForEach(tree.backMatter) { Text($0.displayName).tag($0.url) }
+                        ForEach(tree.backMatter) { scene in
+                            Text(scene.displayName).tag(scene.url).contextMenu {
+                                regenerateMenuItem(for: scene)
+                            }
+                        }
                     }
                 }
                 if !tree.notes.isEmpty {
@@ -190,6 +266,45 @@ struct ContentView: View {
         await projectViewModel.open(root: URL(fileURLWithPath: path))
         if let firstScene = projectViewModel.binderTree?.manuscript.first(where: { !$0.isLooseFile })?.scenes.first {
             selectedSceneURL = firstScene.url
+        }
+    }
+
+    @ViewBuilder
+    private func regenerateMenuItem(for scene: SceneNode) -> some View {
+        if let template = FrontBackMatterTemplate.matching(filename: scene.url.lastPathComponent) {
+            Button("Regenerate from Template") {
+                regenerateConfirmation = (template, scene.displayName)
+            }
+        }
+    }
+
+    private func generateMissingFrontBackMatter() {
+        guard let metadata = projectViewModel.metadata, let root = projectViewModel.workingTreeRoot else { return }
+        do {
+            _ = try FrontBackMatterService.generateMissing(metadata: metadata, workingTree: root, fileWriter: LiveAtomicFileWriter())
+            Task { await projectViewModel.refresh() }
+        } catch {
+            frontBackMatterError = String(describing: error)
+        }
+    }
+
+    private func performRegenerate() {
+        defer { regenerateConfirmation = nil }
+        guard let pending = regenerateConfirmation, let metadata = projectViewModel.metadata,
+            let root = projectViewModel.workingTreeRoot
+        else { return }
+        do {
+            try FrontBackMatterService.regenerate(
+                template: pending.template,
+                metadata: metadata,
+                workingTree: root,
+                fileWriter: LiveAtomicFileWriter()
+            )
+            if let sceneURL = selectedSceneURL, sceneURL.lastPathComponent == pending.template.filename {
+                sceneEditor.open(url: sceneURL)
+            }
+        } catch {
+            frontBackMatterError = String(describing: error)
         }
     }
 
