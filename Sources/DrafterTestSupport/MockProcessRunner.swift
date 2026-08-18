@@ -1,8 +1,11 @@
 import DrafterCore
 import Foundation
 
-/// A scripted `ProcessRunning` fake. Register a result (or error) for a given executable
-/// name; `run` records every invocation so tests can assert on the exact command built.
+/// A scripted `ProcessRunning` fake. Register results for a given executable name in the
+/// order they should be returned — each call to `run` for that executable pops the next
+/// one off the queue. Once the queue is drained, the last scripted result is returned
+/// again for any further calls, so a single `script(...)` call still behaves as "always
+/// return this" for tests that only care about one invocation.
 public actor MockProcessRunner: ProcessRunning {
     public struct Invocation: Sendable, Equatable {
         public let executableURL: URL
@@ -11,7 +14,7 @@ public actor MockProcessRunner: ProcessRunning {
         public let environment: [String: String]?
     }
 
-    private var scriptedResults: [String: Result<ProcessResult, Error>] = [:]
+    private var queues: [String: [Result<ProcessResult, Error>]] = [:]
     private var _invocations: [Invocation] = []
 
     public init() {}
@@ -19,11 +22,11 @@ public actor MockProcessRunner: ProcessRunning {
     public var invocations: [Invocation] { _invocations }
 
     public func script(_ result: ProcessResult, forExecutableNamed name: String) {
-        scriptedResults[name] = .success(result)
+        queues[name, default: []].append(.success(result))
     }
 
     public func script(throwing error: Error, forExecutableNamed name: String) {
-        scriptedResults[name] = .failure(error)
+        queues[name, default: []].append(.failure(error))
     }
 
     public func run(
@@ -41,13 +44,20 @@ public actor MockProcessRunner: ProcessRunning {
             )
         )
 
-        switch scriptedResults[executableURL.lastPathComponent] {
+        let name = executableURL.lastPathComponent
+        let outcome: Result<ProcessResult, Error>
+        if var queue = queues[name], !queue.isEmpty {
+            outcome = queue.removeFirst()
+            queues[name] = queue.isEmpty ? [outcome] : queue
+        } else {
+            outcome = .success(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""))
+        }
+
+        switch outcome {
         case .success(let result):
             return result
         case .failure(let error):
             throw error
-        case nil:
-            return ProcessResult(exitCode: 0, standardOutput: "", standardError: "")
         }
     }
 }
