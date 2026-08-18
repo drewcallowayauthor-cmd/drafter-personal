@@ -74,7 +74,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ProjectStoreTests",
-            dependencies: ["ProjectStore"]
+            dependencies: ["ProjectStore", "DrafterTestSupport"]
         ),
 
         // MARK: - App (SwiftUI shell; wires the services together)
