@@ -1,0 +1,35 @@
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - closure_spacing
+  - unused_import
+  - redundant_type_annotation
+  - toggle_bool
+  - contains_over_first_not_nil
+
+disabled_rules:
+  - todo
+
+line_length:
+  warning: 120
+  error: 160
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 400
+  error: 600
