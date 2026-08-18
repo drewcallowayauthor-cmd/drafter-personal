@@ -92,6 +92,26 @@ final class TypewriterTextView: NSTextView {
         guard !isTypewriterScrollingEnabled else { return }
         super.scrollRangeToVisible(range)
     }
+
+    /// ⌘I (§8.3 point 6). `NSApp.sendAction(_:to: nil, from:)` routes this through the
+    /// responder chain to whichever view is first responder, so it's a no-op unless
+    /// this text view actually has focus.
+    @objc func drafterToggleItalic(_ sender: Any?) {
+        applyMarkerWrap("*")
+    }
+
+    /// ⌘B (§8.3 point 6).
+    @objc func drafterToggleBold(_ sender: Any?) {
+        applyMarkerWrap("**")
+    }
+
+    private func applyMarkerWrap(_ marker: String) {
+        let result = MarkerWrapping.wrap(text: string, selectedRange: selectedRange(), marker: marker)
+        guard shouldChangeText(in: result.replacementRange, replacementString: result.replacementText) else { return }
+        textStorage?.replaceCharacters(in: result.replacementRange, with: result.replacementText)
+        didChangeText()
+        setSelectedRange(result.newSelectedRange)
+    }
 }
 
 /// M1's `NSTextView` wrapper (§8.3): measured column, soft wrap only, editable, bound to

@@ -19,5 +19,18 @@ struct DrafterApp: App {
                     NSApp.activate(ignoringOtherApps: true)
                 }
         }
+        .commands {
+            CommandMenu("Format") {
+                Button("Italic") {
+                    NSApp.sendAction(#selector(TypewriterTextView.drafterToggleItalic(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("i", modifiers: .command)
+
+                Button("Bold") {
+                    NSApp.sendAction(#selector(TypewriterTextView.drafterToggleBold(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("b", modifiers: .command)
+            }
+        }
     }
 }
