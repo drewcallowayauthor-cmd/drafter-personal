@@ -116,6 +116,7 @@ struct SceneTextView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = true
         textView.font = .systemFont(ofSize: 15)
         textView.string = text
+        MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!)
 
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -138,6 +139,7 @@ struct SceneTextView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? TypewriterTextView else { return }
         if textView.string != text {
             textView.string = text
+            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!)
         }
         scrollView.measuredWidthInCharacters = measuredWidthInCharacters
         scrollView.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled
@@ -167,6 +169,9 @@ struct SceneTextView: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
+            if let textStorage = textView.textStorage, let font = textView.font {
+                MarkdownSyntaxHighlighter.applyAttributes(to: textStorage, baseFont: font)
+            }
             text.wrappedValue = textView.string
         }
 
