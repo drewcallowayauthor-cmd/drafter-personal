@@ -1,3 +1,4 @@
+import CompileService
 import DrafterCore
 import Foundation
 import Observation
@@ -18,6 +19,11 @@ final class SceneEditorViewModel {
     private let fileWriter: AtomicFileWriting
     private let autosaveDelay: Duration
     private var autosaveTask: Task<Void, Never>?
+    private var wordCountBaseline = 0
+
+    /// Called after every successful disk write with the word delta since the previous
+    /// one — the signal `AutocommitScheduler` uses to know a commit is owed (§5.4).
+    var onSaved: ((Int) -> Void)?
 
     init(fileWriter: AtomicFileWriting = LiveAtomicFileWriter(), autosaveDelay: Duration = .seconds(2)) {
         self.fileWriter = fileWriter
@@ -29,6 +35,7 @@ final class SceneEditorViewModel {
         errorMessage = nil
         do {
             document = try SceneDocument.load(from: url)
+            wordCountBaseline = WordCounter.count(document?.body ?? "")
         } catch {
             document = nil
             errorMessage = String(describing: error)
@@ -56,6 +63,9 @@ final class SceneEditorViewModel {
         do {
             try fileWriter.write(Data(document.serializedContents().utf8), to: document.url)
             self.document = document.markedSaved()
+            let newWordCount = WordCounter.count(document.body)
+            onSaved?(newWordCount - wordCountBaseline)
+            wordCountBaseline = newWordCount
         } catch {
             errorMessage = String(describing: error)
         }

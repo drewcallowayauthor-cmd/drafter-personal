@@ -1,6 +1,12 @@
 import AppKit
 import SwiftUI
 
+extension Notification.Name {
+    /// Posted by the Checkpoint menu command; `ContentView` observes it since the
+    /// scene/project state it needs to act on lives there, not at the App level.
+    static let drafterRequestCheckpoint = Notification.Name("DrafterRequestCheckpoint")
+}
+
 @main
 struct DrafterApp: App {
     init() {
@@ -20,6 +26,14 @@ struct DrafterApp: App {
                 }
         }
         .commands {
+            CommandGroup(replacing: .saveItem) {
+                // §8.5: ⌘S is "Checkpoint (commit now)", not a file save — there is no
+                // save button (§8.3 point 9's autosave already covers that).
+                Button("Checkpoint") {
+                    NotificationCenter.default.post(name: .drafterRequestCheckpoint, object: nil)
+                }
+                .keyboardShortcut("s", modifiers: .command)
+            }
             CommandMenu("Format") {
                 Button("Italic") {
                     NSApp.sendAction(#selector(TypewriterTextView.drafterToggleItalic(_:)), to: nil, from: nil)

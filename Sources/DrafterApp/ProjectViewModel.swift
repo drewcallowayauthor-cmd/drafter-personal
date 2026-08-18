@@ -1,17 +1,19 @@
 import DrafterCore
 import Foundation
+import GitService
 import Observation
 import ProjectStore
 
-/// M0 placeholder view model: opens a project folder and exposes a read-only snapshot
-/// for `ContentView`'s binder list. Write operations (save, resequence, …) come later
-/// milestones — this only proves the ProjectStore wiring end to end.
+/// Opens a project folder and exposes a read-only snapshot for `ContentView`'s binder
+/// list, plus the M2 git wiring (§7): a repo is initialized in-place if missing, and
+/// `autocommitScheduler` is exposed so the editor can report activity into it.
 @MainActor
 @Observable
 final class ProjectViewModel {
     private(set) var metadata: ProjectMetadata?
     private(set) var binderTree: BinderTree?
     private(set) var errorMessage: String?
+    private(set) var autocommitScheduler: AutocommitScheduler?
 
     private var project: Project?
 
@@ -20,12 +22,21 @@ final class ProjectViewModel {
         do {
             let project = try Project.open(root: root, fileWriter: LiveAtomicFileWriter())
             self.project = project
-            metadata = await project.metadata
+            let metadata = await project.metadata
+            self.metadata = metadata
             binderTree = await project.binderTree
+
+            let repositoryCoordinator = RepositoryCoordinator(
+                gitService: GitService(processRunner: LiveProcessRunner()),
+                workingTree: root
+            )
+            try await repositoryCoordinator.ensureInitialized(authorName: metadata.author)
+            autocommitScheduler = AutocommitScheduler(repositoryCoordinator: repositoryCoordinator)
         } catch {
             self.project = nil
             metadata = nil
             binderTree = nil
+            autocommitScheduler = nil
             errorMessage = String(describing: error)
         }
     }

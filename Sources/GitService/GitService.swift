@@ -8,6 +8,21 @@ public enum MergeResult: Sendable, Equatable {
     case conflicted(paths: [String])
 }
 
+/// One row of `git log` output (§5.8's History panel, Appendix A's log format).
+public struct CommitLogEntry: Sendable, Equatable {
+    public let sha: String
+    public let date: Date
+    public let subject: String
+    public let authorName: String
+
+    public init(sha: String, date: Date, subject: String, authorName: String) {
+        self.sha = sha
+        self.date = date
+        self.subject = subject
+        self.authorName = authorName
+    }
+}
+
 /// Subprocess wrapper around `git` (§7, §Appendix A). Callers get one serial actor per
 /// project — never concurrent git in the same working tree.
 public actor GitService {
@@ -41,6 +56,47 @@ public actor GitService {
             )
         }
         return (ahead: parts[0], behind: parts[1])
+    }
+
+    /// `git init -b main` (Appendix A) — the working tree must already exist on disk;
+    /// this just makes it a git repo.
+    public func initRepository(in workingTree: URL) async throws {
+        _ = try await run(["init", "-b", "main"], in: workingTree)
+    }
+
+    /// `git config user.name` / `user.email` (Appendix A), scoped locally to this repo
+    /// — never touches the user's global git config.
+    public func configureIdentity(name: String, email: String, in workingTree: URL) async throws {
+        _ = try await run(["config", "user.name", name], in: workingTree)
+        _ = try await run(["config", "user.email", email], in: workingTree)
+    }
+
+    /// `git log --follow --format=%H%x1f%at%x1f%s%x1f%an -- "<path>"` (Appendix A) when
+    /// `path` is given — history for one file, renames followed. Without a path, drops
+    /// `--follow` (meaningless repo-wide) for the project-wide Timeline view (§5.8).
+    public func log(for path: String? = nil, in workingTree: URL) async throws -> [CommitLogEntry] {
+        var arguments = ["log"]
+        if path != nil {
+            arguments.append("--follow")
+        }
+        arguments.append("--format=%H%x1f%at%x1f%s%x1f%an")
+        if let path {
+            arguments += ["--", path]
+        }
+
+        let result = try await run(arguments, in: workingTree)
+        return result.standardOutput
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .compactMap { line -> CommitLogEntry? in
+                let fields = line.components(separatedBy: "\u{1F}")
+                guard fields.count == 4, let timestamp = TimeInterval(fields[1]) else { return nil }
+                return CommitLogEntry(
+                    sha: fields[0],
+                    date: Date(timeIntervalSince1970: timestamp),
+                    subject: fields[2],
+                    authorName: fields[3]
+                )
+            }
     }
 
     /// `git add -A` (§5.4) — stage everything ahead of a commit.

@@ -1,3 +1,4 @@
+import GitService
 import ProjectStore
 import SwiftUI
 import UniformTypeIdentifiers
@@ -44,13 +45,27 @@ struct ContentView: View {
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
-            // "App loses focus" (§8.3 point 9) — flush any pending edit immediately
-            // rather than waiting out the debounce.
+            // "App loses focus" (§8.3 point 9, §5.4) — flush the pending disk write
+            // immediately rather than waiting out its debounce, then commit immediately
+            // too rather than waiting out the separate 90s commit debounce.
             if newPhase != .active {
                 sceneEditor.saveNow()
+                Task { await projectViewModel.autocommitScheduler?.flush(trigger: .focusLost) }
             }
         }
-        .task { await openDebugProjectIfRequested() }
+        .onReceive(NotificationCenter.default.publisher(for: .drafterRequestCheckpoint)) { _ in
+            sceneEditor.saveNow()
+            Task { await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: nil)) }
+        }
+        .task {
+            // Reads projectViewModel.autocommitScheduler dynamically on each save
+            // rather than capturing today's value, since it's created after the
+            // project (and its repo) finishes opening.
+            sceneEditor.onSaved = { wordDelta in
+                projectViewModel.autocommitScheduler?.recordActivity(wordDelta: wordDelta)
+            }
+            await openDebugProjectIfRequested()
+        }
         .frame(minWidth: 640, minHeight: 420)
     }
 
