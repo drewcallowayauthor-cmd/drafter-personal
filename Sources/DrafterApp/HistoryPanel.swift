@@ -2,12 +2,23 @@ import GitService
 import SwiftUI
 
 /// §5.8's History panel: commits touching the open scene, with relative time, word
-/// delta, and machine name, plus a "Restore as copy" action per commit. The two-pane
-/// diff view §5.8 also specifies is a natural follow-up, not built here.
+/// delta, and machine name. Clicking a commit shows the two-pane diff against the
+/// current in-editor text; the context menu offers "Restore as Copy" (§5.8's primary
+/// restore action) directly.
 struct HistoryPanel: View {
     let history: HistoryViewModel
     let sceneURL: URL
     let workingTree: URL
+    let currentBody: String
+
+    @State private var diffPresentation: DiffPresentation?
+    @State private var isDiffLoading = false
+
+    private struct DiffPresentation: Identifiable {
+        let id: String
+        let entry: CommitLogEntry
+        let lines: [SceneDiffLine]
+    }
 
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
@@ -32,6 +43,10 @@ struct HistoryPanel: View {
             } else {
                 List(history.entries, id: \.sha) { entry in
                     row(for: entry)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            Task { await showDiff(for: entry) }
+                        }
                         .contextMenu {
                             Button("Restore as Copy") {
                                 Task { await history.restoreAsCopy(entry: entry, sceneURL: sceneURL, workingTree: workingTree) }
@@ -45,9 +60,38 @@ struct HistoryPanel: View {
             await history.load(sceneURL: sceneURL, workingTree: workingTree)
         }
         .overlay {
-            if history.isRestoring {
+            if history.isRestoring || isDiffLoading {
                 ProgressView().controlSize(.small)
             }
+        }
+        .sheet(item: $diffPresentation) { presentation in
+            VStack(spacing: 0) {
+                DiffView(
+                    lines: presentation.lines,
+                    oldLabel: "\(presentation.entry.subject) (\(Self.relativeFormatter.localizedString(for: presentation.entry.date, relativeTo: .now)))",
+                    newLabel: "Current"
+                )
+                Divider()
+                HStack {
+                    Spacer()
+                    Button("Close") { diffPresentation = nil }
+                        .keyboardShortcut(.cancelAction)
+                }
+                .padding()
+            }
+        }
+    }
+
+    private func showDiff(for entry: CommitLogEntry) async {
+        isDiffLoading = true
+        defer { isDiffLoading = false }
+        if let lines = await history.diffLines(
+            against: entry,
+            sceneURL: sceneURL,
+            workingTree: workingTree,
+            currentBody: currentBody
+        ) {
+            diffPresentation = DiffPresentation(id: entry.sha, entry: entry, lines: lines)
         }
     }
 

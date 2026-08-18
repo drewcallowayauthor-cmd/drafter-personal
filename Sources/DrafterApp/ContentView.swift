@@ -104,7 +104,12 @@ struct ContentView: View {
         if let historyViewModel, let sceneURL = selectedSceneURL, isOpenableScene(sceneURL),
             let workingTree = projectViewModel.workingTreeRoot
         {
-            HistoryPanel(history: historyViewModel, sceneURL: sceneURL, workingTree: workingTree)
+            HistoryPanel(
+                history: historyViewModel,
+                sceneURL: sceneURL,
+                workingTree: workingTree,
+                currentBody: sceneEditor.document?.body ?? ""
+            )
         } else {
             ContentUnavailableView(
                 "No Scene Selected",

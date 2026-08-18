@@ -9,7 +9,8 @@ public enum MergeResult: Sendable, Equatable {
 }
 
 /// One row of `git log` output (§5.8's History panel, Appendix A's log format).
-public struct CommitLogEntry: Sendable, Equatable {
+public struct CommitLogEntry: Sendable, Equatable, Identifiable {
+    public var id: String { sha }
     public let sha: String
     public let date: Date
     public let subject: String

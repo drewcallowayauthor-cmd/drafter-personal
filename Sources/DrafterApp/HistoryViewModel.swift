@@ -1,6 +1,7 @@
 import DrafterCore
 import Foundation
 import GitService
+import ProjectStore
 
 /// Backs §5.8's History panel: commits touching the open scene, and restoring an older
 /// version as a sibling copy (never an in-place overwrite from this view).
@@ -59,6 +60,21 @@ final class HistoryViewModel {
 
     func clearRestoredFileURL() {
         restoredFileURL = nil
+    }
+
+    /// The diff for §5.8's two-pane view: `entry`'s version of this scene against
+    /// `currentBody` (the live in-editor text, which may itself be unsaved). Both sides
+    /// are compared front-matter-stripped, matching what's actually shown in the editor.
+    func diffLines(against entry: CommitLogEntry, sceneURL: URL, workingTree: URL, currentBody: String) async -> [SceneDiffLine]? {
+        do {
+            let relativePath = Self.relativePath(of: sceneURL, in: workingTree)
+            let rawOldContents = try await gitService.show(path: relativePath, at: entry.sha, in: workingTree)
+            let oldBody = SceneFrontMatter.parse(rawOldContents).body
+            return SceneDiff.diff(old: oldBody, new: currentBody)
+        } catch {
+            errorMessage = String(describing: error)
+            return nil
+        }
     }
 
     static func relativePath(of fileURL: URL, in workingTree: URL) -> String {
