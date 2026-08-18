@@ -14,12 +14,16 @@ public struct CommitLogEntry: Sendable, Equatable {
     public let date: Date
     public let subject: String
     public let authorName: String
+    /// The `Machine:` trailer (§5.4) — empty for commits that predate this convention
+    /// or were made outside the app.
+    public let machineName: String
 
-    public init(sha: String, date: Date, subject: String, authorName: String) {
+    public init(sha: String, date: Date, subject: String, authorName: String, machineName: String) {
         self.sha = sha
         self.date = date
         self.subject = subject
         self.authorName = authorName
+        self.machineName = machineName
     }
 }
 
@@ -71,15 +75,18 @@ public actor GitService {
         _ = try await run(["config", "user.email", email], in: workingTree)
     }
 
-    /// `git log --follow --format=%H%x1f%at%x1f%s%x1f%an -- "<path>"` (Appendix A) when
-    /// `path` is given — history for one file, renames followed. Without a path, drops
-    /// `--follow` (meaningless repo-wide) for the project-wide Timeline view (§5.8).
+    /// Extends Appendix A's `--format=%H%x1f%at%x1f%s%x1f%an` with a 5th field pulling
+    /// just the `Machine:` trailer's value (§5.4), which §5.8's History panel needs to
+    /// distinguish "you, 5 minutes ago on this machine" from "you, on the other one."
+    /// `--follow` when `path` is given — history for one file, renames followed.
+    /// Without a path, drops `--follow` (meaningless repo-wide) for the project-wide
+    /// Timeline view (§5.8).
     public func log(for path: String? = nil, in workingTree: URL) async throws -> [CommitLogEntry] {
         var arguments = ["log"]
         if path != nil {
             arguments.append("--follow")
         }
-        arguments.append("--format=%H%x1f%at%x1f%s%x1f%an")
+        arguments.append("--format=%H%x1f%at%x1f%s%x1f%an%x1f%(trailers:key=Machine,valueonly=true,separator=)")
         if let path {
             arguments += ["--", path]
         }
@@ -89,14 +96,22 @@ public actor GitService {
             .split(separator: "\n", omittingEmptySubsequences: true)
             .compactMap { line -> CommitLogEntry? in
                 let fields = line.components(separatedBy: "\u{1F}")
-                guard fields.count == 4, let timestamp = TimeInterval(fields[1]) else { return nil }
+                guard fields.count == 5, let timestamp = TimeInterval(fields[1]) else { return nil }
                 return CommitLogEntry(
                     sha: fields[0],
                     date: Date(timeIntervalSince1970: timestamp),
                     subject: fields[2],
-                    authorName: fields[3]
+                    authorName: fields[3],
+                    machineName: fields[4]
                 )
             }
+    }
+
+    /// `git show <sha>:"<path>"` (Appendix A) — a file's contents at a given commit,
+    /// used to restore an older version (§5.8).
+    public func show(path: String, at sha: String, in workingTree: URL) async throws -> String {
+        let result = try await run(["show", "\(sha):\(path)"], in: workingTree)
+        return result.standardOutput
     }
 
     /// `git add -A` (§5.4) — stage everything ahead of a commit.

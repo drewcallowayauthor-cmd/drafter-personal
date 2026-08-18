@@ -3,11 +3,14 @@ import ProjectStore
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The Binder/Editor layout (§8.1), built up in M1 slices. Inspector pane comes later.
+/// The Binder/Editor/Inspector layout (§8.1). Inspector currently holds History (§5.8);
+/// Scene and Targets sections are later additions to the same pane.
 struct ContentView: View {
     @State private var projectViewModel = ProjectViewModel()
     @State private var sceneEditor = SceneEditorViewModel()
+    @State private var historyViewModel: HistoryViewModel?
     @State private var isImporterPresented = false
+    @State private var isInspectorPresented = true
     @State private var selectedSceneURL: URL?
     @State private var isTypewriterScrollingEnabled = true
     @Environment(\.scenePhase) private var scenePhase
@@ -18,15 +21,23 @@ struct ContentView: View {
         } detail: {
             detail
         }
+        .inspector(isPresented: $isInspectorPresented) {
+            inspector
+        }
         .toolbar {
-            ToolbarItem {
+            ToolbarItem(placement: .status) {
                 saveStatus
             }
             ToolbarItem {
-                Toggle("Typewriter Scrolling", systemImage: "align.vertical.center", isOn: $isTypewriterScrollingEnabled)
+                Toggle("Typewriter", isOn: $isTypewriterScrollingEnabled)
             }
             ToolbarItem {
                 Button("Open Project…") { isImporterPresented = true }
+            }
+            ToolbarItem {
+                Button { isInspectorPresented.toggle() } label: {
+                    Image(systemName: "sidebar.right")
+                }
             }
         }
         .fileImporter(isPresented: $isImporterPresented, allowedContentTypes: [.folder]) { result in
@@ -57,6 +68,16 @@ struct ContentView: View {
             sceneEditor.saveNow()
             Task { await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: nil)) }
         }
+        .onChange(of: projectViewModel.workingTreeRoot) { _, _ in
+            historyViewModel = projectViewModel.gitService.map { HistoryViewModel(gitService: $0) }
+        }
+        .onChange(of: historyViewModel?.restoredFileURL) { _, newValue in
+            guard newValue != nil else { return }
+            Task {
+                await projectViewModel.refresh()
+                historyViewModel?.clearRestoredFileURL()
+            }
+        }
         .task {
             // Reads projectViewModel.autocommitScheduler dynamically on each save
             // rather than capturing today's value, since it's created after the
@@ -75,6 +96,21 @@ struct ContentView: View {
             Text(document.isDirty ? "Unsaved" : "Saved")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var inspector: some View {
+        if let historyViewModel, let sceneURL = selectedSceneURL, isOpenableScene(sceneURL),
+            let workingTree = projectViewModel.workingTreeRoot
+        {
+            HistoryPanel(history: historyViewModel, sceneURL: sceneURL, workingTree: workingTree)
+        } else {
+            ContentUnavailableView(
+                "No Scene Selected",
+                systemImage: "clock",
+                description: Text("Select a scene to see its history.")
+            )
         }
     }
 
