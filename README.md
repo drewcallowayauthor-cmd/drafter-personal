@@ -23,6 +23,13 @@ swift build
 swift test
 ```
 
+## License
+
+Drafter is licensed under the [GNU Affero General Public License v3.0](LICENSE)
+(AGPL-3.0). You're free to use, modify, and redistribute it — including commercially —
+but any distributed copy (including a version offered over a network) must also make
+its source available under AGPL-3.0.
+
 ## Third-party licenses
 
 Drafter bundles two external tools, invoked as subprocesses rather than linked into the
