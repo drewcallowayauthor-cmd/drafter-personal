@@ -43,7 +43,7 @@ final class HistoryViewModel {
         do {
             entries = try await source.log(for: Self.relativePath(of: sceneURL, in: workingTree), in: workingTree)
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -68,7 +68,7 @@ final class HistoryViewModel {
             try fileWriter.write(Data(contents.utf8), to: restoredURL)
             restoredFileURL = restoredURL
         } catch {
-            actionErrorMessage = String(describing: error)
+            actionErrorMessage = error.localizedDescription
         }
     }
 
@@ -90,7 +90,7 @@ final class HistoryViewModel {
             let oldBody = SceneFrontMatter.parse(rawOldContents).body
             return SceneDiff.diff(old: oldBody, new: currentBody)
         } catch {
-            actionErrorMessage = String(describing: error)
+            actionErrorMessage = error.localizedDescription
             return nil
         }
     }

@@ -48,4 +48,47 @@ public enum DrafterError: Error, Sendable, Equatable {
     case projectAlreadyOpen(path: String)
 
     case filesystem(underlying: String)
+
+    /// A subprocess (`git`, `pandoc`, `typst`, …) could not be launched at all —
+    /// distinct from `.processFailed`, which means it ran and exited non-zero.
+    case processLaunchFailed(name: String, underlying: String)
+}
+
+extension DrafterError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .processFailed(let command, let exitCode, let stderr):
+            let detail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            return detail.isEmpty
+                ? "\(command) failed (exit code \(exitCode))."
+                : "\(command) failed: \(detail)"
+        case .binaryUnavailable(let name):
+            return "Couldn't find \(name). Make sure it's installed and try again."
+        case .offline:
+            return "No network connection."
+        case .authenticationFailed:
+            return "GitHub rejected the stored credential. Reconnect in Settings."
+        case .pushRejected:
+            return "The push was rejected because the remote has newer commits."
+        case .mergeConflict(let paths):
+            let list = paths.joined(separator: ", ")
+            return paths.count == 1
+                ? "There's a conflict in \(list)."
+                : "There are conflicts in \(paths.count) files: \(list)"
+        case .locationInsideSyncedFolder(let path):
+            return "\(path) is inside a cloud-synced folder (iCloud Drive, Dropbox, etc.), which isn't supported."
+        case .githubAPIError(let statusCode, let message):
+            return "GitHub error (\(statusCode)): \(message)"
+        case .keychainFailed(let status):
+            return "Couldn't access the Keychain (status \(status))."
+        case .projectFolderMoved:
+            return "This project's folder was moved or deleted."
+        case .projectAlreadyOpen(let path):
+            return "\(path) is already open in another window."
+        case .filesystem(let underlying):
+            return underlying
+        case .processLaunchFailed(let name, let underlying):
+            return "Couldn't launch \(name): \(underlying)"
+        }
+    }
 }

@@ -70,7 +70,13 @@ public struct LiveProcessRunner: ProcessRunning {
             do {
                 try process.run()
             } catch {
-                continuation.resume(throwing: error)
+                DrafterLog.app.error("Failed to launch \(executableURL.lastPathComponent, privacy: .public): \(error, privacy: .public)")
+                continuation.resume(
+                    throwing: DrafterError.processLaunchFailed(
+                        name: executableURL.lastPathComponent,
+                        underlying: String(describing: error)
+                    )
+                )
             }
         }
     }

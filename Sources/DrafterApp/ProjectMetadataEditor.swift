@@ -235,6 +235,11 @@ private struct LocalFileVersionControlTabContent: View {
                 kvRow("Snapshots Kept", "\(viewModel.snapshotCount)")
                 kvRow("History Size", viewModel.historySizeText)
             }
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .font(Theme.Font.body(12))
+                    .foregroundStyle(.red)
+            }
             HStack(spacing: 8) {
                 Button("Open History in Finder") {
                     NSWorkspace.shared.activateFileViewerSelecting([viewModel.historyFolderURL])

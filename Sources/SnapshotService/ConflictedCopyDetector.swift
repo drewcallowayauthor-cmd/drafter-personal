@@ -1,3 +1,4 @@
+import DrafterCore
 import Foundation
 
 /// §7.5: Local-file mode has no merge engine, so a genuine conflict — the same scene
@@ -18,7 +19,9 @@ public enum ConflictedCopyDetector {
     }
 
     /// Appendix B's watched patterns, tried in order. Each captures the filename it
-    /// believes is the "clean" original, extension included.
+    /// believes is the "clean" original, extension included. `try!` is safe here — these
+    /// are hardcoded, compile-time-constant patterns; a `RegexCompileSafetyTests` unit
+    /// test guards against a future edit introducing a typo.
     private static let patterns: [NSRegularExpression] = [
         // Dropbox: "<name> (<user>'s conflicted copy <date>).md"
         // Box:     "<name> (Conflicted copy <date>).md"
@@ -52,7 +55,13 @@ public enum ConflictedCopyDetector {
     public static func scan(workingTree: URL, fileManager: FileManager = .default) -> [Match] {
         var matches: [Match] = []
         let excludedTopLevelNames: Set<String> = ["History", "Build", "Resources"]
-        let topLevelNames = (try? fileManager.contentsOfDirectory(atPath: workingTree.path)) ?? []
+        let topLevelNames: [String]
+        do {
+            topLevelNames = try fileManager.contentsOfDirectory(atPath: workingTree.path)
+        } catch {
+            DrafterLog.snapshot.error("Failed to scan \(workingTree.path, privacy: .public) for conflicted copies: \(error, privacy: .public)")
+            topLevelNames = []
+        }
 
         for topLevelName in topLevelNames {
             guard !topLevelName.hasPrefix("."), !excludedTopLevelNames.contains(topLevelName) else { continue }

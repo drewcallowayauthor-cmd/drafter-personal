@@ -295,7 +295,7 @@ struct CompileSheet: View {
             let outcome: CompileOutcome
             switch target {
             case .epub:
-                let cssURL = try? EPUBStylesheetManager.ensureStylesheetExists(fileWriter: LiveAtomicFileWriter())
+                let cssURL = try EPUBStylesheetManager.ensureStylesheetExists(fileWriter: LiveAtomicFileWriter())
                 let coordinator = EPUBExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
                 let result = try await coordinator.export(
                     metadata: exportMetadata,
@@ -341,7 +341,7 @@ struct CompileSheet: View {
             onCompiled(outcome)
             onCancel()
         } catch {
-            compileError = String(describing: error)
+            compileError = error.localizedDescription
         }
     }
 }

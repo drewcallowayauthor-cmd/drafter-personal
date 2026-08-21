@@ -84,7 +84,7 @@ final class ProjectViewModel {
             try await attach(project: project, root: root, metadata: metadata)
         } catch {
             await reset()
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -123,7 +123,7 @@ final class ProjectViewModel {
 
             switch versionControl {
             case .git:
-                let token = try? await CredentialStore().loadToken()
+                let token = await Self.loadTokenIfAvailable()
                 let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
                 let repositoryCoordinator = RepositoryCoordinator(gitService: gitService, workingTree: root)
                 try await repositoryCoordinator.ensureInitialized(authorName: author)
@@ -154,7 +154,7 @@ final class ProjectViewModel {
             }
         } catch {
             await reset()
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -175,7 +175,7 @@ final class ProjectViewModel {
                 withIntermediateDirectories: true
             )
 
-            let token = try? await CredentialStore().loadToken()
+            let token = await Self.loadTokenIfAvailable()
             let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
             try await gitService.clone(url: repository.cloneURL.absoluteString, to: root)
 
@@ -183,7 +183,7 @@ final class ProjectViewModel {
             try await attach(project: project, root: root, gitService: gitService)
         } catch {
             await reset()
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -197,13 +197,13 @@ final class ProjectViewModel {
         errorMessage = nil
         syncStatusMessage = nil
         guard let project, let workingTreeRoot, let metadata, metadata.versionControl == .git else { return }
-        guard let token = try? await CredentialStore().loadToken(), !token.isEmpty else {
+        guard let token = await Self.loadTokenIfAvailable(), !token.isEmpty else {
             syncStatusMessage = "Add a GitHub token in Settings first."
             return
         }
 
         let freshGitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
-        if (try? await freshGitService.remoteURL(in: workingTreeRoot)) != nil {
+        if await Self.hasRemoteLogging(freshGitService, in: workingTreeRoot) {
             syncStatusMessage = "Already connected to GitHub."
             return
         }
@@ -225,7 +225,7 @@ final class ProjectViewModel {
                 metadata: metadata
             )
         } catch {
-            syncStatusMessage = "Couldn't connect to GitHub — \(String(describing: error))"
+            syncStatusMessage = "Couldn't connect to GitHub — \(error.localizedDescription)"
         }
     }
 
@@ -249,7 +249,7 @@ final class ProjectViewModel {
             )
             syncStatusMessage = "Synced to \(repository.htmlURL.absoluteString)"
         } catch {
-            syncStatusMessage = "Not synced to GitHub — \(String(describing: error))"
+            syncStatusMessage = "Not synced to GitHub — \(error.localizedDescription)"
         }
     }
 
@@ -335,10 +335,10 @@ final class ProjectViewModel {
             let scheduler = AutocommitScheduler(checkpointCoordinator: resolvedCoordinator)
             autocommitScheduler = scheduler
 
-            if let _ = try? await resolvedGitService.remoteURL(in: root) {
+            if await Self.hasRemoteLogging(resolvedGitService, in: root) {
                 var syncGitService = resolvedGitService
                 if builtOwnGitService {
-                    let token = try? await CredentialStore().loadToken()
+                    let token = await Self.loadTokenIfAvailable()
                     syncGitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
                     self.gitService = syncGitService
                     versioningSource = syncGitService
@@ -389,7 +389,11 @@ final class ProjectViewModel {
 
     private func checkConcurrentEditingGit() async {
         guard let gitService, let workingTreeRoot else { return }
-        _ = try? await gitService.fetch(in: workingTreeRoot)
+        do {
+            try await gitService.fetch(in: workingTreeRoot)
+        } catch {
+            DrafterLog.app.error("Background fetch for the concurrent-editing check failed: \(error, privacy: .public)")
+        }
         concurrentEditingWarning = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTreeRoot,
@@ -415,9 +419,41 @@ final class ProjectViewModel {
     /// periodic tick.
     func refreshCredentialsAndResync() async {
         guard let project, let workingTreeRoot, let metadata, metadata.versionControl == .git else { return }
-        let token = try? await CredentialStore().loadToken()
+        errorMessage = nil
+        let token = await Self.loadTokenIfAvailable()
         let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
-        try? await attach(project: project, root: workingTreeRoot, gitService: gitService, metadata: metadata)
+        do {
+            try await attach(project: project, root: workingTreeRoot, gitService: gitService, metadata: metadata)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// The stored token is best-effort throughout this file: most opens have no
+    /// GitHub remote at all, so a Keychain miss/failure just falls back to an
+    /// unauthenticated `GitService` rather than blocking the open — but a failure that
+    /// isn't "there's simply no token saved" should still leave a trace rather than
+    /// silently behaving as if the user were never connected.
+    private static func loadTokenIfAvailable() async -> String? {
+        do {
+            return try await CredentialStore().loadToken()
+        } catch {
+            DrafterLog.app.error("Failed to load the saved GitHub token: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// A failed `remoteURL` check is treated the same as "no remote configured yet" —
+    /// worst case this re-attempts a connect that turns out to already exist, which
+    /// `RepositoryCoordinator.connectToGitHub` handles gracefully — but it's still
+    /// worth a log line so a spurious "reconnect" isn't a total mystery later.
+    private static func hasRemoteLogging(_ gitService: GitService, in workingTree: URL) async -> Bool {
+        do {
+            return try await gitService.remoteURL(in: workingTree) != nil
+        } catch {
+            DrafterLog.app.error("Failed to check for an existing remote: \(error, privacy: .public)")
+            return false
+        }
     }
 
     /// Dismisses the concurrent-editing warning's "Cancel" option (§8.3) — backs out
@@ -489,7 +525,7 @@ final class ProjectViewModel {
             try await project.refreshBinderTree()
             binderTree = await project.binderTree
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -502,7 +538,7 @@ final class ProjectViewModel {
             binderTree = await project.binderTree
             return sceneURL
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return nil
         }
     }
@@ -516,7 +552,7 @@ final class ProjectViewModel {
             binderTree = await project.binderTree
             return sceneURL
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return nil
         }
     }
@@ -531,7 +567,7 @@ final class ProjectViewModel {
             binderTree = await project.binderTree
             return newURL
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return nil
         }
     }
@@ -543,7 +579,7 @@ final class ProjectViewModel {
             try await project.delete(itemAt: url)
             binderTree = await project.binderTree
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -555,7 +591,7 @@ final class ProjectViewModel {
             try await project.reorder(orderedURLs: orderedURLs)
             binderTree = await project.binderTree
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -568,7 +604,7 @@ final class ProjectViewModel {
             try await project.moveScene(at: url, toChapterDirectory: chapterDirectory, before: targetURL)
             binderTree = await project.binderTree
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -582,7 +618,7 @@ final class ProjectViewModel {
             binderTree = await project.binderTree
             return importedURL
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return nil
         }
     }
@@ -598,7 +634,7 @@ final class ProjectViewModel {
             metadata = await project.metadata
             return true
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return false
         }
     }
@@ -608,7 +644,12 @@ final class ProjectViewModel {
     /// already checks the file exists before using it, so a dangling path is harmless.
     func removeCoverImage() async {
         guard let workingTreeRoot, let metadata else { return }
-        try? FileManager.default.removeItem(at: workingTreeRoot.appendingPathComponent(metadata.compile.coverImage))
+        errorMessage = nil
+        do {
+            try FileManager.default.removeItem(at: workingTreeRoot.appendingPathComponent(metadata.compile.coverImage))
+        } catch {
+            errorMessage = "Couldn't remove the cover image: \(error.localizedDescription)"
+        }
         await refresh()
     }
 
@@ -626,7 +667,7 @@ final class ProjectViewModel {
         do {
             return try await project.replace(matches: matches, replacement: replacement, fileWriter: LiveAtomicFileWriter())
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return []
         }
     }
@@ -641,7 +682,7 @@ final class ProjectViewModel {
             self.metadata = metadata
             return true
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return false
         }
     }

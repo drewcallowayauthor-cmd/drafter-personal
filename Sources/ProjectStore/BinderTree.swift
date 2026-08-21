@@ -1,3 +1,4 @@
+import DrafterCore
 import Foundation
 
 /// A single scene file — a leaf in the binder (§4.2).
@@ -77,7 +78,7 @@ public enum BinderTreeBuilder {
     }
 
     private static func buildManuscript(at directory: URL, fileManager: FileManager) throws -> [ChapterNode] {
-        guard let entries = try? contents(of: directory, fileManager: fileManager) else { return [] }
+        guard let entries = try contentsIfPresent(of: directory, fileManager: fileManager) else { return [] }
 
         let chapterFolders = entries.filter { isDirectory($0, fileManager: fileManager) }
         let looseFiles = entries.filter { $0.pathExtension == "md" }
@@ -112,7 +113,7 @@ public enum BinderTreeBuilder {
         fileManager: FileManager,
         extensions: Set<String>? = ["md"]
     ) throws -> [SceneNode] {
-        guard let entries = try? contents(of: directory, fileManager: fileManager) else { return [] }
+        guard let entries = try contentsIfPresent(of: directory, fileManager: fileManager) else { return [] }
         let files = entries.filter { !isDirectory($0, fileManager: fileManager) }
         let matching = extensions.map { allowed in files.filter { allowed.contains($0.pathExtension) } } ?? files
         return orderedSceneNodes(from: matching)
@@ -133,6 +134,20 @@ public enum BinderTreeBuilder {
             includingPropertiesForKeys: [.isDirectoryKey],
             options: [.skipsHiddenFiles]
         )
+    }
+
+    /// `nil` when `directory` legitimately doesn't exist yet (a brand-new project, or
+    /// an optional section like Notes/ that's never been used) — that's not an error.
+    /// Any other listing failure (permissions, an unmounted volume) propagates instead
+    /// of silently presenting as "this section is empty."
+    private static func contentsIfPresent(of directory: URL, fileManager: FileManager) throws -> [URL]? {
+        guard fileManager.fileExists(atPath: directory.path) else { return nil }
+        do {
+            return try contents(of: directory, fileManager: fileManager)
+        } catch {
+            DrafterLog.projectStore.error("Failed to list \(directory.path, privacy: .public): \(error, privacy: .public)")
+            throw error
+        }
     }
 
     private static func isDirectory(_ url: URL, fileManager: FileManager) -> Bool {

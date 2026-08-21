@@ -569,10 +569,18 @@ struct ContentView: View {
 
     @ViewBuilder
     private var saveStatus: some View {
-        if let document = sceneEditor.document {
-            Text(document.isDirty ? "Unsaved" : "Saved")
-                .font(Theme.Font.body(12))
-                .foregroundStyle(Theme.Color.textMuted)
+        HStack(spacing: 4) {
+            if let document = sceneEditor.document {
+                Text(document.isDirty ? "Unsaved" : "Saved")
+                    .font(Theme.Font.body(12))
+                    .foregroundStyle(Theme.Color.textMuted)
+            }
+            if projectViewModel.autocommitScheduler?.lastCommitFailed == true {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(Theme.Font.body(11))
+                    .foregroundStyle(.yellow)
+                    .help("The last background commit failed. Your edits are still saved to disk — this will retry on the next change.")
+            }
         }
     }
 
@@ -911,8 +919,21 @@ struct ContentView: View {
             Spacer()
             Button("Keep Mine") { externalChangeConflictURL = nil }
             Button("Compare") {
-                let onDisk = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-                externalChangeDiffLines = SceneDiff.diff(old: sceneEditor.document?.body ?? "", new: onDisk)
+                do {
+                    let onDisk = try String(contentsOf: url, encoding: .utf8)
+                    externalChangeDiffLines = SceneDiff.diff(old: sceneEditor.document?.body ?? "", new: onDisk)
+                } catch {
+                    DrafterLog.app.error("Failed to read \(url.path, privacy: .public) for external-change compare: \(error, privacy: .public)")
+                    externalChangeDiffLines = [
+                        SceneDiffLine(
+                            kind: .unchanged,
+                            oldText: "⚠️ Couldn't read the on-disk version of this scene.",
+                            newText: "⚠️ Couldn't read the on-disk version of this scene.",
+                            oldWords: nil,
+                            newWords: nil
+                        )
+                    ]
+                }
                 isExternalChangeCompareSheetPresented = true
             }
             Button("Load Theirs") {
@@ -1162,7 +1183,7 @@ struct ContentView: View {
             _ = try FrontBackMatterService.generateMissing(metadata: metadata, workingTree: root, fileWriter: LiveAtomicFileWriter())
             Task { await projectViewModel.refresh() }
         } catch {
-            frontBackMatterError = String(describing: error)
+            frontBackMatterError = error.localizedDescription
         }
     }
 
@@ -1182,7 +1203,7 @@ struct ContentView: View {
                 sceneEditor.open(url: sceneURL)
             }
         } catch {
-            frontBackMatterError = String(describing: error)
+            frontBackMatterError = error.localizedDescription
         }
     }
 

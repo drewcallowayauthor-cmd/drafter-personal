@@ -22,7 +22,13 @@ enum ConcurrentEditingWarning {
         window: TimeInterval = 300,
         now: Date = .now
     ) async -> Info? {
-        guard let entries = try? await gitService.log(ref: "origin/main", in: workingTree) else { return nil }
+        let entries: [CommitLogEntry]
+        do {
+            entries = try await gitService.log(ref: "origin/main", in: workingTree)
+        } catch {
+            DrafterLog.app.error("Concurrent-editing check failed to read origin/main log: \(error, privacy: .public)")
+            return nil
+        }
         return recentOther(in: entries, ownMachineName: ownMachineName, window: window, now: now)
     }
 
@@ -36,7 +42,13 @@ enum ConcurrentEditingWarning {
         window: TimeInterval = 300,
         now: Date = .now
     ) async -> Info? {
-        guard let entries = try? await snapshotService.log(for: nil, in: workingTree) else { return nil }
+        let entries: [CommitLogEntry]
+        do {
+            entries = try await snapshotService.log(for: nil, in: workingTree)
+        } catch {
+            DrafterLog.app.error("Concurrent-editing check failed to read the snapshot log: \(error, privacy: .public)")
+            return nil
+        }
         return recentOther(in: entries, ownMachineName: ownMachineName, window: window, now: now)
     }
 

@@ -18,7 +18,7 @@ final class TargetsViewModel {
                 try String(contentsOf: url, encoding: .utf8)
             }
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 

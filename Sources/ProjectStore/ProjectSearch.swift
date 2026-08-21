@@ -49,7 +49,13 @@ public enum ProjectSearchService {
 
         var results: [ProjectSearchMatch] = []
         for scene in scenes(in: binderTree) {
-            guard let document = try? SceneDocument.load(from: scene.url) else { continue }
+            let document: SceneDocument
+            do {
+                document = try SceneDocument.load(from: scene.url)
+            } catch {
+                DrafterLog.projectStore.error("Skipping \(scene.url.path, privacy: .public) in search — failed to load: \(error, privacy: .public)")
+                continue
+            }
             results.append(contentsOf: matches(in: document.body, regex: regex, sceneURL: scene.url, displayName: scene.displayName))
         }
         return results
@@ -67,7 +73,13 @@ public enum ProjectSearchService {
     ) throws -> Set<URL> {
         var rewrittenURLs: Set<URL> = []
         for (sceneURL, matchesInScene) in Dictionary(grouping: matches, by: \.sceneURL) {
-            guard var document = try? SceneDocument.load(from: sceneURL) else { continue }
+            var document: SceneDocument
+            do {
+                document = try SceneDocument.load(from: sceneURL)
+            } catch {
+                DrafterLog.projectStore.error("Skipping \(sceneURL.path, privacy: .public) in replace — failed to load: \(error, privacy: .public)")
+                continue
+            }
             let mutableBody = NSMutableString(string: document.body)
             for match in matchesInScene.sorted(by: { $0.range.location > $1.range.location }) {
                 guard match.range.location + match.range.length <= mutableBody.length else { continue }

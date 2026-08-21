@@ -50,7 +50,7 @@ final class GitHubRepoPickerViewModel {
         } catch DrafterError.offline {
             errorMessage = "Couldn't reach GitHub. Check your connection and try again."
         } catch {
-            errorMessage = "Couldn't load repositories: \(String(describing: error))"
+            errorMessage = "Couldn't load repositories: \(error.localizedDescription)"
         }
     }
 }

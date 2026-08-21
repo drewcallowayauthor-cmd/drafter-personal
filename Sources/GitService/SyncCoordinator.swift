@@ -60,6 +60,7 @@ public actor SyncCoordinator {
         do {
             try await gitService.fetch(remote: remote, in: workingTree)
         } catch {
+            DrafterLog.sync.error("fetch failed: \(error, privacy: .public)")
             return try await transition(to: failureState(for: error))
         }
 
@@ -69,7 +70,13 @@ public actor SyncCoordinator {
         // ahead": just push and let that create it. This also self-heals a project
         // whose initial connection got as far as `addRemote` but never completed the
         // push (e.g. an auth failure mid-connection).
-        let remoteBranchExists = (try? await gitService.refExists(remoteRef, in: workingTree)) ?? false
+        let remoteBranchExists: Bool
+        do {
+            remoteBranchExists = try await gitService.refExists(remoteRef, in: workingTree)
+        } catch {
+            DrafterLog.sync.error("refExists(\(self.remoteRef, privacy: .public)) failed, assuming it doesn't exist yet: \(error, privacy: .public)")
+            remoteBranchExists = false
+        }
         guard remoteBranchExists else {
             return try await push()
         }
@@ -78,6 +85,7 @@ public actor SyncCoordinator {
         do {
             divergence = try await gitService.divergence(from: remoteRef, in: workingTree)
         } catch {
+            DrafterLog.sync.error("divergence check failed: \(error, privacy: .public)")
             return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
         }
         lastKnownAheadCount = divergence.ahead
@@ -91,6 +99,7 @@ public actor SyncCoordinator {
             do {
                 try await gitService.fastForwardMerge(to: remoteRef, in: workingTree)
             } catch {
+                DrafterLog.sync.error("fast-forward merge failed: \(error, privacy: .public)")
                 return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
             }
             return try await transition(to: .idle)
@@ -108,6 +117,7 @@ public actor SyncCoordinator {
                     in: workingTree
                 )
             } catch {
+                DrafterLog.sync.error("three-way merge failed: \(error, privacy: .public)")
                 return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
             }
             switch result {
@@ -138,6 +148,7 @@ public actor SyncCoordinator {
         do {
             try await gitService.pushSettingUpstream(remote: remote, branch: branch, in: workingTree)
         } catch {
+            DrafterLog.sync.error("push failed: \(error, privacy: .public)")
             if isAuthenticationFailure(error) {
                 return try await transition(to: .authenticationRequired)
             }

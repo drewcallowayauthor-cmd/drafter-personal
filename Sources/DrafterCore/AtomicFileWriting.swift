@@ -15,11 +15,16 @@ public struct LiveAtomicFileWriter: AtomicFileWriting {
         let directory = url.deletingLastPathComponent()
         let tempURL = directory.appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
 
-        try data.write(to: tempURL, options: .atomic)
-        let handle = try FileHandle(forWritingTo: tempURL)
-        try handle.synchronize()
-        try handle.close()
+        do {
+            try data.write(to: tempURL, options: .atomic)
+            let handle = try FileHandle(forWritingTo: tempURL)
+            try handle.synchronize()
+            try handle.close()
 
-        _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
+        } catch {
+            DrafterLog.projectStore.error("Atomic write to \(url.path, privacy: .public) failed: \(error, privacy: .public)")
+            throw DrafterError.filesystem(underlying: String(describing: error))
+        }
     }
 }

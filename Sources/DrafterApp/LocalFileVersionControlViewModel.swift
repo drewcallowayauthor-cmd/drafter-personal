@@ -1,3 +1,4 @@
+import DrafterCore
 import Foundation
 import Observation
 import SnapshotService
@@ -14,6 +15,7 @@ final class LocalFileVersionControlViewModel {
     private(set) var snapshotCount = 0
     private(set) var historySizeText = "—"
     private(set) var isLoading = false
+    private(set) var errorMessage: String?
 
     private let snapshotService: SnapshotService
     private let workingTree: URL
@@ -29,8 +31,15 @@ final class LocalFileVersionControlViewModel {
     func load() async {
         isLoading = true
         defer { isLoading = false }
+        errorMessage = nil
 
-        let entries = (try? await snapshotService.log(for: nil, in: workingTree)) ?? []
+        let entries: [CommitLogEntry]
+        do {
+            entries = try await snapshotService.log(for: nil, in: workingTree)
+        } catch {
+            errorMessage = "Couldn't load snapshot history: \(error.localizedDescription)"
+            entries = []
+        }
         snapshotCount = entries.count
         if let latest = entries.first {
             let formatter = RelativeDateTimeFormatter()

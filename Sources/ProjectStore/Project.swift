@@ -93,7 +93,7 @@ public actor Project {
     public func createChapter(title: String, fileWriter: AtomicFileWriting) throws -> URL {
         let manuscriptDirectory = root.appendingPathComponent("Manuscript")
         let chapterName = FilenamePrefix.nextFilename(
-            existingFilenames: existingEntryNames(in: manuscriptDirectory),
+            existingFilenames: try existingEntryNames(in: manuscriptDirectory),
             title: title,
             extension: nil
         )
@@ -110,7 +110,7 @@ public actor Project {
     @discardableResult
     public func createScene(title: String, in directory: URL, fileWriter: AtomicFileWriting) throws -> URL {
         let filename = FilenamePrefix.nextFilename(
-            existingFilenames: existingEntryNames(in: directory),
+            existingFilenames: try existingEntryNames(in: directory),
             title: title,
             extension: "md"
         )
@@ -196,7 +196,7 @@ public actor Project {
         let sourceDirectory = url.deletingLastPathComponent()
 
         if sourceDirectory == chapterDirectory {
-            var urls = orderedEntryURLs(in: sourceDirectory)
+            var urls = try orderedEntryURLs(in: sourceDirectory)
             urls.removeAll { $0 == url }
             let index = targetURL.flatMap { target in urls.firstIndex { $0 == target } } ?? urls.count
             urls.insert(url, at: index)
@@ -219,12 +219,12 @@ public actor Project {
         let temporaryURL = chapterDirectory.appendingPathComponent(temporaryFilename)
         try FileManager.default.moveItem(at: url, to: temporaryURL)
 
-        let remainingSourceURLs = orderedEntryURLs(in: sourceDirectory)
+        let remainingSourceURLs = try orderedEntryURLs(in: sourceDirectory)
         if !remainingSourceURLs.isEmpty {
             try reorder(orderedURLs: remainingSourceURLs)
         }
 
-        var destinationURLs = orderedEntryURLs(in: chapterDirectory).filter { $0 != temporaryURL }
+        var destinationURLs = try orderedEntryURLs(in: chapterDirectory).filter { $0 != temporaryURL }
         let index = targetURL.flatMap { target in destinationURLs.firstIndex { $0 == target } } ?? destinationURLs.count
         destinationURLs.insert(temporaryURL, at: index)
         try reorder(orderedURLs: destinationURLs)
@@ -237,7 +237,7 @@ public actor Project {
     public func importFile(from sourceURL: URL, into directory: URL) throws -> URL {
         let ext = sourceURL.pathExtension
         let filename = FilenamePrefix.nextFilename(
-            existingFilenames: existingEntryNames(in: directory),
+            existingFilenames: try existingEntryNames(in: directory),
             title: sourceURL.deletingPathExtension().lastPathComponent,
             extension: ext.isEmpty ? nil : ext
         )
@@ -255,9 +255,14 @@ public actor Project {
         let fileManager = FileManager.default
         let resourcesDirectory = root.appendingPathComponent("Resources")
         try fileManager.createDirectory(at: resourcesDirectory, withIntermediateDirectories: true)
-        for existing in existingEntryNames(in: resourcesDirectory)
+        for existing in try existingEntryNames(in: resourcesDirectory)
         where (existing as NSString).deletingPathExtension == "cover" {
-            try? fileManager.removeItem(at: resourcesDirectory.appendingPathComponent(existing))
+            let staleCoverURL = resourcesDirectory.appendingPathComponent(existing)
+            do {
+                try fileManager.removeItem(at: staleCoverURL)
+            } catch {
+                DrafterLog.projectStore.error("Failed to remove stale cover \(staleCoverURL.path, privacy: .public): \(error, privacy: .public)")
+            }
         }
 
         let ext = sourceURL.pathExtension.isEmpty ? "jpg" : sourceURL.pathExtension
@@ -287,11 +292,17 @@ public actor Project {
         try ProjectSearchService.replace(matches: matches, replacement: replacement, fileWriter: fileWriter)
     }
 
-    private func orderedEntryURLs(in directory: URL) -> [URL] {
-        FilenamePrefix.sort(existingEntryNames(in: directory)).map { directory.appendingPathComponent($0) }
+    private func orderedEntryURLs(in directory: URL) throws -> [URL] {
+        FilenamePrefix.sort(try existingEntryNames(in: directory)).map { directory.appendingPathComponent($0) }
     }
 
-    private func existingEntryNames(in directory: URL) -> [String] {
-        (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+    private func existingEntryNames(in directory: URL) throws -> [String] {
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        do {
+            return try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        } catch {
+            DrafterLog.projectStore.error("Failed to list \(directory.path, privacy: .public): \(error, privacy: .public)")
+            throw error
+        }
     }
 }

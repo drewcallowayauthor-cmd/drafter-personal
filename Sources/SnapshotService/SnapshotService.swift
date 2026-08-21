@@ -50,7 +50,7 @@ public actor SnapshotService {
         let destination = historyDirectory.appendingPathComponent(folderName)
         try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
 
-        for name in topLevelNamesToSnapshot(in: workingTree) {
+        for name in try topLevelNamesToSnapshot(in: workingTree) {
             // `FileManager.copyItem` uses `copyfile(3)` under the hood, which clones
             // rather than duplicates on an APFS volume (§7.2/Appendix B) — an unchanged
             // Resources/cover.jpg costs no extra disk space until it diverges.
@@ -71,7 +71,13 @@ public actor SnapshotService {
         let historyDirectory = historyDirectory(in: workingTree)
         let entries = try snapshotFolderNames(in: workingTree).compactMap { name -> SnapshotRetention.Entry? in
             guard let parsed = SnapshotFolderName.parse(name) else { return nil }
-            let metadata = try? readMetadata(folderName: name, in: workingTree)
+            let metadata: SnapshotMetadata?
+            do {
+                metadata = try readMetadata(folderName: name, in: workingTree)
+            } catch {
+                DrafterLog.snapshot.error("Failed to read metadata for snapshot \(name, privacy: .public): \(error, privacy: .public)")
+                metadata = nil
+            }
             return SnapshotRetention.Entry(
                 name: name,
                 date: parsed.date,
@@ -79,7 +85,11 @@ public actor SnapshotService {
             )
         }
         for name in SnapshotRetention.namesToPrune(entries: entries, now: now) {
-            try? fileManager.removeItem(at: historyDirectory.appendingPathComponent(name))
+            do {
+                try fileManager.removeItem(at: historyDirectory.appendingPathComponent(name))
+            } catch {
+                DrafterLog.snapshot.error("Failed to prune snapshot \(name, privacy: .public): \(error, privacy: .public)")
+            }
         }
     }
 
@@ -125,8 +135,8 @@ public actor SnapshotService {
 
     // MARK: - Internal
 
-    private func topLevelNamesToSnapshot(in workingTree: URL) -> [String] {
-        let names = (try? fileManager.contentsOfDirectory(atPath: workingTree.path)) ?? []
+    private func topLevelNamesToSnapshot(in workingTree: URL) throws -> [String] {
+        let names = try fileManager.contentsOfDirectory(atPath: workingTree.path)
         return names.filter { !$0.hasPrefix(".") && !Self.excludedTopLevelNames.contains($0) }
     }
 
@@ -153,7 +163,7 @@ public actor SnapshotService {
     /// `FileManager.contentsEqual` recurses through directories on its own.
     private func hasChanged(since folderName: String, in workingTree: URL) throws -> Bool {
         let previous = historyDirectory(in: workingTree).appendingPathComponent(folderName)
-        for name in topLevelNamesToSnapshot(in: workingTree) {
+        for name in try topLevelNamesToSnapshot(in: workingTree) {
             let current = workingTree.appendingPathComponent(name).path
             let priorCopy = previous.appendingPathComponent(name).path
             guard fileManager.fileExists(atPath: priorCopy) else { return true }
@@ -202,8 +212,13 @@ extension SnapshotService: VersioningSource {
 
     private func entry(for folderName: String, in workingTree: URL) -> CommitLogEntry? {
         guard let parsed = SnapshotFolderName.parse(folderName) else { return nil }
-        let metadata = (try? readMetadata(folderName: folderName, in: workingTree))
-            ?? SnapshotMetadata(subject: "snapshot", isProtectedFromPruning: false)
+        let metadata: SnapshotMetadata
+        do {
+            metadata = try readMetadata(folderName: folderName, in: workingTree)
+        } catch {
+            DrafterLog.snapshot.error("Failed to read metadata for snapshot \(folderName, privacy: .public): \(error, privacy: .public)")
+            metadata = SnapshotMetadata(subject: "snapshot", isProtectedFromPruning: false)
+        }
         return CommitLogEntry(
             sha: folderName,
             date: parsed.date,

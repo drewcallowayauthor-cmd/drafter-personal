@@ -38,7 +38,7 @@ final class SceneEditorViewModel {
             wordCountBaseline = WordCounter.count(document?.body ?? "")
         } catch {
             document = nil
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -67,7 +67,7 @@ final class SceneEditorViewModel {
             onSaved?(newWordCount - wordCountBaseline)
             wordCountBaseline = newWordCount
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 

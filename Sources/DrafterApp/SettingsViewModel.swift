@@ -24,11 +24,24 @@ final class SettingsViewModel {
     /// reality rather than a stale save (§5.3's "Test Connection... reports the actual
     /// result" applies just as much on reopening Settings as it does to a fresh entry).
     func loadStatus() async {
-        guard let token = try? await credentialStore.loadToken() else {
+        let token: String?
+        do {
+            token = try await credentialStore.loadToken()
+        } catch {
+            DrafterLog.credential.error("Failed to load the saved GitHub token: \(error, privacy: .public)")
             connectedLogin = nil
             return
         }
-        connectedLogin = try? await apiClient.currentUser(token: token).login
+        guard let token else {
+            connectedLogin = nil
+            return
+        }
+        do {
+            connectedLogin = try await apiClient.currentUser(token: token).login
+        } catch {
+            DrafterLog.credential.error("Failed to verify the saved GitHub token: \(error, privacy: .public)")
+            connectedLogin = nil
+        }
     }
 
     func testAndSave(token: String) async {
@@ -47,13 +60,17 @@ final class SettingsViewModel {
         } catch DrafterError.offline {
             statusMessage = "Couldn't reach GitHub. Check your connection and try again."
         } catch {
-            statusMessage = "Couldn't verify the token: \(String(describing: error))"
+            statusMessage = "Couldn't verify the token: \(error.localizedDescription)"
         }
     }
 
     func disconnect() async {
-        try? await credentialStore.deleteToken()
-        connectedLogin = nil
-        statusMessage = "Disconnected from GitHub."
+        do {
+            try await credentialStore.deleteToken()
+            connectedLogin = nil
+            statusMessage = "Disconnected from GitHub."
+        } catch {
+            statusMessage = "Couldn't disconnect: \(error.localizedDescription)"
+        }
     }
 }

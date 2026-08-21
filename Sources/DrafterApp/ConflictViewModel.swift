@@ -49,14 +49,48 @@ final class ConflictViewModel {
     func loadMetadata() async {
         for index in conflicts.indices {
             let path = conflicts[index].path
-            conflicts[index].mine = try? await gitService.lastCommit(for: path, at: "HEAD", in: workingTree)
-            conflicts[index].theirs = try? await gitService.lastCommit(for: path, at: "MERGE_HEAD", in: workingTree)
+            do {
+                conflicts[index].mine = try await gitService.lastCommit(for: path, at: "HEAD", in: workingTree)
+            } catch {
+                DrafterLog.app.error("Failed to load 'mine' commit metadata for \(path, privacy: .public): \(error, privacy: .public)")
+            }
+            do {
+                conflicts[index].theirs = try await gitService.lastCommit(for: path, at: "MERGE_HEAD", in: workingTree)
+            } catch {
+                DrafterLog.app.error("Failed to load 'theirs' commit metadata for \(path, privacy: .public): \(error, privacy: .public)")
+            }
         }
     }
 
+    /// `nil` for a side means it couldn't be read — distinct from empty content, so the
+    /// diff view shows "couldn't load this content" instead of implying the whole file
+    /// was added or deleted.
     func diffLines(for conflict: FileConflict) async -> [SceneDiffLine] {
-        let mine = (try? await gitService.show(path: conflict.path, at: "HEAD", in: workingTree)) ?? ""
-        let theirs = (try? await gitService.theirsContent(path: conflict.path, in: workingTree)) ?? ""
+        let mine: String?
+        do {
+            mine = try await gitService.show(path: conflict.path, at: "HEAD", in: workingTree)
+        } catch {
+            DrafterLog.app.error("Failed to load 'mine' content for \(conflict.path, privacy: .public): \(error, privacy: .public)")
+            mine = nil
+        }
+        let theirs: String?
+        do {
+            theirs = try await gitService.theirsContent(path: conflict.path, in: workingTree)
+        } catch {
+            DrafterLog.app.error("Failed to load 'theirs' content for \(conflict.path, privacy: .public): \(error, privacy: .public)")
+            theirs = nil
+        }
+        guard let mine, let theirs else {
+            return [
+                SceneDiffLine(
+                    kind: .unchanged,
+                    oldText: "⚠️ Couldn't load this file's content.",
+                    newText: "⚠️ Couldn't load this file's content.",
+                    oldWords: nil,
+                    newWords: nil
+                )
+            ]
+        }
         return SceneDiff.diff(old: mine, new: theirs)
     }
 
@@ -65,7 +99,7 @@ final class ConflictViewModel {
             try await conflictResolver.keepMine(path: conflict.path)
             markResolved(conflict.path)
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -74,7 +108,7 @@ final class ConflictViewModel {
             try await conflictResolver.keepTheirs(path: conflict.path)
             markResolved(conflict.path)
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -85,7 +119,7 @@ final class ConflictViewModel {
             try await conflictResolver.keepBoth(path: conflict.path, duplicatePath: Self.duplicatePath(for: conflict))
             markResolved(conflict.path)
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -99,7 +133,7 @@ final class ConflictViewModel {
             try await conflictResolver.finalize(machineName: machineName)
             return true
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = error.localizedDescription
             return false
         }
     }

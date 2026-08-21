@@ -52,7 +52,7 @@ final class ConflictedCopyViewModel {
             try FileManager.default.removeItem(at: match.conflictedURL)
             matches.removeAll { $0 == match }
         } catch {
-            actionErrorMessage = String(describing: error)
+            actionErrorMessage = error.localizedDescription
         }
     }
 
@@ -62,7 +62,7 @@ final class ConflictedCopyViewModel {
             try FileManager.default.removeItem(at: match.conflictedURL)
             matches.removeAll { $0 == match }
         } catch {
-            actionErrorMessage = String(describing: error)
+            actionErrorMessage = error.localizedDescription
         }
     }
 

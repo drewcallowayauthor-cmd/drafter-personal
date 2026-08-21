@@ -51,7 +51,11 @@ public actor GitHubAPIClient {
     /// `.githubAPIError` so the caller can fall back to the "Not synced" local-only path.
     public func createRepository(name: String, token: String) async throws -> GitHubRepository {
         var request = makeRequest(path: "/user/repos", method: "POST", token: token)
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["name": name, "private": true])
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["name": name, "private": true])
+        } catch {
+            throw DrafterError.filesystem(underlying: String(describing: error))
+        }
         return try await send(request)
     }
 
@@ -118,7 +122,12 @@ public actor GitHubAPIClient {
     private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
         let (data, statusCode) = try await performRequest(request)
         try Self.throwIfError(statusCode: statusCode, data: data)
-        return try JSONDecoder().decode(T.self, from: data)
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            DrafterLog.credential.error("Failed to decode GitHub API response: \(error, privacy: .public)")
+            throw DrafterError.githubAPIError(statusCode: statusCode, message: "GitHub returned an unexpected response.")
+        }
     }
 
     private static func errorMessage(from data: Data) -> String {
