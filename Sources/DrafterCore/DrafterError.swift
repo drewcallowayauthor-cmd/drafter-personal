@@ -29,8 +29,23 @@ public enum DrafterError: Error, Sendable, Equatable {
     /// iCloud Drive, Google Drive, OneDrive.
     case locationInsideSyncedFolder(path: String)
 
+    /// The GitHub API rejected a request for a reason other than authentication —
+    /// repo name taken, rate limited, validation error (§5.2). Distinct from
+    /// `.authenticationFailed` so the UI can show GitHub's own message rather than
+    /// prompting for a new token.
+    case githubAPIError(statusCode: Int, message: String)
+
+    /// The macOS Keychain refused to store or retrieve the PAT (§5.3) — e.g. the user
+    /// denied a Keychain access prompt.
+    case keychainFailed(status: Int32)
+
     /// The working tree changed on disk out from under an open project (§12.2 item 1).
     case projectFolderMoved
+
+    /// Another window already has this project open (§12.2 item 7) — refused rather
+    /// than attaching a second `FileSystemWatcher`/`AutocommitScheduler`/
+    /// `SyncScheduler` that would race the first over the same working tree.
+    case projectAlreadyOpen(path: String)
 
     case filesystem(underlying: String)
 }

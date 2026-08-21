@@ -8,35 +8,54 @@ public enum MergeResult: Sendable, Equatable {
     case conflicted(paths: [String])
 }
 
-/// One row of `git log` output (§5.8's History panel, Appendix A's log format).
-public struct CommitLogEntry: Sendable, Equatable, Identifiable {
-    public var id: String { sha }
-    public let sha: String
-    public let date: Date
-    public let subject: String
-    public let authorName: String
-    /// The `Machine:` trailer (§5.4) — empty for commits that predate this convention
-    /// or were made outside the app.
-    public let machineName: String
-
-    public init(sha: String, date: Date, subject: String, authorName: String, machineName: String) {
-        self.sha = sha
-        self.date = date
-        self.subject = subject
-        self.authorName = authorName
-        self.machineName = machineName
-    }
-}
-
 /// Subprocess wrapper around `git` (§7, §Appendix A). Callers get one serial actor per
 /// project — never concurrent git in the same working tree.
 public actor GitService {
     private let processRunner: ProcessRunning
     private let gitExecutableURL: URL
+    /// The GitHub PAT (§5.3), if any — threaded into every subprocess invocation as a
+    /// `-c http.extraHeader` flag (see `authArguments()`) rather than ever being
+    /// written into `.git/config` or a remote URL, matching §5.3's "never store a
+    /// token... in `.git/config`". `nil` for a local-only project, or one relying on
+    /// pre-existing credentials (SSH keys, an existing credential helper — §5.3 path 1).
+    private let authToken: String?
 
-    public init(processRunner: ProcessRunning, gitExecutableURL: URL = URL(fileURLWithPath: "/usr/bin/git")) {
+    public init(
+        processRunner: ProcessRunning,
+        gitExecutableURL: URL = URL(fileURLWithPath: "/usr/bin/git"),
+        authToken: String? = nil
+    ) {
         self.processRunner = processRunner
         self.gitExecutableURL = gitExecutableURL
+        self.authToken = authToken
+    }
+
+    /// `-c http.extraHeader="Authorization: Basic <base64(x-access-token:token)>"` —
+    /// git's smart-HTTP backend (and GitHub's implementation of it) only recognizes
+    /// Basic auth, not a bearer token; the REST API (`GitHubAPIClient`) is the only
+    /// place a raw `Bearer` header applies. The username is conventionally
+    /// `x-access-token` (what GitHub Actions' own checkout uses) — GitHub only checks
+    /// the password (the PAT) for token auth, so any non-empty username works. Passed
+    /// per-invocation rather than ever being written into `.git/config` (§5.3).
+    private func authArguments() -> [String] {
+        guard let authToken, !authToken.isEmpty else { return [] }
+        let credentials = Data("x-access-token:\(authToken)".utf8).base64EncodedString()
+        return ["-c", "http.extraHeader=Authorization: Basic \(credentials)"]
+    }
+
+    /// `git rev-parse --verify --quiet <ref>` — whether `ref` resolves to a commit,
+    /// without throwing on failure. A missing ref is an expected outcome here (e.g. a
+    /// freshly-created GitHub repo has no branches at all until the first push
+    /// succeeds — §5.2), not a genuine error, so callers branch on the `Bool` rather
+    /// than catching.
+    public func refExists(_ ref: String, in workingTree: URL) async throws -> Bool {
+        let result = try await processRunner.run(
+            executableURL: gitExecutableURL,
+            arguments: authArguments() + ["rev-parse", "--verify", "--quiet", ref],
+            currentDirectoryURL: workingTree,
+            environment: ["GIT_TERMINAL_PROMPT": "0"]
+        )
+        return result.succeeded
     }
 
     /// `git status --porcelain` — empty output means nothing to commit (§5.4).
@@ -82,8 +101,13 @@ public actor GitService {
     /// `--follow` when `path` is given — history for one file, renames followed.
     /// Without a path, drops `--follow` (meaningless repo-wide) for the project-wide
     /// Timeline view (§5.8).
-    public func log(for path: String? = nil, in workingTree: URL) async throws -> [CommitLogEntry] {
+    /// `ref` scopes the log to a specific branch/remote-ref (e.g. `origin/main` for
+    /// §6.4's concurrent-editing check) instead of the default `HEAD`.
+    public func log(for path: String? = nil, ref: String? = nil, in workingTree: URL) async throws -> [CommitLogEntry] {
         var arguments = ["log"]
+        if let ref {
+            arguments.append(ref)
+        }
         if path != nil {
             arguments.append("--follow")
         }
@@ -93,7 +117,25 @@ public actor GitService {
         }
 
         let result = try await run(arguments, in: workingTree)
-        return result.standardOutput
+        return Self.parseLogEntries(result.standardOutput)
+    }
+
+    /// The most recent commit touching `path` reachable from `ref` — used by §5.7's
+    /// conflict sheet to label each side ("Mine — edited 14 minutes ago on
+    /// Josiah-Mac-Studio"): `ref` is `HEAD` for "mine" and `MERGE_HEAD` for "theirs"
+    /// during an unresolved merge. `nil` if `path` has no history reachable from `ref`.
+    public func lastCommit(for path: String, at ref: String, in workingTree: URL) async throws -> CommitLogEntry? {
+        let arguments = [
+            "log", "-1",
+            "--format=%H%x1f%at%x1f%s%x1f%an%x1f%(trailers:key=Machine,valueonly=true,separator=)",
+            ref, "--", path
+        ]
+        let result = try await run(arguments, in: workingTree)
+        return Self.parseLogEntries(result.standardOutput).first
+    }
+
+    private static func parseLogEntries(_ output: String) -> [CommitLogEntry] {
+        output
             .split(separator: "\n", omittingEmptySubsequences: true)
             .compactMap { line -> CommitLogEntry? in
                 let fields = line.components(separatedBy: "\u{1F}")
@@ -141,14 +183,52 @@ public actor GitService {
         _ = try await run(["push", remote, branch], in: workingTree)
     }
 
+    /// `git clone <url> <destination>` (§5.9) — `destination`'s parent directory must
+    /// already exist; git creates `destination` itself and refuses to run if it does.
+    public func clone(url: String, to destination: URL) async throws {
+        let parent = destination.deletingLastPathComponent()
+        _ = try await run(["clone", url, destination.path], in: parent)
+    }
+
+    /// `git remote add <name> <url>` (Appendix A, §5.2 step 3).
+    public func addRemote(url: String, name: String = "origin", in workingTree: URL) async throws {
+        _ = try await run(["remote", "add", name, url], in: workingTree)
+    }
+
+    /// `git remote get-url <name>` — `nil` when no such remote is configured, rather
+    /// than throwing, since "not connected to GitHub yet" is an expected, common state
+    /// (§5.2's local-only project) that callers branch on rather than catch.
+    public func remoteURL(named name: String = "origin", in workingTree: URL) async throws -> String? {
+        let result = try await processRunner.run(
+            executableURL: gitExecutableURL,
+            arguments: ["remote", "get-url", name],
+            currentDirectoryURL: workingTree,
+            environment: ["GIT_TERMINAL_PROMPT": "0"]
+        )
+        guard result.succeeded else { return nil }
+        let trimmed = result.standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// `git push -u <remote> <branch>` — the first push of a newly connected repo
+    /// (§5.2 step 3), distinct from the ongoing `push(remote:branch:in:)` because only
+    /// the first push needs to set the upstream tracking branch.
+    public func pushSettingUpstream(remote: String = "origin", branch: String = "main", in workingTree: URL) async throws {
+        _ = try await run(["push", "-u", remote, branch], in: workingTree)
+    }
+
     /// `git merge <ref>` — the "diverged" case in §5.6. A conflicted merge is not treated
     /// as a thrown error: git's non-zero exit for conflicts is expected and handled by
     /// checking for conflicted files, distinct from a genuine failure (§5.7's territory,
     /// not an exceptional one).
-    public func merge(with ref: String, in workingTree: URL) async throws -> MergeResult {
+    public func merge(with ref: String, message: String? = nil, in workingTree: URL) async throws -> MergeResult {
+        var arguments = ["merge", ref]
+        if let message {
+            arguments += ["-m", message]
+        }
         let result = try await processRunner.run(
             executableURL: gitExecutableURL,
-            arguments: ["merge", ref],
+            arguments: arguments,
             currentDirectoryURL: workingTree,
             environment: ["GIT_TERMINAL_PROMPT": "0"]
         )
@@ -184,6 +264,14 @@ public actor GitService {
         _ = try await run(["checkout", "--theirs", path], in: workingTree)
     }
 
+    /// `git show :3:<path>` — the "theirs" side of an unresolved conflict (merge stage
+    /// 3), used by "Keep Both" (§5.7) to write their version out as a second file
+    /// without discarding it.
+    public func theirsContent(path: String, in workingTree: URL) async throws -> String {
+        let result = try await run(["show", ":3:\(path)"], in: workingTree)
+        return result.standardOutput
+    }
+
     /// `git mv <old> <new>` (§4.3) — renames used for reordering, so history follows
     /// the file.
     public func move(from oldPath: String, to newPath: String, in workingTree: URL) async throws {
@@ -193,7 +281,7 @@ public actor GitService {
     private func run(_ arguments: [String], in workingTree: URL) async throws -> ProcessResult {
         let result = try await processRunner.run(
             executableURL: gitExecutableURL,
-            arguments: arguments,
+            arguments: authArguments() + arguments,
             currentDirectoryURL: workingTree,
             environment: ["GIT_TERMINAL_PROMPT": "0"]
         )
@@ -205,5 +293,14 @@ public actor GitService {
             )
         }
         return result
+    }
+}
+
+/// §9.1's `VersioningSource` conformance — lets `HistoryViewModel` drive either Git
+/// mode or Local-file mode through the same interface. `log(for:ref:in:)`'s `ref`
+/// parameter has no equivalent here, so this always scopes to `HEAD`.
+extension GitService: VersioningSource {
+    public func log(for path: String?, in workingTree: URL) async throws -> [CommitLogEntry] {
+        try await log(for: path, ref: nil, in: workingTree)
     }
 }

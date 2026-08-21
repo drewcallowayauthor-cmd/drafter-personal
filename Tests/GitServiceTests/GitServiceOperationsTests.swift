@@ -41,6 +41,94 @@ struct GitServiceOperationsTests {
         #expect(invocations.first?.arguments == ["fetch", "origin"])
     }
 
+    @Test("clone runs git clone <url> <destination> from the destination's parent directory")
+    func cloneRunsGitClone() async throws {
+        let runner = MockProcessRunner()
+        let service = GitService(processRunner: runner)
+        let destination = URL(fileURLWithPath: "/tmp/projects/the-last-shift")
+
+        try await service.clone(url: "https://github.com/josiah/the-last-shift.git", to: destination)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["clone", "https://github.com/josiah/the-last-shift.git", destination.path])
+        #expect(invocations.first?.currentDirectoryURL == destination.deletingLastPathComponent())
+    }
+
+    @Test("with an authToken set, network commands carry an http.extraHeader Basic auth token")
+    func authTokenAddsExtraHeader() async throws {
+        let runner = MockProcessRunner()
+        let service = GitService(processRunner: runner, authToken: "ghp_abc123")
+
+        try await service.fetch(in: workingTree)
+
+        let expectedCredentials = Data("x-access-token:ghp_abc123".utf8).base64EncodedString()
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == [
+            "-c", "http.extraHeader=Authorization: Basic \(expectedCredentials)", "fetch", "origin"
+        ])
+    }
+
+    @Test("with no authToken, no extra header is added")
+    func noAuthTokenAddsNoExtraHeader() async throws {
+        let runner = MockProcessRunner()
+        let service = GitService(processRunner: runner)
+
+        try await service.fetch(in: workingTree)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["fetch", "origin"])
+    }
+
+    @Test("addRemote runs remote add with the given name and url")
+    func addRemoteRunsRemoteAdd() async throws {
+        let runner = MockProcessRunner()
+        let service = GitService(processRunner: runner)
+
+        try await service.addRemote(url: "https://github.com/josiah/the-last-shift.git", in: workingTree)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["remote", "add", "origin", "https://github.com/josiah/the-last-shift.git"])
+    }
+
+    @Test("pushSettingUpstream runs push -u origin main")
+    func pushSettingUpstreamRunsPushDashU() async throws {
+        let runner = MockProcessRunner()
+        let service = GitService(processRunner: runner)
+
+        try await service.pushSettingUpstream(in: workingTree)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["push", "-u", "origin", "main"])
+    }
+
+    @Test("remoteURL returns the trimmed url when the remote is configured")
+    func remoteURLReturnsTrimmedURL() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "https://github.com/josiah/book.git\n", standardError: ""),
+            forExecutableNamed: "git"
+        )
+        let service = GitService(processRunner: runner)
+
+        let url = try await service.remoteURL(in: workingTree)
+
+        #expect(url == "https://github.com/josiah/book.git")
+    }
+
+    @Test("remoteURL returns nil rather than throwing when no such remote exists")
+    func remoteURLReturnsNilWhenMissing() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(
+            ProcessResult(exitCode: 2, standardOutput: "", standardError: "fatal: No such remote 'origin'"),
+            forExecutableNamed: "git"
+        )
+        let service = GitService(processRunner: runner)
+
+        let url = try await service.remoteURL(in: workingTree)
+
+        #expect(url == nil)
+    }
+
     @Test("fastForwardMerge runs merge --ff-only")
     func fastForwardMergeRunsFFOnly() async throws {
         let runner = MockProcessRunner()

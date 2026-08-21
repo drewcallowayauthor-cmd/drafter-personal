@@ -1,3 +1,4 @@
+import CredentialStore
 import DrafterCore
 import DrafterTestSupport
 import Foundation
@@ -7,6 +8,64 @@ import Testing
 
 @Suite("RepositoryCoordinator")
 struct RepositoryCoordinatorTests {
+    @Test("connectToGitHub creates the repo, adds the remote, sets identity to the account email, and pushes -u")
+    func connectToGitHubWiresUpRemoteAndIdentity() async throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let runner = MockProcessRunner()
+        let requester = MockHTTPRequester()
+        await requester.script(statusCode: 201, jsonObject: [
+            "name": "the-last-shift",
+            "full_name": "josiah/the-last-shift",
+            "clone_url": "https://github.com/josiah/the-last-shift.git",
+            "html_url": "https://github.com/josiah/the-last-shift",
+            "private": true
+        ])
+        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": "josiah@example.com"])
+        let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
+
+        let repository = try await coordinator.connectToGitHub(
+            repositoryName: "the-last-shift",
+            authorName: "Tim Fleet",
+            apiClient: GitHubAPIClient(requester: requester),
+            token: "ghp_abc"
+        )
+
+        #expect(repository.htmlURL == URL(string: "https://github.com/josiah/the-last-shift"))
+        let invocations = await runner.invocations
+        #expect(invocations[0].arguments == ["remote", "add", "origin", "https://github.com/josiah/the-last-shift.git"])
+        #expect(invocations[1].arguments == ["config", "user.name", "Tim Fleet"])
+        #expect(invocations[2].arguments == ["config", "user.email", "josiah@example.com"])
+        #expect(invocations[3].arguments == ["push", "-u", "origin", "main"])
+    }
+
+    @Test("connectToGitHub falls back to the noreply email when the account has none public")
+    func connectToGitHubFallsBackToNoreplyEmail() async throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let runner = MockProcessRunner()
+        let requester = MockHTTPRequester()
+        await requester.script(statusCode: 201, jsonObject: [
+            "name": "the-last-shift",
+            "full_name": "josiah/the-last-shift",
+            "clone_url": "https://github.com/josiah/the-last-shift.git",
+            "html_url": "https://github.com/josiah/the-last-shift",
+            "private": true
+        ])
+        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": NSNull()])
+        let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
+
+        _ = try await coordinator.connectToGitHub(
+            repositoryName: "the-last-shift",
+            authorName: "Tim Fleet",
+            apiClient: GitHubAPIClient(requester: requester),
+            token: "ghp_abc"
+        )
+
+        let invocations = await runner.invocations
+        #expect(invocations[2].arguments == ["config", "user.email", "josiah@users.noreply.github.com"])
+    }
+
     @Test("ensureInitialized runs init and configures identity when .git is missing")
     func ensureInitializedInitsWhenMissing() async throws {
         let root = try makeTempDirectory()

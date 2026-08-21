@@ -1,12 +1,14 @@
+import CredentialStore
 import DrafterCore
 import Foundation
 import GitService
 
-/// M2's local-only slice of §7's `SyncCoordinator` — repo init and commit triggers, no
-/// remote yet (that's M3). One instance per open project; owns the working tree's
+/// §7's `SyncCoordinator` role, minus the ongoing fetch/merge/push loop (that's
+/// `GitService.SyncCoordinator`): repo init, commit triggers, and connecting a fresh
+/// local repo to GitHub (§5.2). One instance per open project; owns the working tree's
 /// relationship with git so the rest of the app just calls `commit(trigger:)` and
 /// doesn't think about staging, empty commits, or identity.
-public actor RepositoryCoordinator {
+public actor RepositoryCoordinator: CheckpointCoordinating {
     private let gitService: GitService
     private let workingTree: URL
     private let machineName: String
@@ -42,6 +44,29 @@ public actor RepositoryCoordinator {
         try await gitService.stageAll(in: workingTree)
         try await gitService.commit(message: CommitMessageBuilder.message(for: trigger, machine: machineName), in: workingTree)
         return true
+    }
+
+    /// §5.2's new-project connection sequence: create the private repo, point `origin`
+    /// at it, replace the placeholder git identity with the real GitHub account email,
+    /// then push. Callers are expected to catch failures here and fall back to the
+    /// "Not synced" local-only state (§5.2) — a taken name, no token, or being offline
+    /// must never block project creation itself.
+    @discardableResult
+    public func connectToGitHub(
+        repositoryName: String,
+        authorName: String,
+        apiClient: GitHubAPIClient,
+        token: String
+    ) async throws -> GitHubRepository {
+        let repository = try await apiClient.createRepository(name: repositoryName, token: token)
+        try await gitService.addRemote(url: repository.cloneURL.absoluteString, in: workingTree)
+
+        let user = try await apiClient.currentUser(token: token)
+        let email = user.email ?? "\(user.login)@users.noreply.github.com"
+        try await gitService.configureIdentity(name: authorName, email: email, in: workingTree)
+
+        try await gitService.pushSettingUpstream(in: workingTree)
+        return repository
     }
 
     public static func defaultMachineName() -> String {

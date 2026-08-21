@@ -1,5 +1,5 @@
 import Testing
-@testable import GitService
+@testable import DrafterCore
 
 @Suite("CommitMessageBuilder")
 struct CommitMessageBuilderTests {

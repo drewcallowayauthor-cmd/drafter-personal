@@ -47,4 +47,29 @@ struct SyncStateMachineTests {
         try await machine.transition(to: .idle)
         #expect(await machine.state == .idle)
     }
+
+    @Test("authenticationRequired can be entered from idle, retried, and returns to idle")
+    func authenticationRequiredRoundTrip() async throws {
+        let machine = SyncStateMachine()
+        try await machine.transition(to: .authenticationRequired)
+        // Retrying while the token is still bad lands back in the same state.
+        try await machine.transition(to: .fetching)
+        try await machine.transition(to: .authenticationRequired)
+        // Fixing the token and retrying succeeds.
+        try await machine.transition(to: .fetching)
+        try await machine.transition(to: .idle)
+        #expect(await machine.state == .idle)
+    }
+
+    @Test("authenticationRequired can be entered from fetching, merging, and pushing")
+    func authenticationRequiredFromEveryNetworkState() async throws {
+        for path: [SyncState] in [[.fetching], [.fetching, .merging], [.fetching, .pushing]] {
+            let machine = SyncStateMachine()
+            for state in path {
+                try await machine.transition(to: state)
+            }
+            try await machine.transition(to: .authenticationRequired)
+            #expect(await machine.state == .authenticationRequired)
+        }
+    }
 }

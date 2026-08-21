@@ -58,6 +58,18 @@ struct GitServiceRepositoryTests {
         #expect(invocations.first?.arguments == ["log", logFormat])
     }
 
+    @Test("log with a ref scopes to that branch, ahead of the format arg")
+    func logWithRefScopesToBranch() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        let service = GitService(processRunner: runner)
+
+        _ = try await service.log(ref: "origin/main", in: workingTree)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["log", "origin/main", logFormat])
+    }
+
     @Test("log parses multiple commits into ordered entries, including the machine trailer")
     func logParsesMultipleCommits() async throws {
         let runner = MockProcessRunner()
@@ -114,6 +126,33 @@ struct GitServiceRepositoryTests {
         let entries = try await service.log(in: workingTree)
 
         #expect(entries.isEmpty)
+    }
+
+    @Test("lastCommit runs log -1 scoped to the ref and path, and parses the single entry")
+    func lastCommitRunsLogDashOne() async throws {
+        let runner = MockProcessRunner()
+        let output = "abc123\u{1F}1755000000\u{1F}checkpoint\u{1F}Josiah Massari\u{1F}Josiah-Mac-Studio\n"
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        let service = GitService(processRunner: runner)
+
+        let entry = try await service.lastCommit(for: "Manuscript/scene.md", at: "MERGE_HEAD", in: workingTree)
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments.contains("MERGE_HEAD") == true)
+        #expect(invocations.first?.arguments.suffix(2) == ["--", "Manuscript/scene.md"])
+        #expect(entry?.sha == "abc123")
+        #expect(entry?.machineName == "Josiah-Mac-Studio")
+    }
+
+    @Test("lastCommit returns nil when the path has no history reachable from the ref")
+    func lastCommitReturnsNilWhenNoHistory() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        let service = GitService(processRunner: runner)
+
+        let entry = try await service.lastCommit(for: "Manuscript/scene.md", at: "HEAD", in: workingTree)
+
+        #expect(entry == nil)
     }
 
     @Test("show runs git show <sha>:<path> and returns its output")
