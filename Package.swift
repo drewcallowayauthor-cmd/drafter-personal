@@ -11,8 +11,9 @@ let package = Package(
         .library(name: "DrafterCore", targets: ["DrafterCore"]),
         .library(name: "DrafterTestSupport", targets: ["DrafterTestSupport"]),
         .library(name: "GitService", targets: ["GitService"]),
+        .library(name: "CredentialStore", targets: ["CredentialStore"]),
         .library(name: "CompileService", targets: ["CompileService"]),
-        .library(name: "BackupService", targets: ["BackupService"]),
+        .library(name: "SnapshotService", targets: ["SnapshotService"]),
         .library(name: "ProjectStore", targets: ["ProjectStore"])
     ],
     targets: [
@@ -29,7 +30,7 @@ let package = Package(
         // MARK: - Test support (fakes shared across test targets; not shipped in the app)
         .target(
             name: "DrafterTestSupport",
-            dependencies: ["DrafterCore"],
+            dependencies: ["DrafterCore", "CredentialStore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
 
@@ -44,6 +45,17 @@ let package = Package(
             dependencies: ["GitService", "DrafterTestSupport"]
         ),
 
+        // MARK: - CredentialStore (Keychain access, GitHub API for repo create/list)
+        .target(
+            name: "CredentialStore",
+            dependencies: ["DrafterCore"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "CredentialStoreTests",
+            dependencies: ["CredentialStore", "DrafterTestSupport"]
+        ),
+
         // MARK: - CompileService (assembly -> pandoc -> EPUB / typst -> PDF)
         .target(
             name: "CompileService",
@@ -55,15 +67,16 @@ let package = Package(
             dependencies: ["CompileService", "DrafterTestSupport"]
         ),
 
-        // MARK: - BackupService (Box mirror + git bundle scheduling)
+        // MARK: - SnapshotService (Local-file mode's version control, §7: whole-tree
+        // snapshots under History/, retention pruning, cloud-provider detection)
         .target(
-            name: "BackupService",
-            dependencies: ["DrafterCore", "GitService"],
+            name: "SnapshotService",
+            dependencies: ["DrafterCore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
-            name: "BackupServiceTests",
-            dependencies: ["BackupService"]
+            name: "SnapshotServiceTests",
+            dependencies: ["SnapshotService", "DrafterTestSupport"]
         ),
 
         // MARK: - ProjectStore (owns the open project; file I/O; FSEvents; in-memory tree)
@@ -80,7 +93,8 @@ let package = Package(
         // MARK: - App (SwiftUI shell; wires the services together)
         .executableTarget(
             name: "DrafterApp",
-            dependencies: ["DrafterCore", "GitService", "CompileService", "BackupService", "ProjectStore"],
+            dependencies: ["DrafterCore", "GitService", "CredentialStore", "CompileService", "SnapshotService", "ProjectStore"],
+            resources: [.copy("Resources/Fonts")],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
