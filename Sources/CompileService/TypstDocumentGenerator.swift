@@ -15,15 +15,18 @@ import ProjectStore
 /// of the import, avoiding any external file path substitution entirely. Re-verified
 /// end to end against a path deliberately containing an underscore.
 ///
-/// Scope note: implements mirrored margins/gutter, chapter openers starting on recto
-/// with a drop, verso/recto running heads, and continuous page numbering. §9.4 also
-/// specifies front matter using roman numerals with the body restarting at arabic 1;
-/// that needs a machine-readable marker at the front-matter/body boundary in the
-/// assembled markdown (via a raw ```{=typst}``` block) that this generator alone can't
-/// provide, so v1 uses one continuous numbering scheme — flagged here rather than
-/// silently dropped, the same way §9.3's epub.css is flagged as needing tuning.
+/// Scope note: implements mirrored margins/gutter, chapter openers with a drop,
+/// verso/recto running heads, and continuous page numbering. §9.4 also specifies front
+/// matter using roman numerals with the body restarting at arabic 1; that needs a
+/// machine-readable marker at the front-matter/body boundary in the assembled markdown
+/// (via a raw ```{=typst}``` block) that this generator alone can't provide, so v1 uses
+/// one continuous numbering scheme — flagged here rather than silently dropped.
 /// Widow/orphan suppression isn't configured explicitly — Typst's own paragraph
 /// line-breaking already avoids single leftover lines by default.
+///
+/// Margins, body typography, chapter-opener geometry, and the scene-break glyph are
+/// tuned against a real compiled print PDF (a Scrivener export of a finished novel)
+/// rather than guessed — see the comments at each constant below for the measurements.
 public enum TypstDocumentGenerator {
     /// The exact marker pandoc's default template (as of pandoc 3.10.2) uses to import
     /// `conf` — replaced wholesale with our inlined function definition.
@@ -48,7 +51,13 @@ public enum TypstDocumentGenerator {
     }
 
     private static func confFunction(trimSize: TrimSize, gutterInches: Double, print: ProjectMetadata.Print) -> String {
-        let outsideMargin = 0.625
+        // Outside/top/bottom measured off a real compiled print PDF (Scrivener export
+        // of a finished novel) rather than assumed: 0.625in all around read visibly
+        // tighter at the top and looser at the bottom than that reference, which runs
+        // ~0.46in outside, ~0.8in top, ~1.0in bottom.
+        let outsideMargin = 0.5
+        let topMargin = 0.8
+        let bottomMargin = 1.0
         let insideMargin = outsideMargin + gutterInches
         let openOnRecto = print.chapterOpensOn.lowercased() == "recto"
 
@@ -85,7 +94,7 @@ public enum TypstDocumentGenerator {
               set page(
                 width: \(trimSize.widthInches)in,
                 height: \(trimSize.heightInches)in,
-                margin: (inside: \(insideMargin)in, outside: \(outsideMargin)in, top: \(outsideMargin)in, bottom: \(outsideMargin)in),
+                margin: (inside: \(insideMargin)in, outside: \(outsideMargin)in, top: \(topMargin)in, bottom: \(bottomMargin)in),
                 numbering: "1",
                 header: context {
                   let pageNum = counter(page).get().at(0)
@@ -110,8 +119,8 @@ public enum TypstDocumentGenerator {
               show heading.where(level: 1): it => {
                 \(openOnRecto ? "pagebreak(to: \"odd\")" : "pagebreak()")
                 v(30%)
-                align(center)[#text(size: 1.4em, weight: "regular")[#it.body]]
-                v(2em)
+                align(center)[#text(size: 1.7em, weight: "regular")[#it.body]]
+                v(3em)
               }
 
               doc
@@ -127,7 +136,7 @@ public enum TypstDocumentGenerator {
     public static func applySceneBreakOrnament(to typstSource: String) -> String {
         typstSource.replacingOccurrences(
             of: "#divider()",
-            with: "#align(center)[#v(1.5em)#text(size: 0.9em, tracking: 0.3em)[• • •]#v(1.5em)]"
+            with: "#align(center)[* * *]"
         )
     }
 }

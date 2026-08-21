@@ -22,6 +22,11 @@ struct CompileOutcome: Equatable {
 /// §9.6's compile sheet. Front/back matter toggles, chapter title format, and scene
 /// separator default from the project's saved compile settings but are export-run
 /// scoped here, not written back to project.json; only "Project Settings…" does that.
+///
+/// Built without `NocturneSheet` (unlike the app's other sheets) because the word-count
+/// estimate row is spec'd to stay pinned below the scrollable body rather than scroll
+/// away with it — the same reason the pre-redesign version kept `statusBanner` outside
+/// the `Form`.
 struct CompileSheet: View {
     let metadata: ProjectMetadata
     let binderTree: BinderTree
@@ -77,80 +82,37 @@ struct CompileSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Form {
-                Section("Target") {
-                    Picker("Target", selection: $target) {
-                        ForEach(CompileTarget.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                }
-
-                Section("Output Location") {
-                    HStack {
-                        Text(outputDirectory.path)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Button("Choose…") { isOutputPickerPresented = true }
+            header
+            Rectangle().fill(Theme.Color.divider).frame(height: 1)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    targetPicker
+                    outputLocationRow
+                    frontBackMatterToggles
+                    chapterFields
+                    if target == .printPDF {
+                        printFields
                     }
                 }
-
-                Section("Front & Back Matter") {
-                    Toggle("Include Front Matter", isOn: $includeFrontMatter)
-                    Toggle("Include Back Matter", isOn: $includeBackMatter)
-                }
-
-                Section("Chapters") {
-                    TextField("Chapter Title Format", text: $chapterTitleFormat)
-                    Text("Preview: \(firstHeadingPreview)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("Scene Separator", text: $sceneSeparator)
-                }
-
-                if target == .printPDF {
-                    Section("Print") {
-                        Picker("Trim Size", selection: $trimSize) {
-                            ForEach(TrimSize.allCases, id: \.self) { size in
-                                Text("\(size.widthInches, specifier: "%g")\" × \(size.heightInches, specifier: "%g")\"")
-                                    .tag(size)
-                            }
-                        }
-                        TextField("Body Font", text: $bodyFont)
-                        HStack {
-                            Text("Point Size")
-                            Spacer()
-                            TextField("", value: $bodyPointSize, format: .number)
-                                .frame(width: 60)
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
-                }
-
-                Section("Estimate") {
-                    Text("\(wordCountEstimate) words")
-                }
+                .padding(18)
             }
-            .formStyle(.grouped)
-
-            // Deliberately outside the scrollable Form: a success/failure/in-progress
-            // result added as just another trailing Section was easy to miss without
-            // scrolling, especially since a small manuscript compiles almost instantly
-            // and gave no visible cue that anything had happened at all.
+            wordCountRow
             statusBanner
-
-            Divider()
-            HStack {
+            Rectangle().fill(Theme.Color.divider).frame(height: 1)
+            HStack(spacing: 8) {
                 Spacer()
                 Button("Cancel") { onCancel() }
+                    .buttonStyle(.nocturneSecondary)
                     .keyboardShortcut(.cancelAction)
                 Button("Compile") { Task { await compile() } }
+                    .buttonStyle(.nocturnePrimary)
                     .keyboardShortcut(.defaultAction)
                     .disabled(isCompiling)
             }
-            .padding()
+            .padding(16)
         }
+        .frame(width: 520, height: 600)
+        .background(Theme.Color.surface)
         .fileImporter(isPresented: $isOutputPickerPresented, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result {
                 outputDirectory = url
@@ -161,7 +123,115 @@ struct CompileSheet: View {
                 try? WordCountAggregator.aggregate(binderTree: binderTree) { try String(contentsOf: $0, encoding: .utf8) }
             )?.project ?? 0
         }
-        .frame(minWidth: 480, idealWidth: 520, minHeight: 560, idealHeight: 640)
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Compile")
+                .font(Theme.Font.heading(17))
+                .foregroundStyle(Theme.Color.text)
+            Spacer()
+            Button(action: onCancel) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .buttonStyle(.nocturneIcon)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+    }
+
+    private var targetPicker: some View {
+        NocturneSegmentedControl(selection: $target, options: CompileTarget.allCases) { target in
+            Text(target.rawValue)
+        }
+    }
+
+    private var outputLocationRow: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Output Location")
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Theme.Color.text.opacity(0.7))
+            HStack {
+                Text(outputDirectory.path)
+                    .font(Theme.Font.body(13))
+                    .foregroundStyle(Theme.Color.textMuted)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer()
+                Button("Choose…") { isOutputPickerPresented = true }
+                    .buttonStyle(.nocturneSecondary)
+            }
+        }
+    }
+
+    private var frontBackMatterToggles: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Include Front Matter", isOn: $includeFrontMatter)
+            Toggle("Include Back Matter", isOn: $includeBackMatter)
+        }
+        .tint(Theme.Color.accent)
+        .foregroundStyle(Theme.Color.text)
+        .font(Theme.Font.body(14))
+    }
+
+    private var chapterFields: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            NocturneField(label: "Chapter Title Format", text: $chapterTitleFormat)
+            Text("Preview: \(firstHeadingPreview)")
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Theme.Color.textMuted)
+            NocturneField(label: "Scene Separator", text: $sceneSeparator)
+        }
+    }
+
+    private var printFields: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Trim Size")
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Theme.Color.text.opacity(0.7))
+            NocturneSegmentedControl(selection: $trimSize, options: TrimSize.allCases) { size in
+                Text("\(size.widthInches, specifier: "%g")\" × \(size.heightInches, specifier: "%g")\"")
+            }
+            NocturneDropdown(label: "Body Font", selection: $bodyFont, options: fontOptions) { $0 }
+            NocturneDropdown(label: "Point Size", selection: $bodyPointSize, options: pointSizeOptions) {
+                String(format: "%g", $0)
+            }
+        }
+    }
+
+    /// KDP's recommended body-text serif fonts (Palatino is also `Print`'s own
+    /// default, §4.5), kept to whichever are actually installed on this Mac — except
+    /// EB Garamond, which the app bundles itself (`BundledFonts`) and so is always
+    /// available. Centaur and Hightower Text are commercial and can't be bundled;
+    /// they only appear here if already installed. The project's saved font is
+    /// always included even if it's since become unavailable, so switching targets
+    /// never silently discards it.
+    private var fontOptions: [String] {
+        let installed = Set(NSFontManager.shared.availableFontFamilies)
+        let curated = ["Palatino", "Centaur", "Hightower Text"].filter { installed.contains($0) }
+        var options = curated + [BundledFonts.ebGaramondFamily]
+        if !options.contains(bodyFont) { options.append(bodyFont) }
+        return options.sorted()
+    }
+
+    private var pointSizeOptions: [Double] {
+        let curated: [Double] = [9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14]
+        return curated.contains(bodyPointSize) ? curated : (curated + [bodyPointSize]).sorted()
+    }
+
+    /// Deliberately outside the scrollable body: a small manuscript compiles almost
+    /// instantly, and burying the estimate in a trailing scrollable section gave no
+    /// visible cue anything had happened at all.
+    private var wordCountRow: some View {
+        HStack {
+            Text("\(wordCountEstimate) words")
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Theme.Color.textMuted)
+            Spacer()
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
     }
 
     @ViewBuilder
@@ -170,28 +240,34 @@ struct CompileSheet: View {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
                 Text("Compiling…")
+                    .font(Theme.Font.body(13))
+                    .foregroundStyle(Theme.Color.text)
                 Spacer()
             }
-            .padding()
-            .background(Color.secondary.opacity(0.1))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(Theme.Color.accent.opacity(0.12))
         } else if let compileError {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-                    Text("Compile Failed").bold()
+                    Text("Compile Failed").bold().foregroundStyle(Theme.Color.text)
                 }
                 DisclosureGroup("Details") {
                     ScrollView {
                         Text(compileError)
                             .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(Theme.Color.textMuted)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .frame(maxHeight: 140)
                 }
+                .foregroundStyle(Theme.Color.text)
             }
-            .padding()
-            .background(Color.red.opacity(0.1))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(.red.opacity(0.12))
         }
     }
 
@@ -245,7 +321,8 @@ struct CompileSheet: View {
                     outputDirectory: outputDirectory,
                     pandocExecutableURL: pandocURL,
                     typstExecutableURL: typstURL,
-                    trimSize: trimSize
+                    trimSize: trimSize,
+                    fontDirectoryURLs: BundledFonts.fontsDirectoryURL.map { [$0] } ?? []
                 )
                 outcome = CompileOutcome(outputURL: result.outputURL)
 

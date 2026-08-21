@@ -123,6 +123,72 @@ struct EPUBExportCoordinatorTests {
         #expect(assembledContent?.contains("# About the Author") == true)
     }
 
+    @Test("splices a Contents page in right after Copyright, with links to every section")
+    func splicesContentsPageAfterCopyright() async throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+
+        let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
+        let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")
+        let dedicationURL = root.appendingPathComponent("FrontMatter/03 Dedication.md")
+        let sceneURL = root.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
+        let chapter = ChapterNode(
+            url: root.appendingPathComponent("Manuscript/01 Arrival"),
+            displayName: "Arrival",
+            scenes: [SceneNode(url: sceneURL, displayName: "Triage")],
+            isLooseFile: false
+        )
+        let tree = BinderTree(
+            manuscript: [chapter],
+            frontMatter: [
+                SceneNode(url: titlePageURL, displayName: "Title Page"),
+                SceneNode(url: copyrightURL, displayName: "Copyright"),
+                SceneNode(url: dedicationURL, displayName: "Dedication")
+            ],
+            backMatter: [],
+            notes: []
+        )
+        let contents: [URL: String] = [
+            titlePageURL: FrontBackMatterTemplate.titlePage.content(for: metadata),
+            copyrightURL: FrontBackMatterTemplate.copyright.content(for: metadata),
+            dedicationURL: FrontBackMatterTemplate.dedication.content(for: metadata),
+            sceneURL: "---\nstatus: draft\ncompile: true\n---\n\nThe board was wrong."
+        ]
+
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        let writer = MockAtomicFileWriter()
+        let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
+
+        _ = try await coordinator.export(
+            metadata: metadata,
+            binderTree: tree,
+            workingTree: root,
+            outputDirectory: root,
+            pandocExecutableURL: pandocURL,
+            cssURL: nil,
+            read: { contents[$0]! }
+        )
+
+        let assembled = try #require(
+            writer.writes.first { $0.url.lastPathComponent == "assembled.md" }
+                .flatMap { String(data: $0.data, encoding: .utf8) }
+        )
+
+        #expect(assembled.contains("[Title Page](#title-page)"))
+        #expect(assembled.contains("[Copyright](#copyright)"))
+        #expect(assembled.contains("[Dedication](#dedication)"))
+        #expect(assembled.contains("[Chapter 1](#chapter-1)"))
+
+        // Contents itself sits after Copyright's body and before Dedication's.
+        let copyrightBodyRange = try #require(assembled.range(of: "All rights reserved"))
+        let contentsRange = try #require(assembled.range(of: "# Contents"))
+        let dedicationRange = try #require(assembled.range(of: "# Dedication"))
+        #expect(copyrightBodyRange.upperBound < contentsRange.lowerBound)
+        #expect(contentsRange.upperBound < dedicationRange.lowerBound)
+    }
+
     private func makeTempDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

@@ -35,4 +35,23 @@ struct ChapterHeadingFormatterTests {
         let heading = ChapterHeadingFormatter.heading(format: "{n}. {title}", index: 2, title: "The First Hour")
         #expect(heading == "2. The First Hour")
     }
+
+    @Test("Prologue and Epilogue emit their title as-is, ignoring the numbered format")
+    func prologueAndEpilogueIgnoreFormat() {
+        #expect(ChapterHeadingFormatter.heading(format: "Chapter {n}", index: 1, title: "Prologue") == "Prologue")
+        #expect(ChapterHeadingFormatter.heading(format: "Chapter {n}", index: 7, title: "Epilogue") == "Epilogue")
+    }
+
+    @Test("Prologue/Epilogue detection is case-insensitive and ignores surrounding whitespace")
+    func prologueDetectionIsCaseInsensitive() {
+        #expect(ChapterHeadingFormatter.isUnnumbered(title: "prologue"))
+        #expect(ChapterHeadingFormatter.isUnnumbered(title: "EPILOGUE"))
+        #expect(ChapterHeadingFormatter.isUnnumbered(title: "  Prologue  "))
+        #expect(ChapterHeadingFormatter.isUnnumbered(title: "Prologue: The Board") == false)
+    }
+
+    @Test("'none' still suppresses a Prologue/Epilogue heading")
+    func noneFormatSuppressesPrologueToo() {
+        #expect(ChapterHeadingFormatter.heading(format: "none", index: 1, title: "Prologue") == nil)
+    }
 }

@@ -20,9 +20,9 @@ struct FrontBackMatterServiceTests {
         )
 
         #expect(created.count == 6)
-        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("FrontMatter/02 Title Page.md").path))
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("FrontMatter/01 Title Page.md").path))
         #expect(
-            FileManager.default.fileExists(atPath: root.appendingPathComponent("BackMatter/01 About the Author.md").path)
+            FileManager.default.fileExists(atPath: root.appendingPathComponent("BackMatter/03 About the Author.md").path)
         )
     }
 
@@ -30,7 +30,7 @@ struct FrontBackMatterServiceTests {
     func generateMissingLeavesExistingFileUntouched() throws {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let titlePageURL = root.appendingPathComponent("FrontMatter/02 Title Page.md")
+        let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         try FileManager.default.createDirectory(at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("Hand-edited content.".utf8).write(to: titlePageURL)
 
@@ -48,7 +48,7 @@ struct FrontBackMatterServiceTests {
     func regenerateOverwritesFile() throws {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let titlePageURL = root.appendingPathComponent("FrontMatter/02 Title Page.md")
+        let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         try FileManager.default.createDirectory(at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("Stale hand-edited content.".utf8).write(to: titlePageURL)
 

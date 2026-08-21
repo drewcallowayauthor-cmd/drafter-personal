@@ -34,6 +34,9 @@ final class PrintExportCoordinator {
         pandocExecutableURL: URL,
         typstExecutableURL: URL,
         trimSize: TrimSize,
+        /// Extra directories typst should search for fonts — how a bundled font
+        /// (§ `BundledFonts`) is found without being installed on the Mac.
+        fontDirectoryURLs: [URL] = [],
         read: @escaping SceneReader = { try String(contentsOf: $0, encoding: .utf8) },
         // Both injectable so orchestration is testable without pandoc/typst actually
         // touching disk: readGeneratedTypst reads pandoc's own output file (not
@@ -105,6 +108,7 @@ final class PrintExportCoordinator {
             let typstResult = try await typstService.compile(
                 inputPath: mainTypstURL.path,
                 outputPath: outputURL.path,
+                fontPaths: fontDirectoryURLs.map(\.path),
                 in: buildDirectory
             )
             guard typstResult.succeeded else {

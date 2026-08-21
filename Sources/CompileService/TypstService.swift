@@ -22,8 +22,16 @@ public actor TypstService {
         )
     }
 
-    /// `typst compile <input> <output>` (§9.4).
-    public func compile(inputPath: String, outputPath: String, in workingDirectory: URL) async throws -> ProcessResult {
-        try await run(arguments: ["compile", inputPath, outputPath], in: workingDirectory)
+    /// `typst compile <input> <output>` (§9.4). `fontPaths` adds `--font-path`
+    /// directories typst searches before falling back to system fonts — how a
+    /// font bundled with the app (rather than installed on the Mac) gets found.
+    public func compile(
+        inputPath: String,
+        outputPath: String,
+        fontPaths: [String] = [],
+        in workingDirectory: URL
+    ) async throws -> ProcessResult {
+        let fontArguments = fontPaths.flatMap { ["--font-path", $0] }
+        return try await run(arguments: ["compile"] + fontArguments + [inputPath, outputPath], in: workingDirectory)
     }
 }

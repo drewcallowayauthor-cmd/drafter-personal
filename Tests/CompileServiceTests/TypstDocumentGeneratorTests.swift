@@ -64,10 +64,10 @@ struct TypstDocumentGeneratorTests {
             gutterInches: 0.5,
             print: ProjectMetadata.Print()
         )
-        #expect(result.contains("inside: 1.125in"))
-        #expect(result.contains("outside: 0.625in"))
-        #expect(result.contains("top: 0.625in"))
-        #expect(result.contains("bottom: 0.625in"))
+        #expect(result.contains("inside: 1.0in"))
+        #expect(result.contains("outside: 0.5in"))
+        #expect(result.contains("top: 0.8in"))
+        #expect(result.contains("bottom: 1.0in"))
     }
 
     @Test("embeds the body font, point size, and leading from print settings")
@@ -123,7 +123,7 @@ struct TypstDocumentGeneratorTests {
         let result = TypstDocumentGenerator.applySceneBreakOrnament(to: source)
 
         #expect(result.contains("#divider()") == false)
-        #expect(result.contains("• • •"))
+        #expect(result.contains("* * *"))
         #expect(result.contains("Some text."))
         #expect(result.contains("More text."))
     }

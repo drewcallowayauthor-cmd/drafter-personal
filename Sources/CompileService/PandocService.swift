@@ -37,7 +37,13 @@ public actor PandocService {
             assembledMarkdownPath,
             "--from=markdown+smart",
             "--to=epub3",
-            "--metadata-file=\(metadataYAMLPath)"
+            "--metadata-file=\(metadataYAMLPath)",
+            // A CLI flag, not a metadata variable (verified against a real pandoc
+            // build — `titlepage: false` in the metadata file is silently ignored;
+            // this is the only thing that actually suppresses pandoc's own
+            // auto-generated title page, which would otherwise sit right alongside
+            // our own hand-authored, user-editable Title Page front-matter file).
+            "--epub-title-page=false"
         ]
         if let coverImagePath {
             arguments.append("--epub-cover-image=\(coverImagePath)")
@@ -45,7 +51,15 @@ public actor PandocService {
         if let cssPath {
             arguments.append("--css=\(cssPath)")
         }
-        arguments += ["--toc", "--toc-depth=1", "--split-level=1", "-o", outputPath]
+        // No `--toc`: that flag doesn't just build the EPUB3 nav document (pandoc
+        // writes that unconditionally, spec-required) — it also inserts it as a
+        // *linear* page early in the reading order, which duplicated our own
+        // hand-authored Contents page (§ EPUBTableOfContentsGenerator). Verified
+        // against a real pandoc build: without `--toc`, `nav.xhtml` is still written
+        // and still usable by a reading app's own built-in TOC button, just not
+        // forced into the flip-through page order. `--split-level=1` doesn't depend
+        // on `--toc` — verified that too.
+        arguments += ["--split-level=1", "-o", outputPath]
 
         return try await run(arguments: arguments, in: workingDirectory)
     }

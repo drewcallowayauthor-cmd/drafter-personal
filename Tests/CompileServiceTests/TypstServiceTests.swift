@@ -22,6 +22,23 @@ struct TypstServiceTests {
         #expect(invocations.first?.currentDirectoryURL == workingDirectory)
     }
 
+    @Test("compile adds a --font-path argument per font directory, before the input/output paths")
+    func compileAddsFontPathArguments() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst")
+        let service = TypstService(processRunner: runner, typstExecutableURL: typstURL)
+
+        _ = try await service.compile(
+            inputPath: "main.typ",
+            outputPath: "../Book.pdf",
+            fontPaths: ["/App/Fonts/EBGaramond"],
+            in: workingDirectory
+        )
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["compile", "--font-path", "/App/Fonts/EBGaramond", "main.typ", "../Book.pdf"])
+    }
+
     @Test("a non-zero exit returns the result with stderr intact rather than throwing")
     func nonZeroExitReturnsResultNotThrow() async throws {
         let runner = MockProcessRunner()

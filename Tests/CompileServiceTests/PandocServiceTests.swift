@@ -30,9 +30,10 @@ struct PandocServiceTests {
             "--from=markdown+smart",
             "--to=epub3",
             "--metadata-file=meta.yaml",
+            "--epub-title-page=false",
             "--epub-cover-image=Resources/cover.jpg",
             "--css=epub.css",
-            "--toc", "--toc-depth=1", "--split-level=1",
+            "--split-level=1",
             "-o", "../The Last Shift.epub"
         ])
         #expect(invocations.first?.currentDirectoryURL == workingDirectory)
