@@ -58,23 +58,76 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         public var bodyPointSize: Double
         public var leading: Double
         public var chapterOpensOn: String
+        public var firstLineIndentEm: Double
+        public var headingFont: String
 
         /// Defaults measured off a real compiled print PDF (Scrivener export of a
         /// finished novel) rather than assumed: Palatino at 11.5pt with ~1.46em leading
-        /// (16.8pt line pitch), and chapters starting on the next page regardless of
-        /// recto/verso — that reference never forces a blank page to keep chapters odd.
+        /// (16.8pt line pitch), a ~1em first-line indent, and chapters starting on the
+        /// next page regardless of recto/verso — that reference never forces a blank
+        /// page to keep chapters odd. `headingFont` defaults to Times New Roman, that
+        /// same reference's own choice for its chapter numerals — a deliberate
+        /// contrast against the Palatino body, not a fallback.
         public init(
             trimSize: String = "5x8",
             bodyFont: String = "Palatino",
             bodyPointSize: Double = 11.5,
             leading: Double = 1.46,
-            chapterOpensOn: String = "either"
+            chapterOpensOn: String = "either",
+            firstLineIndentEm: Double = 1.0,
+            headingFont: String = "Times New Roman"
         ) {
             self.trimSize = trimSize
             self.bodyFont = bodyFont
             self.bodyPointSize = bodyPointSize
             self.leading = leading
             self.chapterOpensOn = chapterOpensOn
+            self.firstLineIndentEm = firstLineIndentEm
+            self.headingFont = headingFont
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case trimSize, bodyFont, bodyPointSize, leading, chapterOpensOn, firstLineIndentEm, headingFont
+        }
+
+        /// Hand-written so `firstLineIndentEm`/`headingFont` — added after the
+        /// original schema — default rather than failing to decode a `project.json`
+        /// written before they existed, mirroring `ProjectMetadata.init(from:)`'s own
+        /// `versionControl` precedent.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            trimSize = try container.decode(String.self, forKey: .trimSize)
+            bodyFont = try container.decode(String.self, forKey: .bodyFont)
+            bodyPointSize = try container.decode(Double.self, forKey: .bodyPointSize)
+            leading = try container.decode(Double.self, forKey: .leading)
+            chapterOpensOn = try container.decode(String.self, forKey: .chapterOpensOn)
+            firstLineIndentEm = try container.decodeIfPresent(Double.self, forKey: .firstLineIndentEm) ?? 1.0
+            headingFont = try container.decodeIfPresent(String.self, forKey: .headingFont) ?? "Times New Roman"
+        }
+    }
+
+    public struct Manuscript: Codable, Sendable, Equatable {
+        public var address: String
+        public var phone: String
+        public var email: String
+        public var agentName: String
+        public var agentAddress: String
+        public var bodyFont: String
+
+        public init(
+            address: String = "",
+            phone: String = "",
+            email: String = "",
+            agentName: String = "",
+            agentAddress: String = "",
+            bodyFont: String = "Times New Roman"
+        ) {
+            self.address = address
+            self.phone = phone
+            self.email = email
+            self.agentName = agentName
+            self.agentAddress = agentAddress
+            self.bodyFont = bodyFont
         }
     }
 
@@ -93,6 +146,7 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
     public var target: Target
     public var compile: Compile
     public var print: Print
+    public var manuscript: Manuscript
 
     public init(
         schemaVersion: Int = 2,
@@ -109,7 +163,8 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         description: String = "",
         target: Target = Target(),
         compile: Compile = Compile(),
-        print: Print = Print()
+        print: Print = Print(),
+        manuscript: Manuscript = Manuscript()
     ) {
         self.schemaVersion = schemaVersion
         self.id = id
@@ -126,11 +181,12 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         self.target = target
         self.compile = compile
         self.print = print
+        self.manuscript = manuscript
     }
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, id, title, subtitle, author, versionControl, series, copyrightYear,
-            publisher, isbn, language, description, target, compile, print
+            publisher, isbn, language, description, target, compile, print, manuscript
     }
 
     public init(from decoder: Decoder) throws {
@@ -153,5 +209,6 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         target = try container.decode(Target.self, forKey: .target)
         compile = try container.decode(Compile.self, forKey: .compile)
         print = try container.decode(Print.self, forKey: .print)
+        manuscript = try container.decodeIfPresent(Manuscript.self, forKey: .manuscript) ?? Manuscript()
     }
 }

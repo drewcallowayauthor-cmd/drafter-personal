@@ -76,8 +76,8 @@ struct PrintExportCoordinatorTests {
         let writer = MockAtomicFileWriter()
         let coordinator = PrintExportCoordinator(processRunner: runner, fileWriter: writer)
 
-        // 400 pages needs the 301-500 tier (0.625in), not the <=150 tier (0.375in)
-        // the first pass assumes — this should trigger exactly one recompile.
+        // 400 pages needs the 301-500 tier (0.5in), not the <=150 tier (0.25in) the
+        // first pass assumes — this should trigger exactly one recompile.
         let result = try await coordinator.export(
             metadata: metadata,
             binderTree: tree,
@@ -99,8 +99,8 @@ struct PrintExportCoordinatorTests {
         #expect(templateWrites.count == 2)
         let firstGutter = String(data: templateWrites[0].data, encoding: .utf8)!
         let secondGutter = String(data: templateWrites[1].data, encoding: .utf8)!
-        #expect(firstGutter.contains("inside: 0.875in"))
-        #expect(secondGutter.contains("inside: 1.125in"))
+        #expect(firstGutter.contains("inside: 0.75in"))
+        #expect(secondGutter.contains("inside: 1.0in"))
     }
 
     @Test("a typst compile failure throws with stderr intact")

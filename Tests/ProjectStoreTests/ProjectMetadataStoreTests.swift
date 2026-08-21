@@ -50,6 +50,13 @@ struct ProjectMetadataStoreTests {
         #expect(metadata.compile.chapterTitleFormat == "Chapter {n}")
         #expect(metadata.print.trimSize == "5x8")
         #expect(metadata.series.number == nil)
+        // `firstLineIndentEm`/`headingFont` were added to `Print` after this fixture's
+        // shape — added here explicitly since a synthesized `Decodable` would have
+        // failed this whole decode outright rather than defaulting, unlike the
+        // hand-written one `Print` actually has (mirroring `ProjectMetadata`'s own
+        // `versionControl` precedent).
+        #expect(metadata.print.firstLineIndentEm == 1.0)
+        #expect(metadata.print.headingFont == "Times New Roman")
     }
 
     @Test("save writes atomically-written JSON that round-trips through load")

@@ -31,6 +31,21 @@ public enum FrontBackMatterTemplate: String, CaseIterable, Sendable {
         }
     }
 
+    /// Whether this template's own heading (`content(for:)`'s `#` line) is meant to be
+    /// visible on the compiled page, matching the `.hidden-heading`/`.title-page-heading`
+    /// split already encoded there: Copyright/Dedication/A Note From/Newsletter carry
+    /// legal or ad-copy text of their own and never show their heading text, while Title
+    /// Page (the book's actual title) and About the Author (a real section title) do.
+    /// Print's Typst pipeline needs this explicitly (§ TypstDocumentGenerator) because
+    /// pandoc's typst writer drops the CSS class `content(for:)` set the heading with —
+    /// only the `#id` survives, as a Typst label.
+    public var showsHeadingOnPage: Bool {
+        switch self {
+        case .copyright, .dedication, .reviewAsk, .newsletter: return false
+        case .titlePage, .aboutTheAuthor: return true
+        }
+    }
+
     /// Filename with its ordering prefix (§4.3).
     public var filename: String {
         switch self {

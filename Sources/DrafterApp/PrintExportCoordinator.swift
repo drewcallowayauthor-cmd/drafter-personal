@@ -103,7 +103,14 @@ final class PrintExportCoordinator {
             }
 
             let rawTypst = try readGeneratedTypst(mainTypstURL)
-            try fileWriter.write(Data(TypstDocumentGenerator.applySceneBreakOrnament(to: rawTypst).utf8), to: mainTypstURL)
+            let patchedTypst = TypstDocumentGenerator.applyFlushFirstParagraphAfterChapterHeadings(
+                to: TypstDocumentGenerator.applyCenteredMatterStyling(
+                    to: TypstDocumentGenerator.applySceneBreakOrnament(to: rawTypst),
+                    bodyPointSize: metadata.print.bodyPointSize
+                ),
+                firstLineIndentEm: metadata.print.firstLineIndentEm
+            )
+            try fileWriter.write(Data(patchedTypst.utf8), to: mainTypstURL)
 
             let typstResult = try await typstService.compile(
                 inputPath: mainTypstURL.path,

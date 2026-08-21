@@ -21,6 +21,16 @@ struct FrontBackMatterTemplateTests {
         #expect(FrontBackMatterTemplate.newsletter.section == .back)
     }
 
+    @Test("only Title Page and About the Author show their own heading text on the page")
+    func showsHeadingOnPageMatchesHiddenHeadingClass() {
+        #expect(FrontBackMatterTemplate.titlePage.showsHeadingOnPage)
+        #expect(FrontBackMatterTemplate.aboutTheAuthor.showsHeadingOnPage)
+        #expect(!FrontBackMatterTemplate.copyright.showsHeadingOnPage)
+        #expect(!FrontBackMatterTemplate.dedication.showsHeadingOnPage)
+        #expect(!FrontBackMatterTemplate.reviewAsk.showsHeadingOnPage)
+        #expect(!FrontBackMatterTemplate.newsletter.showsHeadingOnPage)
+    }
+
     @Test("filenames match the reference EPUB's front/back matter order")
     func filenamesMatchExampleLayout() {
         #expect(FrontBackMatterTemplate.titlePage.filename == "01 Title Page.md")
