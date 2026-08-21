@@ -10,7 +10,7 @@ import AppKit
 /// first thing to revisit if very long scenes (§12.2's >20k-word case) show hitching —
 /// the fix would be scoping the rescan to the edited paragraph instead of the whole text.
 public enum MarkdownSyntaxHighlighter {
-    public static func applyAttributes(to textStorage: NSTextStorage, baseFont: NSFont) {
+    public static func applyAttributes(to textStorage: NSTextStorage, baseFont: NSFont, lineHeightMultiple: CGFloat = 1.0) {
         let text = textStorage.string
         let fullRange = NSRange(location: 0, length: (text as NSString).length)
         guard fullRange.length > 0 else { return }
@@ -19,9 +19,17 @@ public enum MarkdownSyntaxHighlighter {
         let italicFont = fontManager.convert(baseFont, toHaveTrait: .italicFontMask)
         let boldFont = fontManager.convert(baseFont, toHaveTrait: .boldFontMask)
         let dimmedColor = NSColor.tertiaryLabelColor
+        // This is a full-range `setAttributes`, so `.paragraphStyle` has to be set
+        // here too, every pass — the Editor pane's line-height setting would
+        // otherwise get silently wiped on the very next keystroke.
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = lineHeightMultiple
 
         textStorage.beginEditing()
-        textStorage.setAttributes([.font: baseFont, .foregroundColor: NSColor.textColor], range: fullRange)
+        textStorage.setAttributes(
+            [.font: baseFont, .foregroundColor: NSColor.textColor, .paragraphStyle: paragraphStyle],
+            range: fullRange
+        )
 
         for syntaxRange in MarkdownSyntaxScanner.scan(text) {
             switch syntaxRange.kind {

@@ -9,9 +9,9 @@ import SwiftUI
 /// inside e.g. a folder the writer already syncs some other way.
 struct NewProjectSheet: View {
     @State private var title = ""
-    @State private var author = ""
+    @State private var author = AppPreferences.shared.defaultAuthorName
     @State private var location = ProjectViewModel.defaultProjectsDirectory()
-    @State private var versionControl: VersionControlMode = .git
+    @State private var versionControl: VersionControlMode = NewProjectSheet.defaultVersionControlMode()
     @State private var manuscriptTemplate: ManuscriptTemplate = .novel
     let onCreate: (
         _ title: String, _ author: String, _ location: URL, _ versionControl: VersionControlMode,
@@ -27,7 +27,7 @@ struct NewProjectSheet: View {
             NocturneField(label: "Author", text: $author)
             saveLocationField
             manuscriptTemplatePicker
-            versionControlPicker
+            VersionControlModePicker(selection: $versionControl)
         } footer: {
             Button("Cancel", action: onCancel)
                 .buttonStyle(.nocturneSecondary)
@@ -78,39 +78,12 @@ struct NewProjectSheet: View {
         }
     }
 
-    private var versionControlPicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Version Control")
-                .font(Theme.Font.body(12))
-                .foregroundStyle(Theme.Color.text.opacity(0.7))
-            NocturneRadioRow(isSelected: versionControl == .git) {
-                versionControl = .git
-            } content: {
-                Text("Git + GitHub")
-                    .font(Theme.Font.body(14))
-                    .foregroundStyle(Theme.Color.text)
-            }
-            NocturneRadioRow(isSelected: versionControl == .localFile) {
-                versionControl = .localFile
-            } content: {
-                Text("Local Files + Cloud Folder")
-                    .font(Theme.Font.body(14))
-                    .foregroundStyle(Theme.Color.text)
-            }
-            Text(versionControlDescription)
-                .font(Theme.Font.body(12))
-                .foregroundStyle(Theme.Color.textMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private var versionControlDescription: String {
-        switch versionControl {
-        case .git:
-            "Private repo, automatic merging, structured conflict resolution. Needs a GitHub account."
-        case .localFile:
-            "Snapshots stored next to your manuscript. Put the project in Box, Google Drive, iCloud Drive, or OneDrive to sync across machines — works without one too, just without sync."
-        }
+    /// §5's "default to whichever mode the writer picked for their last project; on
+    /// first launch, default to Git mode" — `AppPreferences.lastPickedVersionControlMode`
+    /// is written on every successful project open/create (`ProjectViewModel.attach`),
+    /// so this reads the same source onboarding seeds from.
+    static func defaultVersionControlMode() -> VersionControlMode {
+        AppPreferences.shared.lastPickedVersionControlMode.flatMap(VersionControlMode.init(rawValue:)) ?? .git
     }
 
     private func chooseLocation() {

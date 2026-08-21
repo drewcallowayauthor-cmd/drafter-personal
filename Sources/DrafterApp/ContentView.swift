@@ -9,20 +9,21 @@ import UniformTypeIdentifiers
 /// Scene and Targets sections are later additions to the same pane.
 struct ContentView: View {
     @State private var projectViewModel = ProjectViewModel()
-    @State private var sceneEditor = SceneEditorViewModel()
+    @State private var sceneEditor = SceneEditorViewModel(autosaveDelay: .seconds(AppPreferences.shared.autosaveDelaySeconds))
     @State private var historyViewModel: HistoryViewModel?
     @State private var conflictedCopyViewModel = ConflictedCopyViewModel()
     @State private var targetsViewModel = TargetsViewModel()
     @State private var isImporterPresented = false
     @State private var isInspectorPresented = true
     @State private var selectedSceneURL: URL?
-    @State private var isTypewriterScrollingEnabled = true
+    @State private var appPreferences = AppPreferences.shared
     @State private var regenerateConfirmation: (template: FrontBackMatterTemplate, displayName: String)?
     @State private var frontBackMatterError: String?
     @State private var isMetadataEditorPresented = false
     @State private var isCompileSheetPresented = false
     @State private var compiledResult: CompileOutcome?
     @State private var isNewProjectSheetPresented = false
+    @State private var isOnboardingSheetPresented = !AppPreferences.shared.hasCompletedOnboarding
     @State private var isCloneProjectSheetPresented = false
     @State private var isConflictSheetPresented = false
     @State private var isNewChapterSheetPresented = false
@@ -173,6 +174,10 @@ struct ContentView: View {
     @ViewBuilder
     private func withProjectSheets(_ content: some View) -> some View {
         content
+        .sheet(isPresented: $isOnboardingSheetPresented) {
+            OnboardingSheet(onFinish: { isOnboardingSheetPresented = false })
+                .nocturneSheetPresentation()
+        }
         .sheet(isPresented: $isMetadataEditorPresented) {
             if let metadata = projectViewModel.metadata {
                 ProjectMetadataEditor(
@@ -399,7 +404,7 @@ struct ContentView: View {
             isInspectorPresented.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestToggleTypewriterScrolling)) { _ in
-            isTypewriterScrollingEnabled.toggle()
+            appPreferences.isTypewriterScrollingEnabled.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestProjectFindReplace)) { _ in
             isProjectFindReplacePresented = true
@@ -516,11 +521,11 @@ struct ContentView: View {
             }
             syncStatus
             Spacer()
-            Button("Typewriter") { isTypewriterScrollingEnabled.toggle() }
+            Button("Typewriter") { appPreferences.isTypewriterScrollingEnabled.toggle() }
                 .buttonStyle(.nocturneGhost)
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous)
-                        .stroke(isTypewriterScrollingEnabled ? Theme.Color.accent : .clear, lineWidth: 1)
+                        .stroke(appPreferences.isTypewriterScrollingEnabled ? Theme.Color.accent : .clear, lineWidth: 1)
                 )
             Button("Project Settings…") { isMetadataEditorPresented = true }
                 .buttonStyle(.nocturneSecondary)
@@ -813,7 +818,11 @@ struct ContentView: View {
                 }
                 SceneTextView(
                     text: sceneBodyBinding,
-                    isTypewriterScrollingEnabled: isTypewriterScrollingEnabled,
+                    measuredWidthInCharacters: appPreferences.measuredWidthInCharacters,
+                    isTypewriterScrollingEnabled: appPreferences.isTypewriterScrollingEnabled,
+                    typewriterCaretFraction: appPreferences.typewriterCaretFraction,
+                    fontSize: appPreferences.editorFontSize,
+                    lineHeightMultiple: appPreferences.editorLineHeightMultiple,
                     jumpRequest: document.url == pendingJumpSceneURL ? pendingJump : nil
                 )
             }
@@ -879,6 +888,17 @@ struct ContentView: View {
         // open changes independently of the project.
         projectViewModel.onExternalChange = { changedURLs in Task { await handleExternalChange(changedURLs: changedURLs) } }
         await openDebugProjectIfRequested()
+        await reopenLastProjectIfRequested()
+    }
+
+    /// General pane's "reopen last project on launch" (§12): only fires when nothing
+    /// else already opened a project this launch (debug override, or a project the OS
+    /// asks us to open) and the writer has opted in.
+    private func reopenLastProjectIfRequested() async {
+        guard projectViewModel.metadata == nil else { return }
+        guard AppPreferences.shared.reopenLastProjectOnLaunch else { return }
+        guard let path = AppPreferences.shared.lastOpenedProjectPath else { return }
+        await projectViewModel.openSilently(root: URL(fileURLWithPath: path))
     }
 
     private func handleExternalChange(changedURLs: Set<URL>) async {

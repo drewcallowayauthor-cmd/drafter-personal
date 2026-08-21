@@ -88,6 +88,21 @@ public actor GitService {
         _ = try await run(["init", "-b", "main"], in: workingTree)
     }
 
+    /// `git count-objects -vH` — human-readable object-store size for the Versioning
+    /// pane's "history size" display (§12). Returns the raw command output rather than
+    /// parsing it: the format is stable but not documented as an API, and the pane just
+    /// needs something legible to show the writer, not a value to compute against.
+    public func repositorySize(workingTree: URL) async throws -> String {
+        let result = try await run(["count-objects", "-vH"], in: workingTree)
+        return result.standardOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// `git gc` — the Versioning pane's "Run Maintenance" action for Git-mode projects
+    /// (§12), mirroring Local-file mode's `SnapshotCoordinator.pruneSnapshots()`.
+    public func runMaintenance(workingTree: URL) async throws {
+        _ = try await run(["gc"], in: workingTree)
+    }
+
     /// `git config user.name` / `user.email` (Appendix A), scoped locally to this repo
     /// — never touches the user's global git config.
     public func configureIdentity(name: String, email: String, in workingTree: URL) async throws {

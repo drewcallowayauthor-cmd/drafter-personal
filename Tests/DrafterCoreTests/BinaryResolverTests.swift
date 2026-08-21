@@ -68,6 +68,48 @@ struct BinaryResolverTests {
         #expect(resolved == nil)
     }
 
+    @Test("an executable override short-circuits before candidate directories are checked")
+    func overrideShortCircuitsCandidateSearch() throws {
+        let overrideDirectory = try makeTempDirectory()
+        let candidateDirectory = try makeTempDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: overrideDirectory)
+            try? FileManager.default.removeItem(at: candidateDirectory)
+        }
+        let overrideBinary = overrideDirectory.appendingPathComponent("custom-pandoc")
+        try makeExecutable(at: overrideBinary)
+        let candidateBinary = candidateDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: candidateBinary)
+
+        let resolved = BinaryResolver.resolve(
+            name: "pandoc",
+            override: overrideBinary,
+            candidateDirectories: [candidateDirectory.path],
+            environment: [:]
+        )
+
+        #expect(resolved == overrideBinary)
+    }
+
+    @Test("a non-executable override falls back to the candidate directory search")
+    func nonExecutableOverrideFallsBack() throws {
+        let candidateDirectory = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: candidateDirectory) }
+        let candidateBinary = candidateDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: candidateBinary)
+        let nonExecutableOverride = candidateDirectory.appendingPathComponent("not-executable")
+        try Data("not a binary".utf8).write(to: nonExecutableOverride)
+
+        let resolved = BinaryResolver.resolve(
+            name: "pandoc",
+            override: nonExecutableOverride,
+            candidateDirectories: [candidateDirectory.path],
+            environment: [:]
+        )
+
+        #expect(resolved == candidateBinary)
+    }
+
     @Test("returns nil when the binary is nowhere to be found")
     func returnsNilWhenNotFound() throws {
         let resolved = BinaryResolver.resolve(

@@ -144,6 +144,8 @@ struct SceneTextView: NSViewRepresentable {
     var isTypewriterScrollingEnabled: Bool = true
     /// Fraction of the visible height the caret is held at (§8.3 point 4's default 45%).
     var typewriterCaretFraction: CGFloat = 0.45
+    var fontSize: CGFloat = 15
+    var lineHeightMultiple: CGFloat = 1.0
     /// See `SceneTextJumpRequest`. `nil` most of the time; set transiently by the caller.
     var jumpRequest: SceneTextJumpRequest?
 
@@ -157,9 +159,9 @@ struct SceneTextView: NSViewRepresentable {
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
         textView.isAutomaticSpellingCorrectionEnabled = true
-        textView.font = .systemFont(ofSize: 15)
+        textView.font = .systemFont(ofSize: fontSize)
         textView.string = text
-        MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!)
+        MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!, lineHeightMultiple: lineHeightMultiple)
 
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -180,9 +182,12 @@ struct SceneTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: MeasuredColumnScrollView, context: Context) {
         guard let textView = scrollView.documentView as? TypewriterTextView else { return }
+        let desiredFont = NSFont.systemFont(ofSize: fontSize)
+        let fontChanged = textView.font?.pointSize != fontSize
         if textView.string != text {
             textView.string = text
-            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!)
+            textView.font = desiredFont
+            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple)
             // This branch only fires for a wholesale content swap from outside the
             // user's own typing (opening a different scene, an external-change
             // reload, a history restore) — never from the text view's own edits
@@ -192,7 +197,11 @@ struct SceneTextView: NSViewRepresentable {
             // the content underneath them has changed, so leaving them in place risks
             // ⌘Z replaying a stale edit into whatever scene happens to be open now.
             textView.undoManager?.removeAllActions()
+        } else if fontChanged || context.coordinator.lineHeightMultiple != lineHeightMultiple {
+            textView.font = desiredFont
+            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple)
         }
+        context.coordinator.lineHeightMultiple = lineHeightMultiple
         scrollView.measuredWidthInCharacters = measuredWidthInCharacters
         scrollView.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled
         scrollView.typewriterCaretFraction = typewriterCaretFraction
@@ -215,6 +224,7 @@ struct SceneTextView: NSViewRepresentable {
         let coordinator = Coordinator(text: $text)
         coordinator.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled
         coordinator.typewriterCaretFraction = typewriterCaretFraction
+        coordinator.lineHeightMultiple = lineHeightMultiple
         return coordinator
     }
 
@@ -223,6 +233,7 @@ struct SceneTextView: NSViewRepresentable {
         private let text: Binding<String>
         var isTypewriterScrollingEnabled = true
         var typewriterCaretFraction: CGFloat = 0.45
+        var lineHeightMultiple: CGFloat = 1.0
         var lastAppliedJumpID: UUID?
 
         init(text: Binding<String>) {
@@ -232,7 +243,7 @@ struct SceneTextView: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             if let textStorage = textView.textStorage, let font = textView.font {
-                MarkdownSyntaxHighlighter.applyAttributes(to: textStorage, baseFont: font)
+                MarkdownSyntaxHighlighter.applyAttributes(to: textStorage, baseFont: font, lineHeightMultiple: lineHeightMultiple)
             }
             text.wrappedValue = textView.string
         }

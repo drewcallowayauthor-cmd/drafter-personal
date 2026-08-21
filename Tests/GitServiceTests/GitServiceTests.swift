@@ -36,6 +36,34 @@ struct GitServiceTests {
         #expect(hasChanges == true)
     }
 
+    @Test("repositorySize returns the trimmed count-objects output")
+    func repositorySizeReturnsTrimmedOutput() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "count: 12\nsize: 1.02 MiB\n", standardError: ""),
+            forExecutableNamed: "git"
+        )
+        let service = GitService(processRunner: runner)
+
+        let size = try await service.repositorySize(workingTree: URL(fileURLWithPath: "/tmp/project"))
+
+        #expect(size == "count: 12\nsize: 1.02 MiB")
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["count-objects", "-vH"])
+    }
+
+    @Test("runMaintenance invokes git gc")
+    func runMaintenanceInvokesGitGC() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        let service = GitService(processRunner: runner)
+
+        try await service.runMaintenance(workingTree: URL(fileURLWithPath: "/tmp/project"))
+
+        let invocations = await runner.invocations
+        #expect(invocations.first?.arguments == ["gc"])
+    }
+
     @Test("parses ahead/behind counts from rev-list")
     func parsesDivergence() async throws {
         let runner = MockProcessRunner()

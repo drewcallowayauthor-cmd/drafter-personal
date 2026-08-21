@@ -88,6 +88,17 @@ final class ProjectViewModel {
         }
     }
 
+    /// General pane's "reopen last project on launch" (§12): behaves like `open(root:)`
+    /// but never surfaces a failure — the writer never asked for this attempt, so a
+    /// moved/deleted last project should fall back to the welcome screen quietly rather
+    /// than greet them with an alert before they've done anything.
+    func openSilently(root: URL) async {
+        await open(root: root)
+        if metadata == nil {
+            errorMessage = nil
+        }
+    }
+
     /// §5.2/M0's "create project folder" flow: scaffolds the folder structure and
     /// `project.json`, initializes git, makes the initial commit, then — if a GitHub
     /// token is already saved (§5.3) — creates a private repo and connects it. A
@@ -124,7 +135,7 @@ final class ProjectViewModel {
             switch versionControl {
             case .git:
                 let token = await Self.loadTokenIfAvailable()
-                let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
+                let gitService = Self.makeGitService(authToken: token)
                 let repositoryCoordinator = RepositoryCoordinator(gitService: gitService, workingTree: root)
                 try await repositoryCoordinator.ensureInitialized(authorName: author)
                 _ = try await repositoryCoordinator.commit(trigger: .checkpoint(label: "initial commit"))
@@ -176,7 +187,7 @@ final class ProjectViewModel {
             )
 
             let token = await Self.loadTokenIfAvailable()
-            let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
+            let gitService = Self.makeGitService(authToken: token)
             try await gitService.clone(url: repository.cloneURL.absoluteString, to: root)
 
             let project = try Project.open(root: root, fileWriter: LiveAtomicFileWriter())
@@ -202,7 +213,7 @@ final class ProjectViewModel {
             return
         }
 
-        let freshGitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
+        let freshGitService = Self.makeGitService(authToken: token)
         if await Self.hasRemoteLogging(freshGitService, in: workingTreeRoot) {
             syncStatusMessage = "Already connected to GitHub."
             return
@@ -286,6 +297,8 @@ final class ProjectViewModel {
         binderTree = await project.binderTree
         workingTreeRoot = root
         RecentProjects.record(title: resolvedMetadata.title.isEmpty ? root.lastPathComponent : resolvedMetadata.title, root: root)
+        AppPreferences.shared.lastOpenedProjectPath = root.path
+        AppPreferences.shared.lastPickedVersionControlMode = resolvedMetadata.versionControl.rawValue
 
         fileSystemWatcher?.stop()
         let watcher = FileSystemWatcher(path: root) { [weak self] changedURLs in self?.onExternalChange?(changedURLs) }
@@ -320,7 +333,7 @@ final class ProjectViewModel {
                 // won't turn out to have a GitHub remote in the first place (§5.2:
                 // "GitHub is not a prerequisite for writing") — the token is only
                 // worth a Keychain round-trip once a remote is confirmed to exist.
-                resolvedGitService = GitService(processRunner: LiveProcessRunner(), authToken: nil)
+                resolvedGitService = Self.makeGitService(authToken: nil)
             }
             self.gitService = resolvedGitService
             versioningSource = resolvedGitService
@@ -332,14 +345,17 @@ final class ProjectViewModel {
                 resolvedCoordinator = RepositoryCoordinator(gitService: resolvedGitService, workingTree: root)
                 try await resolvedCoordinator.ensureInitialized(authorName: resolvedMetadata.author)
             }
-            let scheduler = AutocommitScheduler(checkpointCoordinator: resolvedCoordinator)
+            let scheduler = AutocommitScheduler(
+                checkpointCoordinator: resolvedCoordinator,
+                debounceDelay: .seconds(AppPreferences.shared.autocommitDebounceSeconds)
+            )
             autocommitScheduler = scheduler
 
             if await Self.hasRemoteLogging(resolvedGitService, in: root) {
                 var syncGitService = resolvedGitService
                 if builtOwnGitService {
                     let token = await Self.loadTokenIfAvailable()
-                    syncGitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
+                    syncGitService = Self.makeGitService(authToken: token)
                     self.gitService = syncGitService
                     versioningSource = syncGitService
                 }
@@ -349,7 +365,11 @@ final class ProjectViewModel {
                     workingTree: root,
                     machineName: RepositoryCoordinator.defaultMachineName()
                 )
-                let newSyncScheduler = SyncScheduler(syncCoordinator: syncCoordinator)
+                let newSyncScheduler = SyncScheduler(
+                    syncCoordinator: syncCoordinator,
+                    fetchInterval: .seconds(AppPreferences.shared.syncFetchIntervalSeconds),
+                    pushDebounceDelay: .seconds(AppPreferences.shared.syncPushDebounceSeconds)
+                )
                 scheduler.onCommitted = { [weak newSyncScheduler] in newSyncScheduler?.schedulePushAfterCommit() }
                 newSyncScheduler.start()
                 syncScheduler = newSyncScheduler
@@ -363,7 +383,10 @@ final class ProjectViewModel {
 
             let coordinator = SnapshotCoordinator(snapshotService: resolvedSnapshotService, workingTree: root)
             snapshotCoordinator = coordinator
-            autocommitScheduler = AutocommitScheduler(checkpointCoordinator: coordinator)
+            autocommitScheduler = AutocommitScheduler(
+                checkpointCoordinator: coordinator,
+                debounceDelay: .seconds(AppPreferences.shared.autocommitDebounceSeconds)
+            )
 
             // §7.6: display-only — never a network call, just a heuristic on the
             // resolved path, so this is safe to do unconditionally and immediately.
@@ -373,6 +396,13 @@ final class ProjectViewModel {
                 syncStatusMessage = "Saved — not in a synced folder"
             }
             await checkConcurrentEditingLocalFile()
+        }
+
+        switch resolvedMetadata.versionControl {
+        case .git:
+            if let gitService { OpenProjectHandle.shared.setGit(workingTreeRoot: root, gitService: gitService) }
+        case .localFile:
+            if let snapshotService { OpenProjectHandle.shared.setLocalFile(workingTreeRoot: root, snapshotService: snapshotService) }
         }
     }
 
@@ -421,7 +451,7 @@ final class ProjectViewModel {
         guard let project, let workingTreeRoot, let metadata, metadata.versionControl == .git else { return }
         errorMessage = nil
         let token = await Self.loadTokenIfAvailable()
-        let gitService = GitService(processRunner: LiveProcessRunner(), authToken: token)
+        let gitService = Self.makeGitService(authToken: token)
         do {
             try await attach(project: project, root: workingTreeRoot, gitService: gitService, metadata: metadata)
         } catch {
@@ -441,6 +471,15 @@ final class ProjectViewModel {
             DrafterLog.app.error("Failed to load the saved GitHub token: \(error, privacy: .public)")
             return nil
         }
+    }
+
+    /// Tools pane's git override (§12), falling back to `GitService`'s own
+    /// `/usr/bin/git` default when unset.
+    private static func makeGitService(authToken: String?) -> GitService {
+        if let overridePath = AppPreferences.shared.gitPathOverride {
+            return GitService(processRunner: LiveProcessRunner(), gitExecutableURL: URL(fileURLWithPath: overridePath), authToken: authToken)
+        }
+        return GitService(processRunner: LiveProcessRunner(), authToken: authToken)
     }
 
     /// A failed `remoteURL` check is treated the same as "no remote configured yet" —
@@ -474,6 +513,7 @@ final class ProjectViewModel {
             await OpenProjectRegistry.shared.unregister(registeredRoot)
         }
         registeredRoot = nil
+        OpenProjectHandle.shared.clear()
         project = nil
         metadata = nil
         binderTree = nil
@@ -491,8 +531,11 @@ final class ProjectViewModel {
         concurrentEditingWarning = nil
     }
 
-    nonisolated static func defaultProjectsDirectory() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
+    static func defaultProjectsDirectory() -> URL {
+        if let overridePath = AppPreferences.shared.projectsDirectoryPath {
+            return URL(fileURLWithPath: overridePath)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Documents/Drafter/Projects")
     }
 

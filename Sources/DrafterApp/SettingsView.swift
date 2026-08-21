@@ -1,49 +1,21 @@
 import SwiftUI
 
-/// §10's Sync pane. The other panes (General, Editor, Backup, Versioning, Tools) belong
-/// to milestones this app hasn't reached yet, so Settings is Sync-only for now rather
-/// than shipping stub tabs for features that don't exist.
+/// §12's Settings window: five panes in doc order, each a self-contained view under
+/// `Settings/`. The Version Control pane carries what used to be this file's whole body
+/// (GitHub Sync) plus mode-dependent rows for whichever project is currently open.
 struct SettingsView: View {
-    @State private var viewModel = SettingsViewModel()
-    @State private var tokenDraft = ""
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("GitHub Account")
-                .font(Theme.Font.heading(15))
-                .foregroundStyle(Theme.Color.text)
-
-            if let login = viewModel.connectedLogin {
-                statusRow("● Connected as \(login)", color: Theme.Color.accent200)
-                Button("Disconnect from GitHub", role: .destructive) {
-                    Task { await viewModel.disconnect() }
-                }
-                .buttonStyle(.nocturneGhost)
-            } else {
-                statusRow("Not connected", color: Theme.Color.textMuted)
-                NocturneField(label: "Personal Access Token", text: $tokenDraft, isSecure: true)
-                Button("Test Connection") {
-                    Task { await viewModel.testAndSave(token: tokenDraft) }
-                }
-                .buttonStyle(.nocturneSecondary)
-                .disabled(tokenDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isTesting)
-            }
-
-            if let message = viewModel.statusMessage {
-                Text(message)
-                    .font(Theme.Font.body(12))
-                    .foregroundStyle(Theme.Color.textMuted)
-            }
+        TabView {
+            GeneralSettingsView()
+                .tabItem { Label("General", systemImage: "gearshape") }
+            EditorSettingsView()
+                .tabItem { Label("Editor", systemImage: "text.cursor") }
+            VersionControlSettingsView()
+                .tabItem { Label("Version Control", systemImage: "arrow.triangle.branch") }
+            VersioningSettingsView()
+                .tabItem { Label("Versioning", systemImage: "clock.arrow.circlepath") }
+            ToolsSettingsView()
+                .tabItem { Label("Tools", systemImage: "wrench.and.screwdriver") }
         }
-        .padding(18)
-        .frame(width: 420)
-        .background(Theme.Color.surface)
-        .task { await viewModel.loadStatus() }
-    }
-
-    private func statusRow(_ text: String, color: SwiftUI.Color) -> some View {
-        Text(text)
-            .font(Theme.Font.body(13))
-            .foregroundStyle(color)
     }
 }

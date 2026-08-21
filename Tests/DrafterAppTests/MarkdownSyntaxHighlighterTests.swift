@@ -58,4 +58,14 @@ struct MarkdownSyntaxHighlighterTests {
         let font = storage.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
         #expect(font?.fontDescriptor.symbolicTraits.contains(.italic) == false)
     }
+
+    @Test("the Editor pane's line height survives a re-apply pass, not just the first")
+    func lineHeightSurvivesReapply() {
+        let storage = NSTextStorage(string: "Some prose.")
+        MarkdownSyntaxHighlighter.applyAttributes(to: storage, baseFont: baseFont, lineHeightMultiple: 1.4)
+        MarkdownSyntaxHighlighter.applyAttributes(to: storage, baseFont: baseFont, lineHeightMultiple: 1.4)
+
+        let style = storage.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
+        #expect(style?.lineHeightMultiple == 1.4)
+    }
 }

@@ -276,7 +276,8 @@ struct CompileSheet: View {
         compileError = nil
         defer { isCompiling = false }
 
-        guard let pandocURL = BinaryResolver.resolve(name: "pandoc") else {
+        let pandocOverride = AppPreferences.shared.pandocPathOverride.map { URL(fileURLWithPath: $0) }
+        guard let pandocURL = BinaryResolver.resolve(name: "pandoc", override: pandocOverride) else {
             compileError = "pandoc isn't installed or couldn't be found (checked ~/.local/bin, /opt/homebrew/bin, "
                 + "/usr/local/bin, and PATH)."
             return
@@ -308,7 +309,8 @@ struct CompileSheet: View {
                 outcome = CompileOutcome(outputURL: result.outputURL)
 
             case .printPDF:
-                guard let typstURL = BinaryResolver.resolve(name: "typst") else {
+                let typstOverride = AppPreferences.shared.typstPathOverride.map { URL(fileURLWithPath: $0) }
+                guard let typstURL = BinaryResolver.resolve(name: "typst", override: typstOverride) else {
                     compileError = "typst isn't installed or couldn't be found (checked ~/.local/bin, "
                         + "/opt/homebrew/bin, /usr/local/bin, and PATH)."
                     return
