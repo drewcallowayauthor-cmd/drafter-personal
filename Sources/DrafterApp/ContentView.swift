@@ -46,6 +46,13 @@ struct ContentView: View {
     @State private var isExternalChangeCompareSheetPresented = false
     @State private var externalChangeDiffLines: [SceneDiffLine] = []
     @State private var toastCenter = ToastCenter()
+    @State private var isProjectFindReplacePresented = false
+    /// §8.3 point 8's "jumps to scene and offset" — set alongside `selectedSceneURL`
+    /// when a find-in-project result is clicked; `pendingJumpSceneURL` guards against
+    /// handing a stale range to whichever scene happens to be open once the selection
+    /// change (and its dispatch-async'd `sceneEditor.open`, see `onChange` below) lands.
+    @State private var pendingJump: SceneTextJumpRequest?
+    @State private var pendingJumpSceneURL: URL?
     @Environment(\.scenePhase) private var scenePhase
 
     // Split into several grouped chunks rather than one long modifier chain: a chain
@@ -341,6 +348,21 @@ struct ContentView: View {
                 .nocturneSheetPresentation()
             }
         }
+        .sheet(isPresented: $isProjectFindReplacePresented) {
+            ProjectFindReplaceSheet(
+                performSearch: { options in await projectViewModel.search(options: options) },
+                performReplace: { matches, replacement in await projectViewModel.replace(matches: matches, replacement: replacement) },
+                flushOpenScene: { sceneEditor.saveNow() },
+                reloadIfOpen: { rewrittenURLs in
+                    if let selectedSceneURL, rewrittenURLs.contains(selectedSceneURL) {
+                        sceneEditor.open(url: selectedSceneURL)
+                    }
+                },
+                onCancel: { isProjectFindReplacePresented = false },
+                onJump: { match in jump(to: match) }
+            )
+            .nocturneSheetPresentation()
+        }
         .sheet(isPresented: $isExternalChangeCompareSheetPresented) {
             DiffView(lines: externalChangeDiffLines, oldLabel: "Mine", newLabel: "On Disk")
                 .nocturneSheetPresentation()
@@ -379,6 +401,20 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestToggleTypewriterScrolling)) { _ in
             isTypewriterScrollingEnabled.toggle()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .drafterRequestProjectFindReplace)) { _ in
+            isProjectFindReplacePresented = true
+        }
+    }
+
+    /// A find-in-project result was clicked: select its scene (opening it in the editor
+    /// via the `selectedSceneURL` `onChange` below) and hand `SceneTextView` the range to
+    /// select once that open completes, then dismiss the sheet so the editor is visible.
+    private func jump(to match: ProjectSearchMatch) {
+        isProjectFindReplacePresented = false
+        pendingJumpSceneURL = match.sceneURL
+        pendingJump = SceneTextJumpRequest(range: match.range)
+        expandedChapterURLs.insert(match.sceneURL.deletingLastPathComponent())
+        selectedSceneURL = match.sceneURL
     }
 
     private func withLifecycleHandlers(_ content: some View) -> some View {
@@ -767,7 +803,11 @@ struct ContentView: View {
                 if externalChangeConflictURL == document.url {
                     externalChangeBar(for: document.url)
                 }
-                SceneTextView(text: sceneBodyBinding, isTypewriterScrollingEnabled: isTypewriterScrollingEnabled)
+                SceneTextView(
+                    text: sceneBodyBinding,
+                    isTypewriterScrollingEnabled: isTypewriterScrollingEnabled,
+                    jumpRequest: document.url == pendingJumpSceneURL ? pendingJump : nil
+                )
             }
         } else if let attachment = selectedAttachment {
             attachmentDetail(attachment)

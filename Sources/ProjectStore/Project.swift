@@ -271,6 +271,22 @@ public actor Project {
         return coverURL
     }
 
+    /// §8.3 point 8's project-wide find (⇧⌘F) — searches the in-memory `binderTree`
+    /// against scene bodies read fresh from disk, so it always reflects the latest
+    /// saved content even though the tree structure itself is cached.
+    public func search(options: ProjectSearchOptions) -> [ProjectSearchMatch] {
+        ProjectSearchService.search(binderTree: binderTree, options: options)
+    }
+
+    /// Applies a batch of replacements from a prior `search(options:)`. Callers editing
+    /// one of the matched scenes right now are responsible for flushing that scene's
+    /// pending autosave first (so this doesn't overwrite it) and reloading it after (so
+    /// the open editor doesn't go stale) — this actor only knows about the on-disk state.
+    @discardableResult
+    public func replace(matches: [ProjectSearchMatch], replacement: String, fileWriter: AtomicFileWriting) throws -> Set<URL> {
+        try ProjectSearchService.replace(matches: matches, replacement: replacement, fileWriter: fileWriter)
+    }
+
     private func orderedEntryURLs(in directory: URL) -> [URL] {
         FilenamePrefix.sort(existingEntryNames(in: directory)).map { directory.appendingPathComponent($0) }
     }

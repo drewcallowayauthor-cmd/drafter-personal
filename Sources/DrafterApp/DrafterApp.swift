@@ -31,6 +31,9 @@ extension Notification.Name {
     static let drafterRequestDeleteSelection = Notification.Name("DrafterRequestDeleteSelection")
     static let drafterRequestToggleInspector = Notification.Name("DrafterRequestToggleInspector")
     static let drafterRequestToggleTypewriterScrolling = Notification.Name("DrafterRequestToggleTypewriterScrolling")
+
+    /// §8.3 point 8's ⇧⌘F — project-wide find & replace.
+    static let drafterRequestProjectFindReplace = Notification.Name("DrafterRequestProjectFindReplace")
 }
 
 @main
@@ -92,6 +95,12 @@ struct DrafterApp: App {
                     NotificationCenter.default.post(name: .drafterRequestProjectSettings, object: nil)
                 }
                 .keyboardShortcut(",", modifiers: [.command, .shift])
+            }
+            CommandMenu("Find") {
+                Button("Find & Replace in Project…") {
+                    NotificationCenter.default.post(name: .drafterRequestProjectFindReplace, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
             }
             CommandMenu("Format") {
                 Button("Italic") {

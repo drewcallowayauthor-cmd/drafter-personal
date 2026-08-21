@@ -126,6 +126,15 @@ final class TypewriterTextView: NSTextView {
     }
 }
 
+/// A one-shot "select this range and scroll it into view" request from outside the text
+/// view — e.g. project-wide find & replace (§8.3 point 8) jumping to a result. `id`
+/// (rather than comparing `range` alone) so requesting the same range twice in a row —
+/// re-clicking the same search result — still re-triggers the jump.
+struct SceneTextJumpRequest: Equatable {
+    let range: NSRange
+    let id = UUID()
+}
+
 /// M1's `NSTextView` wrapper (§8.3): measured column, soft wrap only, editable, bound to
 /// a text binding, with toggleable typewriter scrolling. Syntax affordances and shortcuts
 /// are separate slices layered on top.
@@ -135,6 +144,8 @@ struct SceneTextView: NSViewRepresentable {
     var isTypewriterScrollingEnabled: Bool = true
     /// Fraction of the visible height the caret is held at (§8.3 point 4's default 45%).
     var typewriterCaretFraction: CGFloat = 0.45
+    /// See `SceneTextJumpRequest`. `nil` most of the time; set transiently by the caller.
+    var jumpRequest: SceneTextJumpRequest?
 
     func makeNSView(context: Context) -> MeasuredColumnScrollView {
         let textView = TypewriterTextView()
@@ -189,6 +200,15 @@ struct SceneTextView: NSViewRepresentable {
         textView.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled
         context.coordinator.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled
         context.coordinator.typewriterCaretFraction = typewriterCaretFraction
+
+        if let jumpRequest, jumpRequest.id != context.coordinator.lastAppliedJumpID,
+            jumpRequest.range.location + jumpRequest.range.length <= (textView.string as NSString).length
+        {
+            context.coordinator.lastAppliedJumpID = jumpRequest.id
+            textView.window?.makeFirstResponder(textView)
+            textView.setSelectedRange(jumpRequest.range)
+            textView.scrollRangeToVisible(jumpRequest.range)
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -203,6 +223,7 @@ struct SceneTextView: NSViewRepresentable {
         private let text: Binding<String>
         var isTypewriterScrollingEnabled = true
         var typewriterCaretFraction: CGFloat = 0.45
+        var lastAppliedJumpID: UUID?
 
         init(text: Binding<String>) {
             self.text = text

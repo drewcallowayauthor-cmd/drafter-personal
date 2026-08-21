@@ -612,6 +612,25 @@ final class ProjectViewModel {
         await refresh()
     }
 
+    /// §8.3 point 8's project-wide find (⇧⌘F).
+    func search(options: ProjectSearchOptions) async -> [ProjectSearchMatch] {
+        guard let project else { return [] }
+        return await project.search(options: options)
+    }
+
+    /// Applies a batch of replacements. Returns the scene URLs actually rewritten so
+    /// the caller can reload any of them that's currently open in the editor.
+    @discardableResult
+    func replace(matches: [ProjectSearchMatch], replacement: String) async -> Set<URL> {
+        guard let project else { return [] }
+        do {
+            return try await project.replace(matches: matches, replacement: replacement, fileWriter: LiveAtomicFileWriter())
+        } catch {
+            errorMessage = String(describing: error)
+            return []
+        }
+    }
+
     /// Saves an edited copy of `project.json` (§4.5) — the metadata editor works on a
     /// local draft and only calls this on explicit confirmation.
     @discardableResult
