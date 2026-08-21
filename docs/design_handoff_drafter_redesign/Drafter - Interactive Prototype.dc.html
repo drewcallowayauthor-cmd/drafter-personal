@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/nocturne-1321f746-8fb3-4dac-84c0-5ff25cd4802d/styles.css">
+<script src="_ds/nocturne-1321f746-8fb3-4dac-84c0-5ff25cd4802d/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#0d0e17;font-family:var(--font-body),system-ui,sans-serif;min-height:100vh;overflow:auto}
+.mwin-wrap{width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+.mwin{width:1180px;height:740px;flex-shrink:0;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;background:var(--color-bg);border:1px solid var(--color-neutral-700);position:relative}
+.mwin-titlebar{height:38px;flex-shrink:0;display:flex;align-items:center;padding:0 14px;background:var(--color-neutral-800);border-bottom:1px solid var(--color-neutral-700)}
+.mwin-dots{display:flex;gap:8px;width:70px}
+.mwin-dot{width:11px;height:11px;border-radius:50%}
+.mwin-title{flex:1;text-align:center;margin-right:70px;font-size:12px;color:var(--color-neutral-300);letter-spacing:.02em}
+.mwin-body{flex:1;display:flex;overflow:hidden;min-height:0}
+.bind-sec{font:600 10px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-400);padding:14px 16px 6px;display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.bind-sec svg{flex-shrink:0;opacity:.7}
+.bind-row{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:13px;color:var(--color-neutral-200);cursor:pointer;border-radius:var(--radius-md);margin:0 6px}
+.bind-row.sel{background:var(--color-accent-800);color:var(--color-text)}
+.bind-row:hover{background:var(--color-neutral-800)}
+.bind-chap{display:flex;align-items:center;gap:6px;padding:6px 16px 6px 10px;font-size:12.5px;font-weight:500;color:var(--color-neutral-300);margin:0 6px;border-radius:var(--radius-md);cursor:pointer;user-select:none}
+.bind-chap:hover{background:var(--color-neutral-800)}
+.bind-scene{padding:5px 16px 5px 30px;font-size:13px;color:var(--color-neutral-200);border-radius:var(--radius-md);margin:0 6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.bind-scene:hover{background:var(--color-neutral-800)}
+.bind-scene.sel{background:var(--color-accent-800);color:var(--color-text)}
+.wc{font-size:10.5px;color:var(--color-neutral-500)}
+.icnbtn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);color:var(--color-neutral-300);flex-shrink:0;cursor:pointer}
+.icnbtn:hover{background:var(--color-neutral-700)}
+.pencil{opacity:.5;flex-shrink:0;cursor:pointer}
+.pencil:hover{opacity:1}
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,10,16,.6);display:flex;align-items:center;justify-content:center;z-index:50}
+.sheet{border-radius:12px;box-shadow:var(--shadow-lg);background:var(--color-bg);border:1px solid var(--color-neutral-700);overflow:hidden;display:flex;flex-direction:column}
+.sheet-hd{padding:15px 20px;font-size:14px;font-weight:500;color:var(--color-text);border-bottom:1px solid var(--color-neutral-800);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.sheet-ft{padding:13px 20px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--color-neutral-800);flex-shrink:0}
+.sheet-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.fsec{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-500)}
+.lrow{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--color-neutral-800);font-size:12.5px}
+.lrow:last-child{border-bottom:none}
+.lval{color:var(--color-neutral-300)}
+.llabel{color:var(--color-neutral-400)}
+.tabrow{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--color-neutral-800)}
+.tabitem{padding:8px 10px;font-size:12px;color:var(--color-neutral-500);cursor:pointer}
+.tabitem.active{color:var(--color-text);border-bottom:2px solid var(--color-accent);font-weight:500}
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--color-neutral-800);border:1px solid var(--color-neutral-700);color:var(--color-text);padding:10px 16px;border-radius:var(--radius-md);font-size:12.5px;box-shadow:var(--shadow-md);z-index:80}
+</style>
+</helmet>
+
+<div class="mwin-wrap" style="transform:{{ scaleTransform }};transform-origin:top center"><div class="mwin">
+  <div class="mwin-titlebar">
+    <div class="mwin-dots"><div class="mwin-dot" style="background:#ff5f57"></div><div class="mwin-dot" style="background:#febc2e"></div><div class="mwin-dot" style="background:#28c840"></div></div>
+    <div class="mwin-title">The Last Shift — Drafter</div>
+  </div>
+  <div class="mwin-body">
+    <!-- binder -->
+    <div style="width:230px;flex-shrink:0;border-right:1px solid var(--color-neutral-800);overflow-y:auto;padding-bottom:12px">
+      <div class="bind-sec" onClick="{{ toggleMs }}"><svg width="8" height="8" viewBox="0 0 256 256" fill="currentColor" style="transform:{{ msChevron }}"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>Manuscript</div>
+      <sc-if value="{{ msExpanded }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ chaptersView }}" as="chapter" hint-placeholder-count="2">
+        <div class="bind-chap" draggable="true" onDragStart="{{ chapter.dragStart }}" onDragOver="{{ allowDrop }}" onDrop="{{ chapter.drop }}" onClick="{{ chapter.toggle }}">
+          <svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor" style="transform:{{ chapter.chevronTransform }};flex-shrink:0"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+          <span style="flex:1">{{ chapter.title }}</span>
+          <span class="pencil" onClick="{{ chapter.renameClick }}"><svg width="10" height="10" viewBox="0 0 256 256" fill="currentColor"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96A16,16,0,0,0,227.31,73.37Z"></path></svg></span>
+        </div>
+        <sc-if value="{{ chapter.expanded }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ chapter.scenes }}" as="scene" hint-placeholder-count="2">
+            <div class="bind-scene {{ scene.selClass }}" draggable="true" onDragStart="{{ scene.dragStart }}" onDragOver="{{ allowDrop }}" onDrop="{{ scene.drop }}" onClick="{{ scene.select }}">
+              <span>{{ scene.title }}</span>
+              <span style="display:flex;align-items:center;gap:6px"><span class="wc">{{ scene.wcLabel }}</span><span class="pencil" onClick="{{ scene.renameClick }}"><svg width="9" height="9" viewBox="0 0 256 256" fill="currentColor"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96A16,16,0,0,0,227.31,73.37Z"></path></svg></span></span>
+            </div>
+          </sc-for>
+          <div style="padding:4px 16px 4px 30px"><span class="wc" style="cursor:pointer" onClick="{{ chapter.addSceneClick }}">+ Scene</span></div>
+        </sc-if>
+      </sc-for>
+      <div style="padding:6px 16px 6px 10px"><button type="button" class="btn btn-ghost" style="height:24px;font-size:10.5px;padding:0 8px" onClick="{{ openNewChapter }}">+ Chapter</button></div>
+      </sc-if>
+
+      <div class="bind-sec" onClick="{{ toggleFm }}"><svg width="8" height="8" viewBox="0 0 256 256" fill="currentColor" style="transform:{{ fmChevron }}"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>Front Matter</div>
+      <sc-if value="{{ fmExpanded }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ frontMatterView }}" as="item" hint-placeholder-count="4">
+        <div class="bind-row {{ item.selClass }}" onClick="{{ item.select }}">{{ item.title }}</div>
+      </sc-for>
+      </sc-if>
+
+      <div class="bind-sec" onClick="{{ toggleBm }}"><svg width="8" height="8" viewBox="0 0 256 256" fill="currentColor" style="transform:{{ bmChevron }}"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>Back Matter</div>
+      <sc-if value="{{ bmExpanded }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ backMatterView }}" as="item" hint-placeholder-count="2">
+        <div class="bind-row {{ item.selClass }}" onClick="{{ item.select }}">{{ item.title }}</div>
+      </sc-for>
+      </sc-if>
+    </div>
+
+    <!-- editor -->
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+      <div style="height:44px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--color-neutral-800)">
+        <span style="font-size:11px;color:var(--color-neutral-500)">Saved</span>
+        <span style="font-size:11px;color:var(--color-neutral-500)">·</span>
+        <span class="tag tag-accent" style="font-size:10px">Synced</span>
+        <div style="flex:1"></div>
+        <button type="button" class="btn btn-ghost" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0;{{ typewriterStyle }}" onClick="{{ toggleTypewriter }}">Typewriter</button>
+        <button type="button" class="btn btn-ghost" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0" onClick="{{ openNewProject }}">New Project…</button>
+        <button type="button" class="btn btn-ghost" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0" onClick="{{ openAddExisting }}">Add Existing…</button>
+        <button type="button" class="btn btn-secondary" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0" onClick="{{ openVersionControl }}">Version Control…</button>
+        <button type="button" class="btn btn-secondary" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0" onClick="{{ openSettings }}">Project Settings…</button>
+        <button type="button" class="btn btn-primary" style="height:26px;font-size:11.5px;padding:0 9px;white-space:nowrap;flex-shrink:0" onClick="{{ openCompile }}">Compile…</button>
+        <div class="icnbtn" onClick="{{ toggleInspector }}"><svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor"><path d="M228,128A100,100,0,1,1,128,28,100.11,100.11,0,0,1,228,128Zm-16,0a84,84,0,1,0-84,84A84.09,84.09,0,0,0,212,128Z"></path></svg></div>
+      </div>
+      <sc-if value="{{ bannerVisible }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:9px 16px;display:flex;align-items:center;gap:12px;background:color-mix(in oklch, var(--color-accent-2-700) 45%, var(--color-neutral-900));border-bottom:1px solid var(--color-neutral-800)">
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" style="color:var(--color-accent-300);flex-shrink:0"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"></path></svg>
+        <span style="font-size:12px;color:var(--color-neutral-100);flex:1">"01 Triage (restored 2026-08-17).md" looks like a cloud-sync conflict copy of "01 Triage.md".</span>
+        <button type="button" class="btn btn-ghost" style="height:24px;font-size:11px;padding:0 8px" onClick="{{ compareConflict }}">Compare</button>
+        <button type="button" class="btn btn-ghost" style="height:24px;font-size:11px;padding:0 8px" onClick="{{ dismissBanner }}">Keep This One</button>
+        <button type="button" class="btn btn-ghost" style="height:24px;font-size:11px;padding:0 8px;color:var(--color-neutral-400)" onClick="{{ dismissBanner }}">Delete</button>
+      </div>
+      </sc-if>
+      <div style="flex:1;overflow-y:auto;padding:40px 64px;max-width:640px;margin:0 auto;width:100%;text-align:{{ selectedAlign }}">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent-300);margin-bottom:6px">{{ selectedBreadcrumb }}</div>
+        <div style="font-size:22px;font-family:var(--font-heading);color:var(--color-text);margin-bottom:4px">{{ selectedTitle }}</div>
+        <sc-if value="{{ selectedIsScene }}" hint-placeholder-val="{{ true }}">
+        <div style="font-size:12.5px;color:var(--color-neutral-400);font-style:italic;margin-bottom:24px">{{ selectedSynopsis }}</div>
+        </sc-if>
+        <div style="font-size:15px;line-height:1.75;color:var(--color-neutral-100);margin-top:16px">
+          <sc-for list="{{ selectedParas }}" as="para" hint-placeholder-count="2">
+            <p style="margin:0 0 16px">{{ para }}</p>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- inspector -->
+    <sc-if value="{{ inspectorOpen }}" hint-placeholder-val="{{ true }}">
+    <div style="width:260px;flex-shrink:0;border-left:1px solid var(--color-neutral-800);overflow-y:auto">
+      <div style="padding:16px">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text);margin-bottom:12px">Targets</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:500;color:var(--color-text)">9,140 words</span>
+          <span style="font-size:11px;color:var(--color-neutral-500)">of 45,000</span>
+        </div>
+        <div style="height:5px;border-radius:99px;background:var(--color-neutral-800);overflow:hidden;margin-bottom:10px"><div style="width:20%;height:100%;background:var(--color-accent)"></div></div>
+        <div style="font-size:11px;color:var(--color-neutral-400)">+340 this session</div>
+        <div style="height:1px;background:var(--color-neutral-800);margin:16px 0"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-neutral-300)"><span>01 Arrival</span><span style="color:var(--color-neutral-500)">6,120</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-neutral-300)"><span>02 The First Hour</span><span style="color:var(--color-neutral-500)">3,020</span></div>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--color-neutral-800)"></div>
+      <div style="padding:16px">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text);margin-bottom:12px">History — {{ selectedTitle }}</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ history }}" as="entry" hint-placeholder-count="3">
+            <div style="cursor:pointer" onClick="{{ entry.open }}"><div style="font-size:12.5px;color:var(--color-neutral-100)">{{ entry.subject }}</div><div style="font-size:11px;color:var(--color-neutral-500)">{{ entry.time }}</div></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div class="toast">{{ toast }}</div>
+</sc-if>
+
+<sc-if value="{{ anyModal }}" hint-placeholder-val="{{ false }}">
+<div class="modal-backdrop" onClick="{{ closeModal }}">
+  <div onClick="{{ stopClick }}">
+
+    <sc-if value="{{ modalNewProject }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:460px">
+      <div class="sheet-hd">New Project<span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span></div>
+      <div class="sheet-body">
+        <div class="field"><label>Title</label><input class="input" defaultValue="The Last Shift"></div>
+        <div class="field"><label>Author</label><input class="input" defaultValue="Tim Fleet"></div>
+        <div class="field"><label>Save Location</label>
+          <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px;color:var(--color-neutral-400)">…/Documents/Drafter Projects</span><button type="button" class="btn btn-ghost" style="height:26px;font-size:11.5px;padding:0 9px">Choose…</button></div>
+        </div>
+        <div class="field">
+          <label>Version Control</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="border:1px solid {{ gitBorder }};background:{{ gitBg }};border-radius:var(--radius-md);padding:12px;cursor:pointer" onClick="{{ pickGit }}">
+              <div style="font-size:12.5px;font-weight:500;color:var(--color-text);margin-bottom:4px">Git + GitHub</div>
+              <div style="font-size:11px;color:var(--color-neutral-400);line-height:1.4">Automatic merging, structured conflicts. Needs an account.</div>
+            </div>
+            <div style="border:1px solid {{ localBorder }};background:{{ localBg }};border-radius:var(--radius-md);padding:12px;cursor:pointer" onClick="{{ pickLocal }}">
+              <div style="font-size:12.5px;font-weight:500;color:var(--color-text);margin-bottom:4px">Local Files + Cloud</div>
+              <div style="font-size:11px;color:var(--color-neutral-400);line-height:1.4">Snapshots beside your manuscript. Sync via Drive, iCloud, Box.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Cancel</button><button type="button" class="btn btn-primary" style="height:30px;padding:0 12px" onClick="{{ createProject }}">Create</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalAddExisting }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:420px;height:380px">
+      <div class="sheet-hd">Add Existing Project<span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span></div>
+      <div class="sheet-body" style="padding:8px 0;gap:0">
+        <div style="padding:10px 20px;border-bottom:1px solid var(--color-neutral-800);cursor:pointer" onClick="{{ selectRepo }}"><div style="font-size:13px;color:var(--color-text)">the-last-shift</div><div style="font-size:11px;color:var(--color-neutral-500)">tfleet/the-last-shift</div></div>
+        <div style="padding:10px 20px;border-bottom:1px solid var(--color-neutral-800);cursor:pointer" onClick="{{ selectRepo }}"><div style="font-size:13px;color:var(--color-text)">night-orderlies</div><div style="font-size:11px;color:var(--color-neutral-500)">tfleet/night-orderlies</div></div>
+        <div style="padding:10px 20px;cursor:pointer" onClick="{{ selectRepo }}"><div style="font-size:13px;color:var(--color-text)">county-line</div><div style="font-size:11px;color:var(--color-neutral-500)">tfleet/county-line</div></div>
+      </div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Cancel</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalVersionControl }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:420px">
+      <div class="sheet-hd">Version Control<span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span></div>
+      <div class="sheet-body" style="gap:0">
+        <div class="lrow"><span class="llabel">Mode</span><span class="lval">Local Files + Cloud Folder</span></div>
+        <div class="lrow"><span class="llabel">Sync</span><span class="lval">iCloud Drive</span></div>
+        <div class="lrow"><span class="llabel">Last Snapshot</span><span class="lval">{{ lastSnapshot }}</span></div>
+        <div class="lrow"><span class="llabel">Snapshots Kept</span><span class="lval">248</span></div>
+        <div class="lrow"><span class="llabel">History Size</span><span class="lval">6.2 MB</span></div>
+      </div>
+      <div class="sheet-ft"><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px">Open History in Finder</button><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ snapshotNow }}">Snapshot Now</button><button type="button" class="btn btn-primary" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Done</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalCompile }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:520px;height:600px">
+      <div class="sheet-hd">Compile<span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span></div>
+      <div class="sheet-body">
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{ compileTabs }}" as="tab" hint-placeholder-count="3">
+            <div style="flex:1;text-align:center;padding:10px 4px;border-radius:var(--radius-md);border:1px solid {{ tab.border }};background:{{ tab.bg }};color:{{ tab.color }};font-size:11px;font-weight:{{ tab.weight }};cursor:pointer" onClick="{{ tab.select }}">{{ tab.label }}</div>
+          </sc-for>
+        </div>
+        <div><div class="fsec" style="margin-bottom:8px">Output Location</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px;color:var(--color-neutral-400)">~/Desktop</span><button type="button" class="btn btn-ghost" style="height:26px;font-size:11.5px;padding:0 9px">Choose…</button></div>
+        </div>
+        <div><div class="fsec" style="margin-bottom:8px">Front &amp; Back Matter</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label class="radio"><input type="checkbox" checked></input><span class="dot"></span>Include Front Matter</label>
+            <label class="radio"><input type="checkbox" checked></input><span class="dot"></span>Include Back Matter</label>
+          </div>
+        </div>
+        <sc-if value="{{ compileIsPrint }}" hint-placeholder-val="{{ false }}">
+        <div><div class="fsec" style="margin-bottom:8px">Trim Size</div>
+          <div style="display:flex;gap:8px">
+            <div style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--color-accent);color:var(--color-accent-100);font-size:11.5px">5" × 8"</div>
+            <div style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--color-neutral-700);color:var(--color-neutral-400);font-size:11.5px">5.5" × 8.5"</div>
+            <div style="padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--color-neutral-700);color:var(--color-neutral-400);font-size:11.5px">6" × 9"</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+          <div class="field"><label>Body Font</label><select class="input"><option>EB Garamond</option><option>Garamond Premier</option><option>Adobe Caslon</option></select></div>
+          <div class="field"><label>Point Size</label><select class="input"><option>10</option><option selected>11</option><option>12</option></select></div>
+        </div>
+        </sc-if>
+        <div class="lrow"><span class="llabel">Estimate</span><span class="lval">9,140 words</span></div>
+      </div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Cancel</button><button type="button" class="btn btn-primary" style="height:30px;padding:0 12px" onClick="{{ compileNow }}">Compile</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalSettings }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:520px;height:560px">
+      <div class="sheet-hd" style="border-bottom:none">Project Settings<span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span></div>
+      <div class="tabrow">
+        <sc-for list="{{ settingsTabs }}" as="tab" hint-placeholder-count="6">
+          <div class="tabitem {{ tab.activeClass }}" onClick="{{ tab.select }}">{{ tab.label }}</div>
+        </sc-for>
+      </div>
+      <div class="sheet-body">
+        <sc-if value="{{ settingsIsBook }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Title</label><input class="input" defaultValue="The Last Shift"></div>
+            <div class="field"><label>Subtitle</label><input class="input" defaultValue=""></div>
+          </div>
+          <div class="field"><label>Author</label><input class="input" defaultValue="Tim Fleet"></div>
+          <div class="field"><label>Description</label><textarea class="input" rows="3" placeholder="A one-line hook for the back cover."></textarea></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ settingsIsSeries }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+          <div class="field"><label>Series Name</label><input class="input" defaultValue=""></div>
+          <div class="field"><label>Number</label><input class="input" defaultValue=""></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ settingsIsPublishing }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Copyright Year</label><input class="input" defaultValue="2026"></div>
+            <div class="field"><label>Language</label><input class="input" defaultValue="en-US"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Publisher</label><input class="input" defaultValue=""></div>
+            <div class="field"><label>ISBN</label><input class="input" defaultValue=""></div>
+          </div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ settingsIsTarget }}" hint-placeholder-val="{{ false }}">
+        <div class="field"><label>Word Count Goal</label><input class="input" defaultValue="45,000"></div>
+        </sc-if>
+        <sc-if value="{{ settingsIsCompile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Chapter Title Format</label><input class="input" defaultValue="Chapter {n}"></div>
+            <div class="field"><label>Scene Separator</label><input class="input" defaultValue="* * *"></div>
+          </div>
+          <label class="radio"><input type="checkbox" checked></input><span class="dot"></span>Include Front Matter</label>
+          <label class="radio"><input type="checkbox" checked></input><span class="dot"></span>Include Back Matter</label>
+        </div>
+        </sc-if>
+        <sc-if value="{{ settingsIsPrint }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="field"><label>Trim Size</label><input class="input" defaultValue="5x8"></div>
+          <div class="field"><label>Body Font</label><input class="input" defaultValue="EB Garamond"></div>
+          <div class="field"><label>Opens On</label><input class="input" defaultValue="Recto"></div>
+        </div>
+        </sc-if>
+      </div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Cancel</button><button type="button" class="btn btn-primary" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Save</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalPrompt }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:360px">
+      <div class="sheet-hd">{{ promptTitle }}</div>
+      <div class="sheet-body"><div class="field"><label>{{ promptFieldLabel }}</label><input class="input" value="{{ promptText }}" onChange="{{ setPromptText }}" autoFocus></div></div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Cancel</button><button type="button" class="btn btn-primary" style="height:30px;padding:0 12px" onClick="{{ submitPrompt }}">{{ promptConfirmLabel }}</button></div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ modalDiff }}" hint-placeholder-val="{{ false }}">
+    <div class="sheet" style="width:640px;height:420px">
+      <div class="sheet-hd" style="display:flex;gap:0">
+        <span style="flex:1;font-size:12px;color:var(--color-neutral-400)">{{ diffLeftLabel }}</span>
+        <span style="flex:1;font-size:12px;color:var(--color-neutral-400)">{{ diffRightLabel }}</span>
+        <span class="icnbtn" onClick="{{ closeModal }}"><svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg></span>
+      </div>
+      <div class="sheet-body" style="font-size:13px;line-height:1.7">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="color:var(--color-neutral-300)">The board <span style="text-decoration:line-through;color:var(--color-neutral-600)">seemed</span> wrong.</div>
+          <div style="color:var(--color-neutral-100)">The board <span style="color:var(--color-accent-200)">was</span> wrong.</div>
+          <div style="color:var(--color-neutral-300)">Sam had checked it twice before the handoff, and twice it had said Room Nine was empty.</div>
+          <div style="color:var(--color-neutral-100)">Sam had checked it twice before the handoff, and twice it had said Room Nine was empty.</div>
+          <div style="color:var(--color-neutral-600)"> </div>
+          <div style="color:var(--color-neutral-100)"><span style="color:var(--color-accent-200)">It was not empty now.</span></div>
+        </div>
+      </div>
+      <div class="sheet-ft"><div style="flex:1"></div><button type="button" class="btn btn-ghost" style="height:30px;padding:0 12px" onClick="{{ closeModal }}">Close</button></div>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    selectedId: 'triage',
+    expandedSections: { ms: true, fm: true, bm: true },
+    expandedChapters: { arrival: true, firstHour: true },
+    chapters: [
+      { id: 'arrival', title: '01 Arrival', scenes: [
+        { id: 'triage', title: '01 Triage', wordCount: 1180, synopsis: 'Sam takes over the board and finds Room Nine already occupied.', paragraphs: ['The board was wrong.', 'Sam had checked it twice before the handoff, and twice it had said Room Nine was empty. It was not empty now.'] },
+        { id: 'board', title: '02 The Board', wordCount: 940, synopsis: 'Sam clears the board before the attending notices the gap.', paragraphs: ['By the time Dr. Alvarez made her rounds, the whiteboard read clean across every bed.', 'Sam had erased Room Nine\u2019s old name before anyone could ask about it twice.'] }
+      ]},
+      { id: 'firstHour', title: '02 The First Hour', scenes: [
+        { id: 'handoff', title: '01 Handoff', wordCount: 720, synopsis: 'The night shift arrives an hour early, and nobody says why.', paragraphs: ['Marcus showed up at ten, a full hour before his shift, and didn\u2019t explain it.', 'Sam decided not to ask. Not yet.'] }
+      ]}
+    ],
+    frontMatter: [
+      { id: 'alsoby', title: 'Also By', paragraphs: ['ALSO BY TIM FLEET', 'County Line'] },
+      { id: 'titlepage', title: 'Title Page', paragraphs: ['THE LAST SHIFT', 'a novel', 'Tim Fleet'] },
+      { id: 'copyright', title: 'Copyright', paragraphs: ['Copyright \u00A9 2026 Tim Fleet. All rights reserved.'] },
+      { id: 'dedication', title: 'Dedication', paragraphs: ['For every night shift that keeps the lights on.'] }
+    ],
+    backMatter: [
+      { id: 'about', title: 'About the Author', paragraphs: ['Tim Fleet worked nights in an ER for six years before he started writing about them.'] },
+      { id: 'newsletter', title: 'Newsletter', paragraphs: ['Sign up for release updates at timfleet.com/newsletter.'] }
+    ],
+    isTypewriter: true,
+    inspectorOpen: true,
+    bannerDismissed: false,
+    modal: null,
+    promptText: '',
+    newSceneChapterId: null,
+    renameInfo: null,
+    versionControlChoice: 'git',
+    compileTarget: 'epub',
+    settingsTab: 'book',
+    lastSnapshot: '4 minutes ago',
+    toast: null,
+    scale: 1
+  };
+
+  componentDidMount() {
+    this._onResize = () => {
+      const availW = window.innerWidth - 48;
+      const availH = window.innerHeight - 48;
+      const scale = Math.min(1, availW / 1180, availH / 740);
+      this.setState({ scale });
+    };
+    this._onResize();
+    window.addEventListener('resize', this._onResize);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+  }
+
+  toggleSection(key) { this.setState(s => ({ expandedSections: { ...s.expandedSections, [key]: !s.expandedSections[key] } })); }
+  toggleChapter(id) { this.setState(s => ({ expandedChapters: { ...s.expandedChapters, [id]: !s.expandedChapters[id] } })); }
+  select(id) { this.setState({ selectedId: id }); }
+  openModal(type, extra) { this.setState({ modal: { type, ...(extra || {}) } }); }
+  closeModal() { this.setState({ modal: null }); }
+  toggleTypewriter() { this.setState(s => ({ isTypewriter: !s.isTypewriter })); }
+  toggleInspector() { this.setState(s => ({ inspectorOpen: !s.inspectorOpen })); }
+  dismissBanner() { this.setState({ bannerDismissed: true }); }
+
+  submitNewChapter() {
+    const title = (this.state.promptText || '').trim();
+    if (!title) return;
+    const id = 'ch' + Date.now();
+    this.setState(s => ({ chapters: [...s.chapters, { id, title, scenes: [] }], modal: null, promptText: '', expandedChapters: { ...s.expandedChapters, [id]: true } }));
+  }
+  submitNewScene() {
+    const title = (this.state.promptText || '').trim();
+    const chapterId = this.state.newSceneChapterId;
+    if (!title || !chapterId) return;
+    const id = 'sc' + Date.now();
+    this.setState(s => ({
+      chapters: s.chapters.map(c => c.id === chapterId ? { ...c, scenes: [...c.scenes, { id, title, wordCount: 0, synopsis: '', paragraphs: [''] }] } : c),
+      modal: null, promptText: '', newSceneChapterId: null, selectedId: id
+    }));
+  }
+  submitRename() {
+    const title = (this.state.promptText || '').trim();
+    const info = this.state.renameInfo;
+    if (!title || !info) return;
+    this.setState(s => {
+      if (info.kind === 'chapter') {
+        return { chapters: s.chapters.map(c => c.id === info.id ? { ...c, title } : c), modal: null, promptText: '', renameInfo: null };
+      }
+      return { chapters: s.chapters.map(c => ({ ...c, scenes: c.scenes.map(sc => sc.id === info.id ? { ...sc, title } : sc) })), modal: null, promptText: '', renameInfo: null };
+    });
+  }
+  openRename(kind, id, title, chapterId) { this.setState({ modal: { type: 'rename' }, renameInfo: { kind, id, chapterId }, promptText: title }); }
+  openNewScene(chapterId) { this.setState({ modal: { type: 'newScene' }, newSceneChapterId: chapterId, promptText: '' }); }
+  openNewChapter() { this.setState({ modal: { type: 'newChapter' }, promptText: '' }); }
+
+  moveScene(sourceChapterId, sceneId, targetChapterId, targetSceneId) {
+    this.setState(s => {
+      let moved = null;
+      const removed = s.chapters.map(c => {
+        if (c.id !== sourceChapterId) return c;
+        const scene = c.scenes.find(x => x.id === sceneId);
+        moved = scene;
+        return { ...c, scenes: c.scenes.filter(x => x.id !== sceneId) };
+      });
+      if (!moved) return null;
+      const final = removed.map(c => {
+        if (c.id !== targetChapterId) return c;
+        const scenes = [...c.scenes];
+        let idx = targetSceneId ? scenes.findIndex(x => x.id === targetSceneId) : scenes.length;
+        if (idx < 0) idx = scenes.length;
+        scenes.splice(idx, 0, moved);
+        return { ...c, scenes };
+      });
+      return { chapters: final };
+    });
+  }
+  moveChapter(sourceId, targetId) {
+    if (sourceId === targetId) return;
+    this.setState(s => {
+      const chapters = [...s.chapters];
+      const from = chapters.findIndex(c => c.id === sourceId);
+      const to = chapters.findIndex(c => c.id === targetId);
+      if (from < 0 || to < 0) return null;
+      const [item] = chapters.splice(from, 1);
+      chapters.splice(to, 0, item);
+      return { chapters };
+    });
+  }
+  _dragScene = null;
+  _dragChapter = null;
+  onSceneDragStart(chapterId, sceneId) { this._dragScene = { chapterId, sceneId }; this._dragChapter = null; }
+  onChapterDragStart(chapterId) { this._dragChapter = chapterId; this._dragScene = null; }
+  onSceneDrop(chapterId, sceneId) {
+    if (this._dragScene) { this.moveScene(this._dragScene.chapterId, this._dragScene.sceneId, chapterId, sceneId); this._dragScene = null; }
+  }
+  onChapterHeaderDrop(chapterId) {
+    if (this._dragScene) { this.moveScene(this._dragScene.chapterId, this._dragScene.sceneId, chapterId, null); this._dragScene = null; return; }
+    if (this._dragChapter) { this.moveChapter(this._dragChapter, chapterId); this._dragChapter = null; }
+  }
+  setVersionControl(v) { this.setState({ versionControlChoice: v }); }
+  setCompileTarget(t) { this.setState({ compileTarget: t }); }
+  setSettingsTab(t) { this.setState({ settingsTab: t }); }
+  snapshotNow() { this.setState({ lastSnapshot: 'just now' }); }
+  showToast(msg) {
+    this.setState({ toast: msg, modal: null });
+    setTimeout(() => { if (this.state.toast === msg) this.setState({ toast: null }); }, 2500);
+  }
+
+  findSelected() {
+    const s = this.state;
+    for (const c of s.chapters) {
+      const sc = c.scenes.find(x => x.id === s.selectedId);
+      if (sc) return { ...sc, kind: 'scene', chapterTitle: c.title };
+    }
+    const fm = s.frontMatter.find(x => x.id === s.selectedId);
+    if (fm) return { ...fm, kind: 'front' };
+    const bm = s.backMatter.find(x => x.id === s.selectedId);
+    if (bm) return { ...bm, kind: 'back' };
+    return {};
+  }
+
+  renderVals() {
+    const s = this.state;
+    const selected = this.findSelected();
+    const chaptersView = s.chapters.map(c => {
+      const expanded = !!s.expandedChapters[c.id];
+      return {
+        id: c.id, title: c.title, expanded,
+        chevronTransform: expanded ? 'none' : 'rotate(-90deg)',
+        toggle: () => this.toggleChapter(c.id),
+        dragStart: () => this.onChapterDragStart(c.id),
+        drop: (e) => { e.preventDefault(); this.onChapterHeaderDrop(c.id); },
+        renameClick: (e) => { e.stopPropagation(); this.openRename('chapter', c.id, c.title); },
+        addSceneClick: () => this.openNewScene(c.id),
+        scenes: c.scenes.map(sc => ({
+          id: sc.id, title: sc.title, wcLabel: sc.wordCount ? sc.wordCount + 'w' : '',
+          selClass: sc.id === s.selectedId ? 'sel' : '',
+          select: () => this.select(sc.id),
+          dragStart: () => this.onSceneDragStart(c.id, sc.id),
+          drop: (e) => { e.preventDefault(); this.onSceneDrop(c.id, sc.id); },
+          renameClick: (e) => { e.stopPropagation(); this.openRename('scene', sc.id, sc.title, c.id); }
+        }))
+      };
+    });
+    const frontMatterView = s.frontMatter.map(it => ({ id: it.id, title: it.title, selClass: it.id === s.selectedId ? 'sel' : '', select: () => this.select(it.id) }));
+    const backMatterView = s.backMatter.map(it => ({ id: it.id, title: it.title, selClass: it.id === s.selectedId ? 'sel' : '', select: () => this.select(it.id) }));
+    const history = [
+      { id: 'h1', subject: 'Revise opening line', time: '2 hours ago', open: () => this.openModal('diff', { diffKind: 'history' }) },
+      { id: 'h2', subject: 'Add Room Nine detail', time: 'Yesterday', open: () => this.openModal('diff', { diffKind: 'history' }) },
+      { id: 'h3', subject: 'Initial draft', time: '3 days ago', open: () => this.openModal('diff', { diffKind: 'history' }) }
+    ];
+    const compileTabs = [
+      { id: 'epub', label: 'EPUB' }, { id: 'print', label: 'Print PDF' }, { id: 'docx', label: 'DOCX' }
+    ].map(t => {
+      const active = s.compileTarget === t.id;
+      return { ...t, select: () => this.setCompileTarget(t.id), border: active ? 'var(--color-accent)' : 'var(--color-neutral-700)', bg: active ? 'var(--color-accent-900)' : 'transparent', color: active ? 'var(--color-accent-100)' : 'var(--color-neutral-400)', weight: active ? 500 : 400 };
+    });
+    const settingsTabs = ['book', 'series', 'publishing', 'target', 'compile', 'print'].map(t => ({
+      id: t, label: t.charAt(0).toUpperCase() + t.slice(1), activeClass: s.settingsTab === t ? 'active' : '', select: () => this.setSettingsTab(t)
+    }));
+    const modal = s.modal;
+    return {
+      chaptersView, frontMatterView, backMatterView, history, compileTabs, settingsTabs,
+      msExpanded: s.expandedSections.ms, msChevron: s.expandedSections.ms ? 'none' : 'rotate(-90deg)', toggleMs: () => this.toggleSection('ms'),
+      fmExpanded: s.expandedSections.fm, fmChevron: s.expandedSections.fm ? 'none' : 'rotate(-90deg)', toggleFm: () => this.toggleSection('fm'),
+      bmExpanded: s.expandedSections.bm, bmChevron: s.expandedSections.bm ? 'none' : 'rotate(-90deg)', toggleBm: () => this.toggleSection('bm'),
+      selectedTitle: selected.title || '', selectedSynopsis: selected.synopsis || '', selectedParas: selected.paragraphs || [],
+      selectedIsScene: selected.kind === 'scene',
+      selectedBreadcrumb: selected.kind === 'scene' ? selected.chapterTitle : (selected.kind === 'front' ? 'Front Matter' : 'Back Matter'),
+      selectedAlign: selected.kind === 'scene' ? 'left' : 'center',
+      isTypewriter: s.isTypewriter, typewriterStyle: s.isTypewriter ? 'border-color:var(--color-accent);color:var(--color-accent-100)' : '',
+      toggleTypewriter: () => this.toggleTypewriter(),
+      inspectorOpen: s.inspectorOpen, toggleInspector: () => this.toggleInspector(),
+      bannerVisible: !s.bannerDismissed, dismissBanner: () => this.dismissBanner(),
+      compareConflict: () => this.openModal('diff', { diffKind: 'conflict' }),
+      openNewProject: () => this.openModal('newProject'),
+      openAddExisting: () => this.openModal('addExisting'),
+      openVersionControl: () => this.openModal('versionControl'),
+      openCompile: () => this.openModal('compile'),
+      openSettings: () => this.openModal('settings'),
+      openNewChapter: () => this.openNewChapter(),
+      closeModal: () => this.closeModal(),
+      stopClick: (e) => e.stopPropagation(),
+      anyModal: !!modal,
+      modalNewProject: modal?.type === 'newProject', modalAddExisting: modal?.type === 'addExisting',
+      modalVersionControl: modal?.type === 'versionControl', modalCompile: modal?.type === 'compile',
+      modalSettings: modal?.type === 'settings', modalPrompt: modal?.type === 'newChapter' || modal?.type === 'newScene' || modal?.type === 'rename',
+      modalDiff: modal?.type === 'diff',
+      diffLeftLabel: modal?.diffKind === 'conflict' ? 'Original' : 'Revise opening line (2h ago)',
+      diffRightLabel: modal?.diffKind === 'conflict' ? 'Conflict Copy' : 'Current',
+      promptText: s.promptText, setPromptText: (e) => this.setState({ promptText: e.target.value }),
+      promptTitle: modal?.type === 'newChapter' ? 'New Chapter' : modal?.type === 'newScene' ? 'New Scene' : 'Rename',
+      promptFieldLabel: modal?.type === 'newChapter' ? 'Chapter Title' : modal?.type === 'newScene' ? 'Scene Title' : 'Title',
+      promptConfirmLabel: modal?.type === 'rename' ? 'Rename' : 'Create',
+      submitPrompt: () => {
+        if (modal?.type === 'newChapter') this.submitNewChapter();
+        else if (modal?.type === 'newScene') this.submitNewScene();
+        else if (modal?.type === 'rename') this.submitRename();
+      },
+      allowDrop: (e) => e.preventDefault(),
+      versionControlChoice: s.versionControlChoice,
+      pickGit: () => this.setVersionControl('git'), pickLocal: () => this.setVersionControl('local'),
+      gitBorder: s.versionControlChoice === 'git' ? 'var(--color-accent)' : 'var(--color-neutral-700)',
+      gitBg: s.versionControlChoice === 'git' ? 'var(--color-accent-900)' : 'transparent',
+      localBorder: s.versionControlChoice === 'local' ? 'var(--color-accent)' : 'var(--color-neutral-700)',
+      localBg: s.versionControlChoice === 'local' ? 'var(--color-accent-900)' : 'transparent',
+      compileIsPrint: s.compileTarget === 'print',
+      settingsIsBook: s.settingsTab === 'book', settingsIsSeries: s.settingsTab === 'series',
+      settingsIsPublishing: s.settingsTab === 'publishing', settingsIsTarget: s.settingsTab === 'target',
+      settingsIsCompile: s.settingsTab === 'compile', settingsIsPrint: s.settingsTab === 'print',
+      lastSnapshot: s.lastSnapshot, snapshotNow: () => this.snapshotNow(),
+      toast: s.toast,
+      scaleTransform: 'scale(' + s.scale + ')',
+      createProject: () => this.showToast('Project created'),
+      compileNow: () => this.showToast('Compiled to ~/Desktop/The Last Shift.epub'),
+      selectRepo: () => this.showToast('Added "the-last-shift"')
+    };
+  }
+}
+
+</script>
+</body>
+</html>
