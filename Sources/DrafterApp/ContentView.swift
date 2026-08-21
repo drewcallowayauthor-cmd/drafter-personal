@@ -473,7 +473,7 @@ struct ContentView: View {
             isNewProjectSheetPresented = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestAddExistingProject)) { _ in
-            isCloneProjectSheetPresented = true
+            presentAddExistingProject()
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestOpenProject)) { _ in
             isImporterPresented = true
@@ -852,7 +852,7 @@ struct ContentView: View {
         } else {
             NoProjectWelcomeView(
                 onNewProject: { isNewProjectSheetPresented = true },
-                onAddExisting: { isCloneProjectSheetPresented = true },
+                onAddExisting: presentAddExistingProject,
                 onOpenRecent: { url in Task { await projectViewModel.open(root: url) } }
             )
         }
@@ -894,6 +894,21 @@ struct ContentView: View {
     /// General pane's "reopen last project on launch" (§12): only fires when nothing
     /// else already opened a project this launch (debug override, or a project the OS
     /// asks us to open) and the writer has opted in.
+    /// "Add Existing" (§5.9) branches on the last-picked version-control mode
+    /// (`NewProjectSheet.defaultVersionControlMode()`'s same source): Git mode clones
+    /// from the account's GitHub repos, since a local folder alone isn't "existing" in
+    /// any useful sense without a remote — Local-file mode has no such registry, so it
+    /// just browses for the folder directly, reusing the same importer "Open
+    /// Project…" already uses.
+    private func presentAddExistingProject() {
+        switch NewProjectSheet.defaultVersionControlMode() {
+        case .git:
+            isCloneProjectSheetPresented = true
+        case .localFile:
+            isImporterPresented = true
+        }
+    }
+
     private func reopenLastProjectIfRequested() async {
         guard projectViewModel.metadata == nil else { return }
         guard AppPreferences.shared.reopenLastProjectOnLaunch else { return }
