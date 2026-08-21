@@ -3,11 +3,12 @@ import DrafterCore
 import Foundation
 import ProjectStore
 
-/// §9.5's DOCX fallback: assembles the manuscript and runs pandoc straight to `.docx`.
-/// Scope note: §9.5 ships a custom `reference.docx` for sane Normal/Heading 1 styles;
-/// v1 omits that and uses pandoc's own built-in defaults, which are fully functional —
-/// flagged here rather than silently built in, the same way epub.css and the print
-/// template's continuous (non-roman-front-matter) page numbering are flagged.
+/// §9.5's DOCX fallback: assembles the manuscript and runs pandoc straight to `.docx`,
+/// styled via a bundled `reference.docx` (`BundledDOCXTemplate`) for standard
+/// submission-manuscript format — 12pt Times New Roman, double-spaced, no extra space
+/// between paragraphs, 0.5in first-line indents, left-aligned, centered chapter
+/// headings after a page break. That's the format agents/publishers expect from a
+/// submitted manuscript, distinct from the finished-book look of the print PDF.
 @MainActor
 final class DOCXExportCoordinator {
     struct ExportResult: Equatable {
@@ -28,6 +29,7 @@ final class DOCXExportCoordinator {
         workingTree: URL,
         outputDirectory: URL,
         pandocExecutableURL: URL,
+        referenceDocURL: URL? = BundledDOCXTemplate.referenceDocxURL,
         read: @escaping SceneReader = { try String(contentsOf: $0, encoding: .utf8) }
     ) async throws -> ExportResult {
         let buildDirectory = workingTree.appendingPathComponent("Build")
@@ -40,11 +42,13 @@ final class DOCXExportCoordinator {
         let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
         let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle).docx")
 
+        var arguments = [assembledURL.path, "--from=markdown+smart", "--to=docx", "-o", outputURL.path]
+        if let referenceDocURL {
+            arguments.append("--reference-doc=\(referenceDocURL.path)")
+        }
+
         let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)
-        let result = try await pandocService.run(
-            arguments: [assembledURL.path, "--from=markdown+smart", "--to=docx", "-o", outputURL.path],
-            in: buildDirectory
-        )
+        let result = try await pandocService.run(arguments: arguments, in: buildDirectory)
         guard result.succeeded else {
             throw DrafterError.processFailed(command: "pandoc", exitCode: result.exitCode, stderr: result.standardError)
         }

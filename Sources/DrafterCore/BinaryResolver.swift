@@ -1,11 +1,12 @@
 import Foundation
 
-/// Locates an external binary (`pandoc`, `typst`, `epubcheck`) on disk. §2.1's order is
-/// bundled → user-configured path in Settings → PATH; bundling isn't built yet, so today
-/// this covers the Settings-override and PATH-equivalent steps — an optional user-supplied
-/// override, then a fixed list of common install locations (since these tools are rarely
-/// installed via a package manager that puts them on a *login shell's* PATH in a way
-/// `Process` inherits), then the process's actual `PATH` environment variable.
+/// Locates an external binary (`pandoc`, `typst`, `epubcheck`) on disk. An explicit
+/// Settings override always wins (a deliberate user choice shouldn't be silently
+/// shadowed by a bundled copy); after that, the app's own bundled binary if it has one
+/// (`pandoc`/`typst` — see `BundledBinaries`, macOS arm64 only), then a fixed list of
+/// common install locations (since these tools are rarely installed via a package
+/// manager that puts them on a *login shell's* PATH in a way `Process` inherits), then
+/// the process's actual `PATH` environment variable.
 public enum BinaryResolver {
     public static let defaultCandidateDirectories = [
         "~/.local/bin",
@@ -16,12 +17,17 @@ public enum BinaryResolver {
     public static func resolve(
         name: String,
         override: URL? = nil,
+        bundled: URL? = nil,
         candidateDirectories: [String] = defaultCandidateDirectories,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
     ) -> URL? {
         if let override, fileManager.isExecutableFile(atPath: override.path) {
             return override
+        }
+
+        if let bundled, fileManager.isExecutableFile(atPath: bundled.path) {
+            return bundled
         }
 
         for directory in candidateDirectories {

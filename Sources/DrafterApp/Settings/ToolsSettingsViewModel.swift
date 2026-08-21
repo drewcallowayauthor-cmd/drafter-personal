@@ -34,7 +34,14 @@ final class ToolsSettingsViewModel {
         let candidateDirectories = id == "git"
             ? BinaryResolver.defaultCandidateDirectories + ["/usr/bin"]
             : BinaryResolver.defaultCandidateDirectories
-        let resolved = BinaryResolver.resolve(name: id, override: overrideURL, candidateDirectories: candidateDirectories)
+        // git/epubcheck aren't bundled — only pandoc and typst are (`BundledBinaries`).
+        let bundled: URL? = id == "pandoc" ? BundledBinaries.pandocURL : id == "typst" ? BundledBinaries.typstURL : nil
+        let resolved = BinaryResolver.resolve(
+            name: id,
+            override: overrideURL,
+            bundled: bundled,
+            candidateDirectories: candidateDirectories
+        )
         return ToolStatus(id: id, displayName: displayName, resolvedPath: resolved?.path)
     }
 }

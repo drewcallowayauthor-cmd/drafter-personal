@@ -38,6 +38,7 @@ struct CompileSheet: View {
     let onCompiled: (CompileOutcome) -> Void
 
     @State private var target: CompileTarget = .epub
+    @State private var epubTemplate: ManuscriptTemplate = .novel
     @State private var outputDirectory: URL
     @State private var chapterTitleFormat: String
     @State private var sceneSeparator: String
@@ -90,6 +91,9 @@ struct CompileSheet: View {
                     outputLocationRow
                     frontBackMatterToggles
                     chapterFields
+                    if target == .epub {
+                        epubFields
+                    }
                     if target == .printPDF {
                         printFields
                     }
@@ -185,6 +189,17 @@ struct CompileSheet: View {
         }
     }
 
+    private var epubFields: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Template")
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Theme.Color.text.opacity(0.7))
+            NocturneSegmentedControl(selection: $epubTemplate, options: ManuscriptTemplate.allCases) { template in
+                Text(template.rawValue)
+            }
+        }
+    }
+
     private var printFields: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Trim Size")
@@ -277,9 +292,9 @@ struct CompileSheet: View {
         defer { isCompiling = false }
 
         let pandocOverride = AppPreferences.shared.pandocPathOverride.map { URL(fileURLWithPath: $0) }
-        guard let pandocURL = BinaryResolver.resolve(name: "pandoc", override: pandocOverride) else {
-            compileError = "pandoc isn't installed or couldn't be found (checked ~/.local/bin, /opt/homebrew/bin, "
-                + "/usr/local/bin, and PATH)."
+        guard let pandocURL = BinaryResolver.resolve(name: "pandoc", override: pandocOverride, bundled: BundledBinaries.pandocURL) else {
+            compileError = "pandoc isn't installed or couldn't be found (checked the app's own bundled copy — "
+                + "arm64 Macs only — plus ~/.local/bin, /opt/homebrew/bin, /usr/local/bin, and PATH)."
             return
         }
 
@@ -296,7 +311,10 @@ struct CompileSheet: View {
             let outcome: CompileOutcome
             switch target {
             case .epub:
-                let cssURL = try EPUBStylesheetManager.ensureStylesheetExists(fileWriter: LiveAtomicFileWriter())
+                let cssURL = try EPUBStylesheetManager.ensureStylesheetExists(
+                    template: epubTemplate,
+                    fileWriter: LiveAtomicFileWriter()
+                )
                 let coordinator = EPUBExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
                 let result = try await coordinator.export(
                     metadata: exportMetadata,
@@ -310,9 +328,9 @@ struct CompileSheet: View {
 
             case .printPDF:
                 let typstOverride = AppPreferences.shared.typstPathOverride.map { URL(fileURLWithPath: $0) }
-                guard let typstURL = BinaryResolver.resolve(name: "typst", override: typstOverride) else {
-                    compileError = "typst isn't installed or couldn't be found (checked ~/.local/bin, "
-                        + "/opt/homebrew/bin, /usr/local/bin, and PATH)."
+                guard let typstURL = BinaryResolver.resolve(name: "typst", override: typstOverride, bundled: BundledBinaries.typstURL) else {
+                    compileError = "typst isn't installed or couldn't be found (checked the app's own bundled copy — "
+                        + "arm64 Macs only — plus ~/.local/bin, /opt/homebrew/bin, /usr/local/bin, and PATH)."
                     return
                 }
                 let coordinator = PrintExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())

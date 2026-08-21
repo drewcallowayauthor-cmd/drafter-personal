@@ -91,6 +91,69 @@ struct BinaryResolverTests {
         #expect(resolved == overrideBinary)
     }
 
+    @Test("a bundled binary is used when there's no override, before candidate directories are checked")
+    func bundledUsedBeforeCandidateSearch() throws {
+        let bundledDirectory = try makeTempDirectory()
+        let candidateDirectory = try makeTempDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: bundledDirectory)
+            try? FileManager.default.removeItem(at: candidateDirectory)
+        }
+        let bundledBinary = bundledDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: bundledBinary)
+        let candidateBinary = candidateDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: candidateBinary)
+
+        let resolved = BinaryResolver.resolve(
+            name: "pandoc",
+            bundled: bundledBinary,
+            candidateDirectories: [candidateDirectory.path],
+            environment: [:]
+        )
+
+        #expect(resolved == bundledBinary)
+    }
+
+    @Test("an explicit override wins over the bundled binary")
+    func overrideWinsOverBundled() throws {
+        let overrideDirectory = try makeTempDirectory()
+        let bundledDirectory = try makeTempDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: overrideDirectory)
+            try? FileManager.default.removeItem(at: bundledDirectory)
+        }
+        let overrideBinary = overrideDirectory.appendingPathComponent("custom-pandoc")
+        try makeExecutable(at: overrideBinary)
+        let bundledBinary = bundledDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: bundledBinary)
+
+        let resolved = BinaryResolver.resolve(
+            name: "pandoc",
+            override: overrideBinary,
+            bundled: bundledBinary,
+            environment: [:]
+        )
+
+        #expect(resolved == overrideBinary)
+    }
+
+    @Test("a missing bundled binary falls back to the candidate directory search")
+    func missingBundledFallsBack() throws {
+        let candidateDirectory = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: candidateDirectory) }
+        let candidateBinary = candidateDirectory.appendingPathComponent("pandoc")
+        try makeExecutable(at: candidateBinary)
+
+        let resolved = BinaryResolver.resolve(
+            name: "pandoc",
+            bundled: URL(fileURLWithPath: "/nonexistent/pandoc"),
+            candidateDirectories: [candidateDirectory.path],
+            environment: [:]
+        )
+
+        #expect(resolved == candidateBinary)
+    }
+
     @Test("a non-executable override falls back to the candidate directory search")
     func nonExecutableOverrideFallsBack() throws {
         let candidateDirectory = try makeTempDirectory()

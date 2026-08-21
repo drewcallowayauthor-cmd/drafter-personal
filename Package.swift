@@ -94,7 +94,7 @@ let package = Package(
         .executableTarget(
             name: "DrafterApp",
             dependencies: ["DrafterCore", "GitService", "CredentialStore", "CompileService", "SnapshotService", "ProjectStore"],
-            resources: [.copy("Resources/Fonts")],
+            resources: [.copy("Resources/Fonts"), .copy("Resources/DOCX"), .copy("Resources/Binaries")],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .testTarget(
