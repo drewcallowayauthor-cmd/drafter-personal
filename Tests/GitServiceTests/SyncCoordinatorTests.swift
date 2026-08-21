@@ -92,6 +92,26 @@ struct SyncCoordinatorTests {
         #expect(invocations[4].arguments == ["push", "-u", "origin", "main"])
     }
 
+    @Test("a clean merge followed by a failed push reports the merge commit in pendingCommits, not the stale pre-merge ahead count")
+    func divergedCleanMergeThenFailedPushCountsTheMergeCommit() async throws {
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "2\t3\n", standardError: ""), forExecutableNamed: "git") // rev-list: ahead 2, behind 3
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // merge (clean)
+        await runner.script(
+            ProcessResult(exitCode: 1, standardOutput: "", standardError: "network unreachable"),
+            forExecutableNamed: "git"
+        ) // push fails
+        let coordinator = makeCoordinator(runner: runner)
+
+        let finalState = try await coordinator.syncNow()
+
+        // Pre-merge ahead count was 2; the merge itself adds one more local commit,
+        // so a push failure right after should report 3 pending, not 2.
+        #expect(finalState == .offline(pendingCommits: 3))
+    }
+
     @Test("diverged with a conflicting merge: lands on conflicted with the file list, never pushes")
     func divergedConflictedMergeStops() async throws {
         let runner = MockProcessRunner()

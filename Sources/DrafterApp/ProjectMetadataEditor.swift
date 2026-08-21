@@ -23,7 +23,7 @@ struct ProjectMetadataEditor: View {
     let workingTree: URL?
     let isGitHubConnected: Bool
     let onConnectToGitHub: () -> Void
-    let onSnapshotNow: () -> Void
+    let onSnapshotNow: () async -> Void
     let onSave: (ProjectMetadata) -> Void
     let onCancel: () -> Void
 
@@ -33,7 +33,7 @@ struct ProjectMetadataEditor: View {
         workingTree: URL?,
         isGitHubConnected: Bool,
         onConnectToGitHub: @escaping () -> Void,
-        onSnapshotNow: @escaping () -> Void,
+        onSnapshotNow: @escaping () async -> Void,
         onSave: @escaping (ProjectMetadata) -> Void,
         onCancel: @escaping () -> Void
     ) {
@@ -219,9 +219,9 @@ struct ProjectMetadataEditor: View {
 /// Control tab rather than its own standalone sheet.
 private struct LocalFileVersionControlTabContent: View {
     @State private var viewModel: LocalFileVersionControlViewModel
-    let onSnapshotNow: () -> Void
+    let onSnapshotNow: () async -> Void
 
-    init(snapshotService: SnapshotService, workingTree: URL, onSnapshotNow: @escaping () -> Void) {
+    init(snapshotService: SnapshotService, workingTree: URL, onSnapshotNow: @escaping () async -> Void) {
         _viewModel = State(initialValue: LocalFileVersionControlViewModel(snapshotService: snapshotService, workingTree: workingTree))
         self.onSnapshotNow = onSnapshotNow
     }
@@ -246,8 +246,10 @@ private struct LocalFileVersionControlTabContent: View {
                 }
                 .buttonStyle(.nocturneSecondary)
                 Button("Snapshot Now") {
-                    onSnapshotNow()
-                    Task { await viewModel.load() }
+                    Task {
+                        await onSnapshotNow()
+                        await viewModel.load()
+                    }
                 }
                 .buttonStyle(.nocturneSecondary)
                 .disabled(viewModel.isLoading)

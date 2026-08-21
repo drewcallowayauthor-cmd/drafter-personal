@@ -81,7 +81,9 @@ public actor SnapshotService {
             return SnapshotRetention.Entry(
                 name: name,
                 date: parsed.date,
-                isProtected: metadata?.isProtectedFromPruning ?? false
+                // Fail closed: an unreadable metadata file must not cause a snapshot
+                // to look unprotected and get pruned.
+                isProtected: metadata?.isProtectedFromPruning ?? true
             )
         }
         for name in SnapshotRetention.namesToPrune(entries: entries, now: now) {
@@ -163,7 +165,14 @@ public actor SnapshotService {
     /// `FileManager.contentsEqual` recurses through directories on its own.
     private func hasChanged(since folderName: String, in workingTree: URL) throws -> Bool {
         let previous = historyDirectory(in: workingTree).appendingPathComponent(folderName)
-        for name in try topLevelNamesToSnapshot(in: workingTree) {
+        let currentNames = try topLevelNamesToSnapshot(in: workingTree)
+        let previousNames = try fileManager.contentsOfDirectory(atPath: previous.path)
+            .filter { !$0.hasPrefix(".") && !Self.excludedTopLevelNames.contains($0) }
+        // A name present in the last snapshot but absent from the current tree (a whole
+        // top-level folder/file deleted since) is itself a change — comparing only the
+        // current tree's names would miss it entirely.
+        if previousNames.contains(where: { !currentNames.contains($0) }) { return true }
+        for name in currentNames {
             let current = workingTree.appendingPathComponent(name).path
             let priorCopy = previous.appendingPathComponent(name).path
             guard fileManager.fileExists(atPath: priorCopy) else { return true }

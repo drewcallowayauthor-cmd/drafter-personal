@@ -78,6 +78,25 @@ struct GitHubAPIClientTests {
         }
     }
 
+    @Test("a non-connectivity transport error surfaces distinctly rather than collapsing to offline")
+    func nonConnectivityTransportErrorDoesNotMapToOffline() async throws {
+        let requester = MockHTTPRequester()
+        await requester.script(throwing: URLError(.badServerResponse))
+        let client = GitHubAPIClient(requester: requester)
+
+        do {
+            _ = try await client.currentUser(token: "ghp_abc")
+            Issue.record("expected currentUser to throw")
+        } catch let error as DrafterError {
+            #expect(error != .offline)
+            if case .githubAPIError = error {
+                // expected: a real, distinct failure rather than a silently-retried offline state
+            } else {
+                Issue.record("expected .githubAPIError, got \(error)")
+            }
+        }
+    }
+
     @Test("listRepositories decodes an array and requests the owner's repos")
     func listRepositoriesDecodesArray() async throws {
         let requester = MockHTTPRequester()

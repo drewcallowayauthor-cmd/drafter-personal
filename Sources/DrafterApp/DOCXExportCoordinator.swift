@@ -37,7 +37,7 @@ final class DOCXExportCoordinator {
         let assembledURL = buildDirectory.appendingPathComponent("assembled.md")
         try fileWriter.write(Data(assembled.utf8), to: assembledURL)
 
-        let sanitizedTitle = metadata.title.isEmpty ? "Untitled" : metadata.title
+        let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
         let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle).docx")
 
         let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)

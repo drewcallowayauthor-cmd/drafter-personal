@@ -64,6 +64,25 @@ struct SnapshotServiceTests {
         #expect(historyContents.count == 2)
     }
 
+    @Test("a snapshot is taken again when a whole top-level entry is deleted, even if nothing else changed")
+    func snapshotsAgainAfterATopLevelDeletion() async throws {
+        let root = try makeWorkingTree()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let service = SnapshotService()
+
+        let notes = root.appendingPathComponent("Notes")
+        try FileManager.default.createDirectory(at: notes, withIntermediateDirectories: true)
+        try Data("Some notes.".utf8).write(to: notes.appendingPathComponent("idea.md"))
+
+        _ = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
+        try FileManager.default.removeItem(at: notes)
+        let secondCreated = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
+
+        #expect(secondCreated)
+        let historyContents = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
+        #expect(historyContents.count == 2)
+    }
+
     @Test("show/contents reads a file's text back out of a specific snapshot")
     func showsContentsAtASnapshot() async throws {
         let root = try makeWorkingTree()
@@ -127,10 +146,13 @@ struct SnapshotServiceTests {
 
         for offset in 0..<2 {
             let name = "2026-01-01 00-0\(offset)-00 M"
-            try FileManager.default.createDirectory(
-                at: historyDirectory.appendingPathComponent(name),
-                withIntermediateDirectories: true
-            )
+            let folder = historyDirectory.appendingPathComponent(name)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            // Explicit, readable, unprotected metadata — the fail-safe for *unreadable*
+            // metadata defaults to protected (never prune on uncertainty), so this test
+            // needs real metadata to actually exercise pruning of unprotected snapshots.
+            let metadata = SnapshotMetadata(subject: "Autosave", isProtectedFromPruning: false)
+            try JSONEncoder().encode(metadata).write(to: folder.appendingPathComponent(SnapshotMetadata.filename))
         }
 
         try await service.pruneSnapshots(in: root, now: now)
@@ -138,6 +160,28 @@ struct SnapshotServiceTests {
         let remaining = try FileManager.default.contentsOfDirectory(atPath: historyDirectory.path)
         #expect(remaining.count == 1)
         _ = ancient
+    }
+
+    @Test("pruneSnapshots never removes a snapshot whose metadata can't be read — fails closed, not open")
+    func doesNotPruneUnreadableMetadata() async throws {
+        let root = try makeWorkingTree()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let service = SnapshotService()
+        let historyDirectory = root.appendingPathComponent("History")
+
+        let name = "2026-01-01 00-00-00 M"
+        let folder = historyDirectory.appendingPathComponent(name)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        // No .drafter-snapshot.json written at all — readMetadata will throw.
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 8, day: 18))!
+
+        try await service.pruneSnapshots(in: root, now: now)
+
+        let remaining = try FileManager.default.contentsOfDirectory(atPath: historyDirectory.path)
+        #expect(remaining == [name])
     }
 
     @Test("cloudProvider detects a Box-synced path and returns nil for a plain local path")

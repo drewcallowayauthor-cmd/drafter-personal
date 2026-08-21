@@ -50,6 +50,45 @@ struct ProjectViewModelOpenGuardTests {
         await secondWindow.closeProject()
     }
 
+    @Test("concurrent open and close calls serialize instead of interleaving and corrupting state")
+    func concurrentOpenAndCloseSerialize() async throws {
+        let root = try makeProjectRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let vm = ProjectViewModel()
+
+        // Fired without awaiting either first. This asserts the invariant
+        // `serialized()` is meant to guarantee — `open`'s `attach()` and
+        // `closeProject`'s `reset()` never interleave, so state is never left torn
+        // between them. Note: Local-file mode's `attach()` has no real network
+        // `await` gap wide enough for cooperative scheduling to actually interleave
+        // these two calls in practice, so this test doesn't reproduce the historical
+        // bug (which needed a slow Git-mode network fetch mid-`attach()` to open the
+        // window) — it's a standing invariant check, not a reproduction.
+        async let openCall: Void = vm.open(root: root)
+        async let closeCall: Void = vm.closeProject()
+        _ = await (openCall, closeCall)
+
+        // Whichever actually ran last, the result must be internally consistent: an
+        // "open" project always has both set; a "closed" one has neither torn apart.
+        if vm.binderTree != nil {
+            #expect(vm.autocommitScheduler != nil)
+        } else {
+            #expect(vm.autocommitScheduler == nil)
+        }
+
+        // No orphaned registry lock either way — a fresh window can still open the
+        // same root once this settles.
+        if vm.binderTree == nil {
+            let secondWindow = ProjectViewModel()
+            await secondWindow.open(root: root)
+            #expect(secondWindow.errorMessage == nil)
+            await secondWindow.closeProject()
+        }
+
+        await vm.closeProject()
+    }
+
     private func makeProjectRoot() throws -> URL {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let chapterDirectory = root.appendingPathComponent("Manuscript/01 Arrival")

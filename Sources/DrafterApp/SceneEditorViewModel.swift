@@ -17,7 +17,10 @@ final class SceneEditorViewModel {
     private(set) var errorMessage: String?
 
     private let fileWriter: AtomicFileWriting
-    private let autosaveDelay: Duration
+    /// `var`, not `let`: re-read on every autosave debounce so a Settings change to
+    /// the autosave interval takes effect immediately rather than only after the app
+    /// (and this view model, which lives for the app's lifetime) restarts.
+    var autosaveDelay: Duration
     private var autosaveTask: Task<Void, Never>?
     private var wordCountBaseline = 0
 

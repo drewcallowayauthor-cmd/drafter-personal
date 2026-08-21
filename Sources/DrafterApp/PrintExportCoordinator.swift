@@ -69,7 +69,7 @@ final class PrintExportCoordinator {
         }
         let pandocDefaultTemplate = templateResult.standardOutput
 
-        let sanitizedTitle = metadata.title.isEmpty ? "Untitled" : metadata.title
+        let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
         let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle) - interior.pdf")
         let templateURL = buildDirectory.appendingPathComponent("template.typ")
         let mainTypstURL = buildDirectory.appendingPathComponent("main.typ")

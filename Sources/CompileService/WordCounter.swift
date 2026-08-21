@@ -6,7 +6,12 @@ import Foundation
 /// it's cheap to exhaustively unit test.
 public enum WordCounter {
     public static func count(_ markdown: String, sceneSeparator: String = "* * *") -> Int {
-        var text = stripFrontMatter(markdown)
+        // Normalize CRLF up front: every line-based comparison below (front-matter
+        // fences, scene-separator lines) compares against a bare "\n"-split line, which
+        // a CRLF-terminated source would fail (trailing "\r" on every line), silently
+        // leaving front matter unstripped and separators uncollapsed.
+        let normalized = markdown.replacingOccurrences(of: "\r\n", with: "\n")
+        var text = stripFrontMatter(normalized)
         text = stripHTMLComments(text)
 
         let lines = text.split(separator: "\n", omittingEmptySubsequences: false)

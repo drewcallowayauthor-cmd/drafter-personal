@@ -56,13 +56,31 @@ public struct LiveProcessRunner: ProcessRunning {
             process.standardOutput = stdoutPipe
             process.standardError = stderrPipe
 
+            // A subprocess can write more than the pipe's kernel buffer (~64KB) before
+            // exiting; if nothing drains the pipe until termination, the child blocks on
+            // write() and never terminates, deadlocking the wait below. Draining
+            // incrementally as data arrives avoids that.
+            let stdoutBuffer = LockedData()
+            let stderrBuffer = LockedData()
+            stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+                stdoutBuffer.append(handle.availableData)
+            }
+            stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+                stderrBuffer.append(handle.availableData)
+            }
+
             process.terminationHandler = { process in
-                let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                // availableData returns empty Data at EOF, so a final drain here
+                // (after the readabilityHandler has stopped firing) picks up any
+                // remainder without racing the handler.
+                stdoutPipe.fileHandleForReading.readabilityHandler = nil
+                stderrPipe.fileHandleForReading.readabilityHandler = nil
+                stdoutBuffer.append(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
+                stderrBuffer.append(stderrPipe.fileHandleForReading.readDataToEndOfFile())
                 let result = ProcessResult(
                     exitCode: process.terminationStatus,
-                    standardOutput: String(data: stdoutData, encoding: .utf8) ?? "",
-                    standardError: String(data: stderrData, encoding: .utf8) ?? ""
+                    standardOutput: String(data: stdoutBuffer.data, encoding: .utf8) ?? "",
+                    standardError: String(data: stderrBuffer.data, encoding: .utf8) ?? ""
                 )
                 continuation.resume(returning: result)
             }
@@ -79,5 +97,24 @@ public struct LiveProcessRunner: ProcessRunning {
                 )
             }
         }
+    }
+}
+
+/// A `Data` accumulator safe to append to from a pipe's `readabilityHandler` queue while
+/// being read from the process's `terminationHandler` queue.
+private final class LockedData: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage = Data()
+
+    func append(_ chunk: Data) {
+        lock.lock()
+        storage.append(chunk)
+        lock.unlock()
+    }
+
+    var data: Data {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage
     }
 }

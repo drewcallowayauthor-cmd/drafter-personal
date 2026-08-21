@@ -50,7 +50,7 @@ public actor GitHubAPIClient {
     /// account. GitHub returns 422 when the name is already taken; that surfaces as
     /// `.githubAPIError` so the caller can fall back to the "Not synced" local-only path.
     public func createRepository(name: String, token: String) async throws -> GitHubRepository {
-        var request = makeRequest(path: "/user/repos", method: "POST", token: token)
+        var request = try makeRequest(path: "/user/repos", method: "POST", token: token)
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: ["name": name, "private": true])
         } catch {
@@ -63,7 +63,7 @@ public actor GitHubAPIClient {
     /// first. Filtering to those with a `project.json` at root is a caller concern (it
     /// needs a second request per repo) — this just lists what's there.
     public func listRepositories(token: String) async throws -> [GitHubRepository] {
-        let request = makeRequest(
+        let request = try makeRequest(
             path: "/user/repos?per_page=100&affiliation=owner&sort=created&direction=desc",
             method: "GET",
             token: token
@@ -74,7 +74,7 @@ public actor GitHubAPIClient {
     /// `GET /user` — used to verify a token (§5.3's "never store a token that hasn't
     /// been verified") and to source the local git identity's email (§5.2 step 4).
     public func currentUser(token: String) async throws -> GitHubUser {
-        let request = makeRequest(path: "/user", method: "GET", token: token)
+        let request = try makeRequest(path: "/user", method: "GET", token: token)
         return try await send(request)
     }
 
@@ -84,15 +84,20 @@ public actor GitHubAPIClient {
     /// owns. A 404 means "no such file," not a failure — resolves to `false`, not a
     /// thrown error.
     public func containsFile(fullName: String, path: String, token: String) async throws -> Bool {
-        let request = makeRequest(path: "/repos/\(fullName)/contents/\(path)", method: "GET", token: token)
+        let encodedFullName = fullName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? fullName
+        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        let request = try makeRequest(path: "/repos/\(encodedFullName)/contents/\(encodedPath)", method: "GET", token: token)
         let (data, statusCode) = try await performRequest(request)
         if statusCode == 404 { return false }
         try Self.throwIfError(statusCode: statusCode, data: data)
         return true
     }
 
-    private func makeRequest(path: String, method: String, token: String) -> URLRequest {
-        var request = URLRequest(url: URL(string: path, relativeTo: baseURL)!)
+    private func makeRequest(path: String, method: String, token: String) throws -> URLRequest {
+        guard let url = URL(string: path, relativeTo: baseURL) else {
+            throw DrafterError.githubAPIError(statusCode: -1, message: "Couldn't build a request URL for \(path).")
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
@@ -106,9 +111,22 @@ public actor GitHubAPIClient {
             let (data, response) = try await requester.perform(request)
             return (data, response.statusCode)
         } catch {
-            throw DrafterError.offline
+            // Only genuine connectivity failures read as `.offline` (§5.5's "queue and
+            // retry, don't alarm the user"). Anything else — a malformed response, TLS
+            // failure, etc. — is a real failure that would otherwise retry forever
+            // while silently never succeeding, so it needs to surface distinctly.
+            if let urlError = error as? URLError, Self.offlineURLErrorCodes.contains(urlError.code) {
+                throw DrafterError.offline
+            }
+            DrafterLog.credential.error("GitHub request failed: \(error, privacy: .public)")
+            throw DrafterError.githubAPIError(statusCode: -1, message: "Couldn't reach GitHub: \(error.localizedDescription)")
         }
     }
+
+    private static let offlineURLErrorCodes: Set<URLError.Code> = [
+        .notConnectedToInternet, .networkConnectionLost, .timedOut,
+        .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed
+    ]
 
     private static func throwIfError(statusCode: Int, data: Data) throws {
         guard (200...299).contains(statusCode) else {

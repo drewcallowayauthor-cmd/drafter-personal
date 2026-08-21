@@ -148,4 +148,53 @@ struct HistoryViewModelTests {
         #expect(viewModel.actionErrorMessage != nil)
         #expect(viewModel.restoredFileURL == nil)
     }
+
+    @Test("a slow load for a scene that's no longer selected doesn't overwrite the newer selection's entries")
+    func staleSlowerLoadDoesNotOverwriteNewerSelection() async throws {
+        let firstScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
+        let secondScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/02 Standoff.md")
+        let source = DelayedVersioningSource(delayedPath: "Manuscript/01 Arrival/01 Triage.md", delayMilliseconds: 50)
+        let viewModel = HistoryViewModel(source: source)
+
+        // Mirrors `.task(id: sceneURL)`: switch scenes before the first (slower)
+        // load resolves, then cancel it — matching what SwiftUI actually does when
+        // `sceneURL` changes. `DelayedVersioningSource`'s delay deliberately ignores
+        // Task cancellation (via a raw `DispatchQueue` timer, not `Task.sleep`), the
+        // same way a real subprocess wait (`Process.terminationHandler`) does — so
+        // this reproduces the actual failure mode: the cancelled load still resolves
+        // successfully, just later, and must not be allowed to clobber the newer one.
+        let firstLoad = Task { await viewModel.load(sceneURL: firstScene, workingTree: workingTree) }
+        try await Task.sleep(for: .milliseconds(5))
+        firstLoad.cancel()
+        await viewModel.load(sceneURL: secondScene, workingTree: workingTree)
+        _ = await firstLoad.value
+
+        #expect(viewModel.entries.map(\.subject) == ["second scene"])
+    }
+}
+
+/// A `VersioningSource` fake whose `log(for:)` can be made slower for one specific
+/// path, so a test can force a "started first but resolves last" ordering.
+private struct DelayedVersioningSource: VersioningSource {
+    let delayedPath: String
+    let delayMilliseconds: Int
+
+    func log(for path: String?, in workingTree: URL) async throws -> [CommitLogEntry] {
+        if path == delayedPath {
+            // Deliberately not `Task.sleep`, which throws immediately on cancellation
+            // — that would make this test pass for the wrong reason (an early throw,
+            // never reaching the success path this test needs to exercise). A raw
+            // `DispatchQueue` timer ignores Task cancellation entirely, the same way
+            // `LiveProcessRunner`'s subprocess-termination continuation does.
+            await withCheckedContinuation { continuation in
+                DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(delayMilliseconds)) {
+                    continuation.resume()
+                }
+            }
+            return [CommitLogEntry(sha: "first", date: Date(), subject: "first scene", authorName: "Tim Fleet", machineName: "Machine-1")]
+        }
+        return [CommitLogEntry(sha: "second", date: Date(), subject: "second scene", authorName: "Tim Fleet", machineName: "Machine-1")]
+    }
+
+    func show(path: String, at id: String, in workingTree: URL) async throws -> String { "" }
 }

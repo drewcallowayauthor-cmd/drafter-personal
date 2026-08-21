@@ -24,6 +24,9 @@ public struct LiveAtomicFileWriter: AtomicFileWriting {
             _ = try FileManager.default.replaceItemAt(url, withItemAt: tempURL)
         } catch {
             DrafterLog.projectStore.error("Atomic write to \(url.path, privacy: .public) failed: \(error, privacy: .public)")
+            // Best-effort: don't leave an orphaned temp file behind on a partial
+            // failure (replaceItemAt already consumes it on success).
+            try? FileManager.default.removeItem(at: tempURL)
             throw DrafterError.filesystem(underlying: String(describing: error))
         }
     }

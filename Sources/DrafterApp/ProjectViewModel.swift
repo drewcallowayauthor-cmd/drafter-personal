@@ -71,7 +71,33 @@ final class ProjectViewModel {
         }
     }
 
+    /// Every operation below that mutates `self.project`/`registeredRoot`/the
+    /// schedulers (`open`, `createNewProject`, `cloneProject`, `connectToGitHub`,
+    /// `refreshCredentialsAndResync`, `closeProject`) spans many `await` points while
+    /// building up that state incrementally rather than atomically. Nothing prevented
+    /// two of them from interleaving — e.g. the concurrent-editing alert's "Cancel"
+    /// (`closeProject`) firing while an in-flight `open`'s `attach()` was still
+    /// mid-flight, so `reset()` would run, then the original `attach()` would resume
+    /// and keep assigning schedulers into a project that was supposedly just closed.
+    /// Routing every entry point through this queue makes them run strictly one after
+    /// another regardless of call order, so no interleaving like that can happen.
+    private var operationQueue: Task<Void, Never> = Task {}
+
+    private func serialized(_ operation: @escaping () async -> Void) async {
+        let previous = operationQueue
+        let task = Task {
+            _ = await previous.value
+            await operation()
+        }
+        operationQueue = task
+        await task.value
+    }
+
     func open(root: URL) async {
+        await serialized { await self.openImpl(root: root) }
+    }
+
+    private func openImpl(root: URL) async {
         errorMessage = nil
         do {
             let project = try Project.open(root: root, fileWriter: LiveAtomicFileWriter())
@@ -111,6 +137,24 @@ final class ProjectViewModel {
         location: URL? = nil,
         versionControl: VersionControlMode = .git,
         manuscriptTemplate: ManuscriptTemplate = .novel
+    ) async {
+        await serialized {
+            await self.createNewProjectImpl(
+                title: title,
+                author: author,
+                location: location,
+                versionControl: versionControl,
+                manuscriptTemplate: manuscriptTemplate
+            )
+        }
+    }
+
+    private func createNewProjectImpl(
+        title: String,
+        author: String,
+        location: URL?,
+        versionControl: VersionControlMode,
+        manuscriptTemplate: ManuscriptTemplate
     ) async {
         errorMessage = nil
         syncStatusMessage = nil
@@ -175,6 +219,10 @@ final class ProjectViewModel {
     /// listed anything without one), and reuses it so the clone of a private repo
     /// actually authenticates.
     func cloneProject(_ repository: GitHubRepository) async {
+        await serialized { await self.cloneProjectImpl(repository) }
+    }
+
+    private func cloneProjectImpl(_ repository: GitHubRepository) async {
         errorMessage = nil
         syncStatusMessage = nil
         do {
@@ -205,6 +253,10 @@ final class ProjectViewModel {
     /// afterward so the newly-added remote actually starts the sync loop, rather than
     /// leaving `syncScheduler` nil until the next reopen.
     func connectToGitHub() async {
+        await serialized { await self.connectToGitHubImpl() }
+    }
+
+    private func connectToGitHubImpl() async {
         errorMessage = nil
         syncStatusMessage = nil
         guard let project, let workingTreeRoot, let metadata, metadata.versionControl == .git else { return }
@@ -448,6 +500,10 @@ final class ProjectViewModel {
     /// `SyncScheduler.start()` retries immediately rather than waiting out the next
     /// periodic tick.
     func refreshCredentialsAndResync() async {
+        await serialized { await self.refreshCredentialsAndResyncImpl() }
+    }
+
+    private func refreshCredentialsAndResyncImpl() async {
         guard let project, let workingTreeRoot, let metadata, metadata.versionControl == .git else { return }
         errorMessage = nil
         let token = await Self.loadTokenIfAvailable()
@@ -498,6 +554,10 @@ final class ProjectViewModel {
     /// Dismisses the concurrent-editing warning's "Cancel" option (§8.3) — backs out
     /// of the project rather than risking an edit alongside another machine.
     func closeProject() async {
+        await serialized { await self.closeProjectImpl() }
+    }
+
+    private func closeProjectImpl() async {
         // §7.3's thinning, mirroring Git mode's `git gc --auto` on close — best-effort,
         // never blocks actually closing the project.
         try? await snapshotCoordinator?.pruneSnapshots()

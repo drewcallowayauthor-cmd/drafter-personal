@@ -21,6 +21,12 @@ struct WordCounterTests {
         #expect(WordCounter.count(scene) == 4)
     }
 
+    @Test("strips YAML front matter before counting even with CRLF line endings")
+    func stripsFrontMatterWithCRLF() {
+        let scene = "---\r\nsynopsis: Sam takes over the board.\r\nstatus: draft\r\n---\r\n\r\nThe board was wrong."
+        #expect(WordCounter.count(scene) == 4)
+    }
+
     @Test("strips emphasis markers without dropping the words")
     func stripsEmphasisMarkers() {
         #expect(WordCounter.count("It was *never* going to be **easy**.") == 7)

@@ -13,8 +13,12 @@ final class SyncScheduler {
     private(set) var state: SyncState = .idle
 
     private let syncCoordinator: SyncCoordinator
-    private let fetchInterval: Duration
-    private let pushDebounceDelay: Duration
+    /// `var`, not `let`: both are re-read on every use (the periodic loop re-reads
+    /// `fetchInterval` each iteration; `schedulePushAfterCommit` snapshots
+    /// `pushDebounceDelay` fresh each call), so a Settings change takes effect on an
+    /// already-open project instead of only the next one opened.
+    var fetchInterval: Duration
+    var pushDebounceDelay: Duration
 
     private var periodicTask: Task<Void, Never>?
     private var pushDebounceTask: Task<Void, Never>?

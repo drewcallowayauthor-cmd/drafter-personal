@@ -41,8 +41,16 @@ final class HistoryViewModel {
         // exact shape of "path exists on disk, but not in <id>" from `show`.
         entries = []
         do {
-            entries = try await source.log(for: Self.relativePath(of: sceneURL, in: workingTree), in: workingTree)
+            let loaded = try await source.log(for: Self.relativePath(of: sceneURL, in: workingTree), in: workingTree)
+            // `.task(id: sceneURL)` cancels the previous load when the selected scene
+            // changes, but cancellation doesn't abort an already-suspended `await` —
+            // without this check, a slower load for the *previous* scene can resolve
+            // after a faster one for the *new* scene and overwrite its correct
+            // entries with stale ones for a scene that's no longer even selected.
+            guard !Task.isCancelled else { return }
+            entries = loaded
         } catch {
+            guard !Task.isCancelled else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -98,8 +106,9 @@ final class HistoryViewModel {
     static func relativePath(of fileURL: URL, in workingTree: URL) -> String {
         let filePath = fileURL.standardizedFileURL.path
         let rootPath = workingTree.standardizedFileURL.path
-        guard filePath.hasPrefix(rootPath) else { return fileURL.lastPathComponent }
-        let relative = filePath.dropFirst(rootPath.count)
-        return relative.hasPrefix("/") ? String(relative.dropFirst()) : String(relative)
+        // Plain `hasPrefix` would treat "/Users/x/ProjectFoo" as inside
+        // "/Users/x/Project" — require the boundary to actually be a path separator.
+        guard filePath.hasPrefix(rootPath + "/") else { return fileURL.lastPathComponent }
+        return String(filePath.dropFirst(rootPath.count + 1))
     }
 }

@@ -11,7 +11,10 @@ import Observation
 @Observable
 public final class AutocommitScheduler {
     private let checkpointCoordinator: any CheckpointCoordinating
-    private let debounceDelay: Duration
+    /// `var`, not `let`: re-read on every `recordActivity` call so a Settings change
+    /// to the debounce interval takes effect on an already-open project rather than
+    /// only on the next one opened.
+    public var debounceDelay: Duration
 
     private var pendingWordDelta = 0
     private var pendingFileCount = 0

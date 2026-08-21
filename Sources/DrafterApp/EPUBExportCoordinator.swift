@@ -45,7 +45,7 @@ final class EPUBExportCoordinator {
         let coverURL = workingTree.appendingPathComponent(metadata.compile.coverImage)
         let coverExists = FileManager.default.fileExists(atPath: coverURL.path)
 
-        let sanitizedTitle = metadata.title.isEmpty ? "Untitled" : metadata.title
+        let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
         let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle).epub")
 
         let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)

@@ -187,7 +187,7 @@ struct ContentView: View {
                     isGitHubConnected: projectViewModel.syncScheduler != nil,
                     onConnectToGitHub: { Task { await projectViewModel.connectToGitHub() } },
                     onSnapshotNow: {
-                        Task { await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: "manual snapshot")) }
+                        await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: "manual snapshot"))
                     },
                     onSave: { updated in
                         Task { await projectViewModel.save(metadata: updated) }
@@ -463,8 +463,7 @@ struct ContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterRequestCheckpoint)) { _ in
-            sceneEditor.saveNow()
-            Task { await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: nil)) }
+            handleRequestCheckpoint()
         }
         .onReceive(NotificationCenter.default.publisher(for: .drafterCredentialsUpdated)) { _ in
             Task { await projectViewModel.refreshCredentialsAndResync() }
@@ -504,6 +503,11 @@ struct ContentView: View {
                 historyViewModel?.clearRestoredFileURL()
             }
         }
+        .modifier(VersioningPreferencesSync(
+            appPreferences: appPreferences,
+            sceneEditor: sceneEditor,
+            projectViewModel: projectViewModel
+        ))
         .task {
             await setUpHandlersAndOpenDebugProject()
         }
@@ -871,6 +875,11 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Color.bg)
+    }
+
+    private func handleRequestCheckpoint() {
+        sceneEditor.saveNow()
+        Task { await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: nil)) }
     }
 
     private func setUpHandlersAndOpenDebugProject() async {
@@ -1278,4 +1287,31 @@ private struct BinderDeleteTarget: Identifiable {
 
 #Preview {
     ContentView()
+}
+
+/// Pushes Settings' Versioning-pane intervals into the currently open project's live
+/// schedulers as they change, instead of only taking effect the next time a project is
+/// opened. Split out of `ContentView.body` because folding these four `onChange`
+/// handlers directly into that already-huge modifier chain pushes the type checker
+/// over its expression-complexity limit.
+private struct VersioningPreferencesSync: ViewModifier {
+    let appPreferences: AppPreferences
+    let sceneEditor: SceneEditorViewModel
+    let projectViewModel: ProjectViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: appPreferences.autosaveDelaySeconds) { _, newValue in
+                sceneEditor.autosaveDelay = .seconds(newValue)
+            }
+            .onChange(of: appPreferences.autocommitDebounceSeconds) { _, newValue in
+                projectViewModel.autocommitScheduler?.debounceDelay = .seconds(newValue)
+            }
+            .onChange(of: appPreferences.syncFetchIntervalSeconds) { _, newValue in
+                projectViewModel.syncScheduler?.fetchInterval = .seconds(newValue)
+            }
+            .onChange(of: appPreferences.syncPushDebounceSeconds) { _, newValue in
+                projectViewModel.syncScheduler?.pushDebounceDelay = .seconds(newValue)
+            }
+    }
 }

@@ -58,15 +58,19 @@ struct DrafterApp: App {
         .defaultSize(width: 1180, height: 740)
         .commands {
             CommandGroup(replacing: .newItem) {
+                // New Project/Add Existing are one-time-per-project setup actions, not
+                // everyday commands, so they get the heavier combos — the plain ⌘N/⇧⌘N
+                // slots go to New Scene/New Chapter (Binder menu below), which are used
+                // constantly while writing.
                 Button("New Project…") {
                     NotificationCenter.default.post(name: .drafterRequestNewProject, object: nil)
                 }
-                .keyboardShortcut("n", modifiers: .command)
+                .keyboardShortcut("n", modifiers: [.command, .option, .shift])
 
                 Button("Add Existing Project…") {
                     NotificationCenter.default.post(name: .drafterRequestAddExistingProject, object: nil)
                 }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .keyboardShortcut("o", modifiers: [.command, .shift])
 
                 Button("Open Project…") {
                     NotificationCenter.default.post(name: .drafterRequestOpenProject, object: nil)
@@ -116,20 +120,23 @@ struct DrafterApp: App {
             // The binder's create/delete actions (§8.2) and the two editor toolbar
             // toggles — all previously reachable only by clicking, never a shortcut.
             CommandMenu("Binder") {
-                Button("New Chapter…") {
-                    NotificationCenter.default.post(name: .drafterRequestNewChapter, object: nil)
-                }
-                .keyboardShortcut("n", modifiers: [.command, .option])
-
+                // New Scene is the single most-used create action while writing, so it
+                // gets the plain ⌘N slot; New Chapter (second most common) gets ⇧⌘N.
+                // New Note is rarer, so it takes the remaining ⌥⌘N slot.
                 Button("New Scene…") {
                     NotificationCenter.default.post(name: .drafterRequestNewScene, object: nil)
                 }
-                .keyboardShortcut("n", modifiers: [.command, .option, .shift])
+                .keyboardShortcut("n", modifiers: .command)
+
+                Button("New Chapter…") {
+                    NotificationCenter.default.post(name: .drafterRequestNewChapter, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
 
                 Button("New Note…") {
                     NotificationCenter.default.post(name: .drafterRequestNewNote, object: nil)
                 }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
+                .keyboardShortcut("n", modifiers: [.command, .option])
 
                 Divider()
 

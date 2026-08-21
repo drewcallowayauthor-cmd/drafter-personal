@@ -123,8 +123,20 @@ struct TypstDocumentGeneratorTests {
         let result = TypstDocumentGenerator.applySceneBreakOrnament(to: source)
 
         #expect(result.contains("#divider()") == false)
-        #expect(result.contains("* * *"))
+        #expect(result.contains("\\* \\* \\*"))
         #expect(result.contains("Some text."))
         #expect(result.contains("More text."))
+    }
+
+    @Test("applySceneBreakOrnament escapes the asterisks — unescaped '* * *' is invalid typst markup (unclosed strong-emphasis delimiter)")
+    func escapesAsterisksForTypstMarkup() {
+        let result = TypstDocumentGenerator.applySceneBreakOrnament(to: "#divider()")
+
+        // A bare, unescaped "* * *" inside a typst content block (`[...]`) doesn't
+        // render as three asterisks — `*` opens/closes strong emphasis, so this
+        // parses as an emphasis span followed by a dangling unclosed `*`, which a
+        // real typst compile rejects outright. Confirmed against typst 0.15.1.
+        #expect(result.contains("* * *") == false)
+        #expect(result.contains("\\* \\* \\*"))
     }
 }

@@ -122,6 +122,10 @@ public actor SyncCoordinator {
             }
             switch result {
             case .clean:
+                // The merge itself created a new local commit on top of the pre-merge
+                // ahead count, so a push failure right after this needs to report one
+                // more pending commit than `divergence` saw before the merge ran.
+                lastKnownAheadCount += 1
                 return try await push()
             case .conflicted(let paths):
                 return try await transition(to: .conflicted(paths: paths))

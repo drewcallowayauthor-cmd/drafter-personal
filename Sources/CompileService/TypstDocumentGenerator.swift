@@ -134,9 +134,14 @@ public enum TypstDocumentGenerator {
     /// fighting that, the scene-break ornament (§9.4) is substituted after pandoc
     /// runs, on the generated .typ text directly.
     public static func applySceneBreakOrnament(to typstSource: String) -> String {
+        // `*` is typst markup syntax for strong emphasis, not a literal character —
+        // `[* * *]` parses as an opening `*`, then a second `*` immediately closing it
+        // (leaving a lone space as the "strong" content), then a dangling unclosed
+        // `*`, which typst rejects outright as a syntax error. Escaping each asterisk
+        // (`\*`) is what actually renders three literal asterisks.
         typstSource.replacingOccurrences(
             of: "#divider()",
-            with: "#align(center)[* * *]"
+            with: "#align(center)[\\* \\* \\*]"
         )
     }
 }
