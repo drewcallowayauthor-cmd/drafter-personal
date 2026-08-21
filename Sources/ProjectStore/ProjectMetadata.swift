@@ -1,7 +1,16 @@
 import Foundation
 
-/// Book-level settings, §4.5. Mirrors `project.json`'s shape exactly so `Codable`
-/// synthesis needs no custom coding keys.
+/// §5's onboarding choice, fixed at project creation (§4.5). `git` wires up
+/// `GitService`/`RepositoryCoordinator`; `localFile` wires up `SnapshotService` instead.
+public enum VersionControlMode: String, Codable, Sendable, Equatable {
+    case git
+    case localFile
+}
+
+/// Book-level settings, §4.5. Mirrors `project.json`'s shape, with a hand-written
+/// `init(from:)` so `versionControl` can default to `.git` when decoding a project.json
+/// written before this field existed, rather than failing to open every pre-existing
+/// project.
 public struct ProjectMetadata: Codable, Sendable, Equatable {
     public struct Series: Codable, Sendable, Equatable {
         public var name: String
@@ -50,12 +59,16 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         public var leading: Double
         public var chapterOpensOn: String
 
+        /// Defaults measured off a real compiled print PDF (Scrivener export of a
+        /// finished novel) rather than assumed: Palatino at 11.5pt with ~1.46em leading
+        /// (16.8pt line pitch), and chapters starting on the next page regardless of
+        /// recto/verso — that reference never forces a blank page to keep chapters odd.
         public init(
             trimSize: String = "5x8",
-            bodyFont: String = "EB Garamond",
-            bodyPointSize: Double = 11.0,
-            leading: Double = 1.35,
-            chapterOpensOn: String = "recto"
+            bodyFont: String = "Palatino",
+            bodyPointSize: Double = 11.5,
+            leading: Double = 1.46,
+            chapterOpensOn: String = "either"
         ) {
             self.trimSize = trimSize
             self.bodyFont = bodyFont
@@ -70,6 +83,7 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
     public var title: String
     public var subtitle: String
     public var author: String
+    public var versionControl: VersionControlMode
     public var series: Series
     public var copyrightYear: Int
     public var publisher: String
@@ -86,6 +100,7 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         title: String,
         subtitle: String = "",
         author: String,
+        versionControl: VersionControlMode = .git,
         series: Series = Series(),
         copyrightYear: Int,
         publisher: String = "",
@@ -101,6 +116,7 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         self.title = title
         self.subtitle = subtitle
         self.author = author
+        self.versionControl = versionControl
         self.series = series
         self.copyrightYear = copyrightYear
         self.publisher = publisher
@@ -110,5 +126,32 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
         self.target = target
         self.compile = compile
         self.print = print
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, id, title, subtitle, author, versionControl, series, copyrightYear,
+            publisher, isbn, language, description, target, compile, print
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        subtitle = try container.decode(String.self, forKey: .subtitle)
+        author = try container.decode(String.self, forKey: .author)
+        // Absent in any project.json written before §5's mode picker existed — those
+        // projects were all Git mode, so that's the correct default, not just a
+        // convenient one.
+        versionControl = try container.decodeIfPresent(VersionControlMode.self, forKey: .versionControl) ?? .git
+        series = try container.decode(Series.self, forKey: .series)
+        copyrightYear = try container.decode(Int.self, forKey: .copyrightYear)
+        publisher = try container.decode(String.self, forKey: .publisher)
+        isbn = try container.decode(String.self, forKey: .isbn)
+        language = try container.decode(String.self, forKey: .language)
+        description = try container.decode(String.self, forKey: .description)
+        target = try container.decode(Target.self, forKey: .target)
+        compile = try container.decode(Compile.self, forKey: .compile)
+        print = try container.decode(Print.self, forKey: .print)
     }
 }

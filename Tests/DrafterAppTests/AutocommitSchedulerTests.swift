@@ -93,7 +93,7 @@ struct AutocommitSchedulerTests {
             workingTree: root,
             machineName: "Test-Machine"
         )
-        return AutocommitScheduler(repositoryCoordinator: coordinator, debounceDelay: delay)
+        return AutocommitScheduler(checkpointCoordinator: coordinator, debounceDelay: delay)
     }
 
     private func makeTempDirectory() throws -> URL {

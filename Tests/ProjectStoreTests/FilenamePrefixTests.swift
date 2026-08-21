@@ -50,4 +50,43 @@ struct FilenamePrefixTests {
         #expect(resequenced.first == "001 Scene 1")
         #expect(resequenced.last == "101 Scene 101")
     }
+
+    @Test("nextFilename picks one past the highest existing prefix")
+    func nextFilenamePicksOnePastHighest() {
+        let filename = FilenamePrefix.nextFilename(
+            existingFilenames: ["01 Triage.md", "03 Room Nine.md"],
+            title: "Code Blue",
+            extension: "md"
+        )
+        #expect(filename == "04 Code Blue.md")
+    }
+
+    @Test("nextFilename starts at 01 with nothing existing")
+    func nextFilenameStartsAtOne() {
+        let filename = FilenamePrefix.nextFilename(existingFilenames: [], title: "Arrival", extension: nil)
+        #expect(filename == "01 Arrival")
+    }
+
+    @Test("nextFilename with no extension omits the trailing dot, for a chapter folder")
+    func nextFilenameWithNoExtensionOmitsDot() {
+        let filename = FilenamePrefix.nextFilename(existingFilenames: ["01 Arrival"], title: "The First Hour", extension: nil)
+        #expect(filename == "02 The First Hour")
+    }
+
+    @Test("nextFilename switches to 3 digits past 99 existing items")
+    func nextFilenameSwitchesToThreeDigits() {
+        let existing = (1...99).map { "\(String(format: "%02d", $0)) Scene.md" }
+        let filename = FilenamePrefix.nextFilename(existingFilenames: existing, title: "Overflow", extension: "md")
+        #expect(filename == "100 Overflow.md")
+    }
+
+    @Test("sanitize replaces illegal filename characters with a hyphen")
+    func sanitizeReplacesIllegalCharacters() {
+        #expect(FilenamePrefix.sanitize("Before: After / Then?") == "Before- After - Then-")
+    }
+
+    @Test("sanitize falls back to Untitled when nothing legal remains")
+    func sanitizeFallsBackToUntitled() {
+        #expect(FilenamePrefix.sanitize("   ") == "Untitled")
+    }
 }

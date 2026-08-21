@@ -1,5 +1,5 @@
+import DrafterCore
 import Foundation
-import GitService
 
 /// §5.4's commit-trigger debounce — distinct from (and coarser than) §8.3's 2s
 /// disk-write autosave. Accumulates word deltas across edits and commits 90s after the
@@ -8,15 +8,21 @@ import GitService
 /// end, pre-export, checkpoint) bypass the debounce entirely via `flush(trigger:)`.
 @MainActor
 public final class AutocommitScheduler {
-    private let repositoryCoordinator: RepositoryCoordinator
+    private let checkpointCoordinator: any CheckpointCoordinating
     private let debounceDelay: Duration
 
     private var pendingWordDelta = 0
     private var pendingFileCount = 0
     private var debounceTask: Task<Void, Never>?
 
-    public init(repositoryCoordinator: RepositoryCoordinator, debounceDelay: Duration = .seconds(90)) {
-        self.repositoryCoordinator = repositoryCoordinator
+    /// Notified after any trigger actually produces a commit — §5.5's "~30s after any
+    /// commit: push" hook. `SyncScheduler.schedulePushAfterCommit` is the intended
+    /// listener; kept as a closure rather than a direct dependency so this type
+    /// doesn't need to know sync exists.
+    public var onCommitted: (() -> Void)?
+
+    public init(checkpointCoordinator: any CheckpointCoordinating, debounceDelay: Duration = .seconds(90)) {
+        self.checkpointCoordinator = checkpointCoordinator
         self.debounceDelay = debounceDelay
     }
 
@@ -42,7 +48,9 @@ public final class AutocommitScheduler {
         debounceTask?.cancel()
         pendingWordDelta = 0
         pendingFileCount = 0
-        _ = try? await repositoryCoordinator.commit(trigger: trigger)
+        if (try? await checkpointCoordinator.commit(trigger: trigger)) == true {
+            onCommitted?()
+        }
     }
 
     private func flushDebounced() async {
@@ -51,6 +59,8 @@ public final class AutocommitScheduler {
         pendingWordDelta = 0
         pendingFileCount = 0
         guard fileCount > 0 else { return }
-        _ = try? await repositoryCoordinator.commit(trigger: .autosave(filesChanged: fileCount, wordDelta: wordDelta))
+        if (try? await checkpointCoordinator.commit(trigger: .autosave(filesChanged: fileCount, wordDelta: wordDelta))) == true {
+            onCommitted?()
+        }
     }
 }

@@ -11,12 +11,18 @@ struct DiffView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(oldLabel).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
-                Text(newLabel).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+                Text(oldLabel)
+                    .font(Theme.Font.heading(15))
+                    .foregroundStyle(Theme.Color.text)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(newLabel)
+                    .font(Theme.Font.heading(15))
+                    .foregroundStyle(Theme.Color.text)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding()
+            .padding(14)
 
-            Divider()
+            Rectangle().fill(Theme.Color.divider).frame(height: 1)
 
             if lines.isEmpty {
                 ContentUnavailableView("No Differences", systemImage: "checkmark.circle")
@@ -30,11 +36,12 @@ struct DiffView: View {
                             }
                         }
                     }
-                    .padding()
+                    .padding(14)
                 }
             }
         }
         .frame(minWidth: 900, idealWidth: 1100, minHeight: 600, idealHeight: 700)
+        .background(Theme.Color.surface)
     }
 
     @ViewBuilder
@@ -48,30 +55,36 @@ struct DiffView: View {
                 Text(" ")
             }
         }
+        .font(Theme.Font.body(13))
+        .foregroundStyle(Theme.Color.text)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(4)
         .background(backgroundColor(for: kind, isOldSide: isOldSide))
-        .cornerRadius(4)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm, style: .continuous))
     }
 
+    /// The handoff spec'd deletions/insertions in neutral/accent tones (§ History &
+    /// diff), but that reads too flat to scan at a glance for something whose whole
+    /// point is standing out — `diffRemoved`/`diffAdded` are theme-tuned red/green
+    /// instead (Theme.swift).
     private func wordText(_ words: [DiffOp<String>]) -> Text {
         words.reduce(Text("")) { partial, op in
             switch op {
             case .equal(let word):
                 return partial + Text(word)
             case .delete(let word):
-                return partial + Text(word).foregroundColor(.red).strikethrough()
+                return partial + Text(word).foregroundColor(Theme.Color.diffRemoved).strikethrough()
             case .insert(let word):
-                return partial + Text(word).foregroundColor(.green)
+                return partial + Text(word).foregroundColor(Theme.Color.diffAdded)
             }
         }
     }
 
     private func backgroundColor(for kind: SceneDiffLine.Kind, isOldSide: Bool) -> Color {
         switch kind {
-        case .removed: return isOldSide ? .red.opacity(0.15) : .clear
-        case .added: return isOldSide ? .clear : .green.opacity(0.15)
-        case .modified: return .yellow.opacity(0.08)
+        case .removed: return isOldSide ? Theme.Color.diffRemoved.opacity(0.15) : .clear
+        case .added: return isOldSide ? .clear : Theme.Color.diffAdded.opacity(0.15)
+        case .modified: return Theme.Color.accent.opacity(0.08)
         case .unchanged: return .clear
         }
     }

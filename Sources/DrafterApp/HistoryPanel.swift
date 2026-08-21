@@ -1,4 +1,4 @@
-import GitService
+import DrafterCore
 import SwiftUI
 
 /// §5.8's History panel: commits touching the open scene, with relative time, word
@@ -29,33 +29,16 @@ struct HistoryPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("History")
-                .font(.headline)
-                .padding([.horizontal, .top])
+                .font(Theme.Font.heading(15))
+                .foregroundStyle(Theme.Color.text)
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
+                .padding(.bottom, 8)
 
-            if let error = history.errorMessage {
-                ContentUnavailableView("Couldn't Load History", systemImage: "exclamationmark.triangle", description: Text(error))
-            } else if history.entries.isEmpty {
-                ContentUnavailableView(
-                    "No History Yet",
-                    systemImage: "clock",
-                    description: Text("Commits touching this scene will show up here.")
-                )
-            } else {
-                List(history.entries, id: \.sha) { entry in
-                    row(for: entry)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            Task { await showDiff(for: entry) }
-                        }
-                        .contextMenu {
-                            Button("Restore as Copy") {
-                                Task { await history.restoreAsCopy(entry: entry, sceneURL: sceneURL, workingTree: workingTree) }
-                            }
-                        }
-                }
-                .listStyle(.plain)
-            }
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxHeight: .infinity)
         .task(id: sceneURL) {
             await history.load(sceneURL: sceneURL, workingTree: workingTree)
         }
@@ -82,13 +65,55 @@ struct HistoryPanel: View {
                     oldLabel: "\(presentation.entry.subject) (\(Self.relativeFormatter.localizedString(for: presentation.entry.date, relativeTo: .now)))",
                     newLabel: "Current"
                 )
-                Divider()
+                Rectangle().fill(Theme.Color.divider).frame(height: 1)
                 HStack {
                     Spacer()
                     Button("Close") { diffPresentation = nil }
+                        .buttonStyle(.nocturneSecondary)
                         .keyboardShortcut(.cancelAction)
                 }
-                .padding()
+                .padding(16)
+            }
+            .background(Theme.Color.surface)
+            .nocturneSheetPresentation()
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let error = history.errorMessage {
+            ContentUnavailableView("Couldn't Load History", systemImage: "exclamationmark.triangle", description: Text(error))
+        } else if history.isLoading {
+            // Deliberately blank rather than "No History Yet" — that empty state is
+            // only accurate once the fetch for the newly selected scene has actually
+            // come back; showing it during the gap flashed wrong info on every scene
+            // switch. Explicitly sized rather than a bare `Color.clear`, which
+            // collapses to zero height and made the "History" label above jump as
+            // the panel resized out and back in on every switch.
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if history.entries.isEmpty {
+            ContentUnavailableView(
+                "No History Yet",
+                systemImage: "clock",
+                description: Text("Commits touching this scene will show up here.")
+            )
+        } else {
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(history.entries, id: \.sha) { entry in
+                        row(for: entry)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                Task { await showDiff(for: entry) }
+                            }
+                            .contextMenu {
+                                Button("Restore as Copy") {
+                                    Task { await history.restoreAsCopy(entry: entry, sceneURL: sceneURL, workingTree: workingTree) }
+                                }
+                            }
+                    }
+                }
             }
         }
     }
@@ -110,6 +135,7 @@ struct HistoryPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(entry.subject)
                 .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Theme.Color.text)
                 .lineLimit(2)
 
             HStack(spacing: 6) {
@@ -121,12 +147,13 @@ struct HistoryPanel: View {
                 if let wordDelta = CommitSubjectWordDelta.parse(entry.subject) {
                     Text("·")
                     Text(wordDelta >= 0 ? "+\(wordDelta)" : "\(wordDelta)")
-                        .foregroundStyle(wordDelta >= 0 ? .green : .red)
+                        .foregroundStyle(wordDelta >= 0 ? Theme.Color.accent200 : .red)
                 }
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(Theme.Font.body(11))
+            .foregroundStyle(Theme.Color.textMuted)
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
     }
 }

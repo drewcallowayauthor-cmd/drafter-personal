@@ -13,35 +13,39 @@ struct FrontBackMatterTemplateTests {
 
     @Test("front matter files are assigned to .front, back matter to .back")
     func sectionsAreCorrect() {
-        #expect(FrontBackMatterTemplate.alsoBy.section == .front)
         #expect(FrontBackMatterTemplate.titlePage.section == .front)
         #expect(FrontBackMatterTemplate.copyright.section == .front)
         #expect(FrontBackMatterTemplate.dedication.section == .front)
+        #expect(FrontBackMatterTemplate.reviewAsk.section == .back)
         #expect(FrontBackMatterTemplate.aboutTheAuthor.section == .back)
         #expect(FrontBackMatterTemplate.newsletter.section == .back)
     }
 
-    @Test("filenames match the design doc's example layout exactly")
+    @Test("filenames match the reference EPUB's front/back matter order")
     func filenamesMatchExampleLayout() {
-        #expect(FrontBackMatterTemplate.alsoBy.filename == "01 Also By.md")
-        #expect(FrontBackMatterTemplate.titlePage.filename == "02 Title Page.md")
-        #expect(FrontBackMatterTemplate.copyright.filename == "03 Copyright.md")
-        #expect(FrontBackMatterTemplate.dedication.filename == "04 Dedication.md")
-        #expect(FrontBackMatterTemplate.aboutTheAuthor.filename == "01 About the Author.md")
+        #expect(FrontBackMatterTemplate.titlePage.filename == "01 Title Page.md")
+        #expect(FrontBackMatterTemplate.copyright.filename == "02 Copyright.md")
+        #expect(FrontBackMatterTemplate.dedication.filename == "03 Dedication.md")
+        #expect(FrontBackMatterTemplate.reviewAsk.filename == "01 A Note From the Author.md")
         #expect(FrontBackMatterTemplate.newsletter.filename == "02 Newsletter.md")
+        #expect(FrontBackMatterTemplate.aboutTheAuthor.filename == "03 About the Author.md")
     }
 
-    @Test("title page includes title, subtitle, and author")
+    @Test("title page includes a large-format heading anchor, a centered subtitle, and a byline author")
     func titlePageContent() {
         let content = FrontBackMatterTemplate.titlePage.content(for: metadata)
-        #expect(content == "# The Last Shift\nA Novel\n\nTim Fleet")
+        #expect(content.hasPrefix("# The Last Shift {.title-page-heading #title-page}\n\n::: {.centered-page}\n"))
+        #expect(content.contains("A Novel"))
+        #expect(content.contains("[Tim Fleet]{.byline}"))
+        #expect(content.hasSuffix(":::"))
     }
 
     @Test("title page omits the subtitle line entirely when there is no subtitle")
     func titlePageOmitsEmptySubtitle() {
         let noSubtitle = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
         let content = FrontBackMatterTemplate.titlePage.content(for: noSubtitle)
-        #expect(content == "# The Last Shift\n\nTim Fleet")
+        #expect(content.contains("A Novel") == false)
+        #expect(content.contains("[Tim Fleet]{.byline}"))
     }
 
     @Test("copyright includes the year, author, and ISBN line when present")
@@ -60,9 +64,17 @@ struct FrontBackMatterTemplateTests {
 
     @Test("matching(filename:) finds the right template and returns nil for non-standard files")
     func matchingFindsTemplateByFilename() {
-        #expect(FrontBackMatterTemplate.matching(filename: "02 Title Page.md") == .titlePage)
-        #expect(FrontBackMatterTemplate.matching(filename: "01 About the Author.md") == .aboutTheAuthor)
+        #expect(FrontBackMatterTemplate.matching(filename: "01 Title Page.md") == .titlePage)
+        #expect(FrontBackMatterTemplate.matching(filename: "03 About the Author.md") == .aboutTheAuthor)
         #expect(FrontBackMatterTemplate.matching(filename: "05 Some Custom Note.md") == nil)
+    }
+
+    @Test("every template's anchor ID appears in its own heading, so Contents links actually resolve")
+    func anchorsAppearInOwnHeading() {
+        for template in FrontBackMatterTemplate.allCases {
+            let content = template.content(for: metadata)
+            #expect(content.contains("#\(template.anchorID)}"), "\(template) is missing its own anchor")
+        }
     }
 
     @Test("every template's content includes the author's name")

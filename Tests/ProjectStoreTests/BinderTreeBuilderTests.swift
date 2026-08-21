@@ -73,6 +73,21 @@ struct BinderTreeBuilderTests {
         #expect(tree.manuscript.map(\.displayName) == ["Arrival"])
     }
 
+    @Test("Notes accepts any file type, unlike Front/Back Matter's markdown-only filter")
+    func notesAcceptsNonMarkdownFiles() throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        try writeFlatSection("Notes", files: ["01 outline.md", "02 cast list.pdf", "03 map.png"], under: root)
+        try writeFlatSection("FrontMatter", files: ["01 Title Page.md", "02 reference.pdf"], under: root)
+
+        let tree = try BinderTreeBuilder.build(projectRoot: root)
+
+        #expect(tree.notes.map(\.displayName) == ["outline", "cast list", "map"])
+        // Front Matter stays markdown-only even when a non-`.md` file sneaks in.
+        #expect(tree.frontMatter.map(\.displayName) == ["Title Page"])
+    }
+
     private func write(_ chapterName: String, files: [String], under manuscriptDirectory: URL) throws {
         let chapterDirectory = manuscriptDirectory.appendingPathComponent(chapterName)
         try FileManager.default.createDirectory(at: chapterDirectory, withIntermediateDirectories: true)

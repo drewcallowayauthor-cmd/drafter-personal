@@ -12,12 +12,24 @@ public enum SceneStatus: String, Sendable, Equatable, CaseIterable {
 /// a general YAML parser — the front-matter block is always this fixed, flat shape, so a
 /// hand-rolled `key: value` reader avoids pulling in a YAML dependency for four fields.
 public struct SceneFrontMatter: Sendable, Equatable {
+    /// Stable identity across renames (§4.3/§4.4), empty for scenes written before this
+    /// field existed. Git mode doesn't need it — `git log --follow` already tracks a
+    /// renamed file — but Local-file mode's History panel (§7.4) has no equivalent, so
+    /// it matches a scene across `History/` snapshots by this id instead of by path.
+    public var id: String
     public var synopsis: String
     public var status: SceneStatus
     public var compile: Bool
     public var notes: String
 
-    public init(synopsis: String = "", status: SceneStatus = .draft, compile: Bool = true, notes: String = "") {
+    public init(
+        id: String = "",
+        synopsis: String = "",
+        status: SceneStatus = .draft,
+        compile: Bool = true,
+        notes: String = ""
+    ) {
+        self.id = id
         self.synopsis = synopsis
         self.status = status
         self.compile = compile
@@ -41,6 +53,7 @@ public struct SceneFrontMatter: Sendable, Equatable {
             let key = line[line.startIndex..<colonIndex].trimmingCharacters(in: .whitespaces)
             let value = line[line.index(after: colonIndex)...].trimmingCharacters(in: .whitespaces)
             switch key {
+            case "id": frontMatter.id = value
             case "synopsis": frontMatter.synopsis = value
             case "status": frontMatter.status = SceneStatus(rawValue: value) ?? .draft
             case "compile": frontMatter.compile = (value == "true")
@@ -58,6 +71,7 @@ public struct SceneFrontMatter: Sendable, Equatable {
     public static func serialize(_ frontMatter: SceneFrontMatter, body: String) -> String {
         """
         ---
+        id: \(frontMatter.id)
         synopsis: \(frontMatter.synopsis)
         status: \(frontMatter.status.rawValue)
         compile: \(frontMatter.compile)

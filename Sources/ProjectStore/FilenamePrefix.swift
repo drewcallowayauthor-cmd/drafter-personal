@@ -43,6 +43,29 @@ public enum FilenamePrefix {
         }
     }
 
+    /// Builds a filename for a new item — one past the highest existing prefix among
+    /// `existingFilenames`, or `01` if there are none (§8.2's New Scene/New Chapter).
+    /// `extension` is `nil` for a folder (a chapter), a string for a file.
+    public static func nextFilename(existingFilenames: [String], title: String, extension: String?) -> String {
+        let maxPrefix = existingFilenames.map { parse($0).prefix ?? 0 }.max() ?? 0
+        let nextNumber = maxPrefix + 1
+        let digits = nextNumber > 99 ? 3 : 2
+        let numberString = String(nextNumber)
+        let padded = String(repeating: "0", count: max(0, digits - numberString.count)) + numberString
+        let base = "\(padded) \(sanitize(title))"
+        return `extension`.map { "\(base).\($0)" } ?? base
+    }
+
+    /// §12.2 point 9's illegal filename characters (`: / \ ? * " < > |`), replaced with
+    /// a hyphen rather than silently dropped, so "Before: After" doesn't collapse into
+    /// something unrecognizable.
+    public static func sanitize(_ title: String) -> String {
+        let illegal = CharacterSet(charactersIn: ":/\\?*\"<>|")
+        let cleaned = title.components(separatedBy: illegal).joined(separator: "-")
+        let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Untitled" : trimmed
+    }
+
     /// Renumbers a set of items so prefixes stay dense (`01, 02, 03`, never `01, 03, 07`),
     /// preserving the caller's order. `digits` matches §4.3's "3 if a chapter exceeds
     /// 99 scenes" rule.

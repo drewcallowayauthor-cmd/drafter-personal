@@ -22,6 +22,12 @@ final class MeasuredColumnScrollView: NSScrollView {
 
     private let minimumMargin: CGFloat = 24
     private let restingVerticalInset: CGFloat = 24
+    /// Permanent breathing room above the first line, on top of whatever the overscroll
+    /// math below needs — kept as a separate addend to `textContainerInset.height`
+    /// rather than baked into `overscrollAmount` itself, since `overscrollAmount` must
+    /// stay exactly equal to the *overscroll-only* portion for `textContainerOrigin`'s
+    /// cancellation to still land correctly (see `TypewriterTextView`'s doc comment).
+    private let topWhitespace: CGFloat = 120
 
     override func layout() {
         super.layout()
@@ -61,7 +67,13 @@ final class MeasuredColumnScrollView: NSScrollView {
         let inset = ceil(requiredBottomOverscroll / 2) + 24
         textView.overscrollAmount = inset
 
-        let newInset = NSSize(width: horizontalInset, height: inset)
+        // `textContainerInset.height` carries `topWhitespace` on top of `inset`, but
+        // `overscrollAmount` (just above) deliberately doesn't — the mismatch between
+        // the two is exactly `topWhitespace` of visible top margin that
+        // `textContainerOrigin`'s cancellation leaves behind. It also adds
+        // `topWhitespace` of extra (harmless — more than required, never less) room at
+        // the bottom, since AppKit reserves this height on both ends of the frame.
+        let newInset = NSSize(width: horizontalInset, height: inset + topWhitespace)
         if textView.textContainerInset != newInset {
             textView.textContainerInset = newInset
         }
@@ -160,6 +172,15 @@ struct SceneTextView: NSViewRepresentable {
         if textView.string != text {
             textView.string = text
             MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!)
+            // This branch only fires for a wholesale content swap from outside the
+            // user's own typing (opening a different scene, an external-change
+            // reload, a history restore) — never from the text view's own edits
+            // reflecting back through `text` (that round-trip lands here with an
+            // already-equal string, above). Undo actions recorded against the old
+            // content reference character ranges that no longer mean anything once
+            // the content underneath them has changed, so leaving them in place risks
+            // ⌘Z replaying a stale edit into whatever scene happens to be open now.
+            textView.undoManager?.removeAllActions()
         }
         scrollView.measuredWidthInCharacters = measuredWidthInCharacters
         scrollView.isTypewriterScrollingEnabled = isTypewriterScrollingEnabled

@@ -65,7 +65,14 @@ public enum BinderTreeBuilder {
                 at: projectRoot.appendingPathComponent("BackMatter"),
                 fileManager: fileManager
             ),
-            notes: try buildFlatSection(at: projectRoot.appendingPathComponent("Notes"), fileManager: fileManager)
+            // Unlike Front/Back Matter (generated `.md` only), Notes also holds
+            // reference documents dropped in from Finder (PDFs, images, etc.) — so it
+            // takes every regular file, not just markdown.
+            notes: try buildFlatSection(
+                at: projectRoot.appendingPathComponent("Notes"),
+                fileManager: fileManager,
+                extensions: nil
+            )
         )
     }
 
@@ -98,9 +105,17 @@ public enum BinderTreeBuilder {
         return orderedSceneNodes(from: entries)
     }
 
-    private static func buildFlatSection(at directory: URL, fileManager: FileManager) throws -> [SceneNode] {
+    /// `extensions: nil` accepts every regular file (still skipping subdirectories);
+    /// otherwise only files whose extension is in the set.
+    private static func buildFlatSection(
+        at directory: URL,
+        fileManager: FileManager,
+        extensions: Set<String>? = ["md"]
+    ) throws -> [SceneNode] {
         guard let entries = try? contents(of: directory, fileManager: fileManager) else { return [] }
-        return orderedSceneNodes(from: entries.filter { $0.pathExtension == "md" })
+        let files = entries.filter { !isDirectory($0, fileManager: fileManager) }
+        let matching = extensions.map { allowed in files.filter { allowed.contains($0.pathExtension) } } ?? files
+        return orderedSceneNodes(from: matching)
     }
 
     private static func orderedSceneNodes(from entries: [URL]) -> [SceneNode] {

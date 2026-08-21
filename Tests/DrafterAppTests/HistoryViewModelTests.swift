@@ -27,7 +27,7 @@ struct HistoryViewModelTests {
             ),
             forExecutableNamed: "git"
         )
-        let viewModel = HistoryViewModel(gitService: GitService(processRunner: runner))
+        let viewModel = HistoryViewModel(source: GitService(processRunner: runner))
         let sceneURL = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
 
         await viewModel.load(sceneURL: sceneURL, workingTree: workingTree)
@@ -50,7 +50,7 @@ struct HistoryViewModelTests {
             forExecutableNamed: "git"
         )
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
-        let viewModel = HistoryViewModel(gitService: GitService(processRunner: runner))
+        let viewModel = HistoryViewModel(source: GitService(processRunner: runner))
         let firstScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         let secondScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage (restored).md")
 
@@ -84,7 +84,7 @@ struct HistoryViewModelTests {
             throwing: DrafterError.processFailed(command: "git show", exitCode: 128, stderr: "bad object"),
             forExecutableNamed: "git"
         )
-        let viewModel = HistoryViewModel(gitService: GitService(processRunner: runner))
+        let viewModel = HistoryViewModel(source: GitService(processRunner: runner))
         let sceneURL = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         await viewModel.load(sceneURL: sceneURL, workingTree: workingTree)
         #expect(viewModel.entries.count == 1)
@@ -106,7 +106,7 @@ struct HistoryViewModelTests {
             forExecutableNamed: "git"
         )
         let writer = MockAtomicFileWriter()
-        let viewModel = HistoryViewModel(gitService: GitService(processRunner: runner), fileWriter: writer)
+        let viewModel = HistoryViewModel(source: GitService(processRunner: runner), fileWriter: writer)
         let sceneURL = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         let entry = CommitLogEntry(
             sha: "abc123",
@@ -133,7 +133,7 @@ struct HistoryViewModelTests {
             throwing: DrafterError.processFailed(command: "git show", exitCode: 128, stderr: "bad object"),
             forExecutableNamed: "git"
         )
-        let viewModel = HistoryViewModel(gitService: GitService(processRunner: runner), fileWriter: MockAtomicFileWriter())
+        let viewModel = HistoryViewModel(source: GitService(processRunner: runner), fileWriter: MockAtomicFileWriter())
         let sceneURL = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         let entry = CommitLogEntry(
             sha: "deadbeef",

@@ -30,10 +30,10 @@ struct ProjectMetadataStoreTests {
           },
           "print": {
             "trimSize": "5x8",
-            "bodyFont": "EB Garamond",
-            "bodyPointSize": 11.0,
-            "leading": 1.35,
-            "chapterOpensOn": "recto"
+            "bodyFont": "Palatino",
+            "bodyPointSize": 11.5,
+            "leading": 1.46,
+            "chapterOpensOn": "either"
           }
         }
         """
