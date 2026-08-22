@@ -29,12 +29,19 @@ final class EPUBExportCoordinator {
         outputDirectory: URL,
         pandocExecutableURL: URL,
         cssURL: URL?,
+        epubTemplate: ManuscriptTemplate = .novel,
         read: @escaping SceneReader = { try String(contentsOf: $0, encoding: .utf8) }
     ) async throws -> ExportResult {
         let buildDirectory = workingTree.appendingPathComponent("Build")
         try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
 
-        let assembled = try assembleWithContentsPage(binderTree: binderTree, compile: metadata.compile, read: read)
+        let assembled = try assembleWithContentsPage(
+            metadata: metadata,
+            binderTree: binderTree,
+            compile: metadata.compile,
+            epubTemplate: epubTemplate,
+            read: read
+        )
 
         let assembledURL = buildDirectory.appendingPathComponent("assembled.md")
         try fileWriter.write(Data(assembled.utf8), to: assembledURL)
@@ -76,8 +83,10 @@ final class EPUBExportCoordinator {
     /// deleted its Copyright file still gets *a* reasonable placement (the very start
     /// of Front Matter) instead of a thrown error.
     private func assembleWithContentsPage(
+        metadata: ProjectMetadata,
         binderTree: BinderTree,
         compile: ProjectMetadata.Compile,
+        epubTemplate: ManuscriptTemplate,
         read: SceneReader
     ) throws -> String {
         var parts: [String] = []
@@ -95,7 +104,7 @@ final class EPUBExportCoordinator {
                 parts.append(try ManuscriptAssembler.assembleMatter(beforeContents, read: read))
             }
             let contentsMarkdown = EPUBTableOfContentsGenerator.markdown(
-                entries: try tableOfContentsEntries(binderTree: binderTree, compile: compile, read: read)
+                entries: try tableOfContentsEntries(metadata: metadata, binderTree: binderTree, compile: compile, epubTemplate: epubTemplate, read: read)
             )
             if !contentsMarkdown.isEmpty {
                 parts.append(contentsMarkdown)
@@ -105,7 +114,20 @@ final class EPUBExportCoordinator {
             }
         }
 
-        parts.append(try ManuscriptAssembler.assembleManuscript(binderTree: binderTree, compile: compile, read: read))
+        switch epubTemplate {
+        case .novel:
+            parts.append(try ManuscriptAssembler.assembleManuscript(binderTree: binderTree, compile: compile, read: read))
+        case .shortStory:
+            let manuscript = try ManuscriptAssembler.assembleShortStoryManuscript(
+                binderTree: binderTree,
+                compile: compile,
+                title: metadata.title,
+                read: read
+            )
+            if !manuscript.isEmpty {
+                parts.append(manuscript)
+            }
+        }
 
         if compile.includeBackMatter, !binderTree.backMatter.isEmpty {
             parts.append(try ManuscriptAssembler.assembleMatter(binderTree.backMatter, read: read))
@@ -121,8 +143,10 @@ final class EPUBExportCoordinator {
     /// (a custom addition) has no fixed anchor to link to, so it's left out rather
     /// than guessed at.
     private func tableOfContentsEntries(
+        metadata: ProjectMetadata,
         binderTree: BinderTree,
         compile: ProjectMetadata.Compile,
+        epubTemplate: ManuscriptTemplate,
         read: SceneReader
     ) throws -> [EPUBTableOfContentsGenerator.Entry] {
         var entries: [EPUBTableOfContentsGenerator.Entry] = []
@@ -135,8 +159,20 @@ final class EPUBExportCoordinator {
             }
         }
 
-        entries += try ManuscriptAssembler.chapterEntries(binderTree: binderTree, compile: compile, read: read)
-            .map { .init(title: $0.title, anchorID: $0.anchorID) }
+        switch epubTemplate {
+        case .novel:
+            entries += try ManuscriptAssembler.chapterEntries(binderTree: binderTree, compile: compile, read: read)
+                .map { .init(title: $0.title, anchorID: $0.anchorID) }
+        case .shortStory:
+            if let entry = try ManuscriptAssembler.shortStoryContentsEntry(
+                binderTree: binderTree,
+                compile: compile,
+                title: metadata.title,
+                read: read
+            ) {
+                entries.append(.init(title: entry.title, anchorID: entry.anchorID))
+            }
+        }
 
         if compile.includeBackMatter {
             for scene in binderTree.backMatter {

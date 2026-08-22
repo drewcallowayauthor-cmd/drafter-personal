@@ -71,6 +71,62 @@ public enum ManuscriptAssembler {
             }
     }
 
+    /// The Short Story EPUB template's counterpart to `assembleManuscript` — a real
+    /// finished short story's own compiled EPUB (Sunrise At Sundown, the reference
+    /// used to build `EPUBStylesheetManager.shortStoryCSS`) has no "Chapter 1"/"Chapter
+    /// 2" pagination at all: the whole story is *one* spine file, and what
+    /// `chapterTitleFormat` numbers are bare in-line scene breaks, not separately
+    /// paginated sections. `assembleManuscript`'s per-chapter `h1` defeats that —
+    /// pandoc's `--split-level=1` (§ PandocService) fragments a new spine file *and* a
+    /// new reader-nav entry at every `h1` it finds. So this wraps the whole manuscript
+    /// in one invisible `h1.hidden-heading` (a single split/nav boundary, titled with
+    /// the story's own title so `EPUBTableOfContentsGenerator`'s Contents page can link
+    /// to it — same trick `FrontBackMatterTemplate.copyright` uses to be linkable
+    /// without being visible) and demotes every chapter heading to `h2`, which
+    /// `--split-level=1` leaves alone entirely — confirmed against a real pandoc build:
+    /// mixed `h1`/`h2` markdown produces one spine file per `h1`, with `h2`s nested
+    /// inside it, in both the spine and nav.xhtml.
+    public static func assembleShortStoryManuscript(
+        binderTree: BinderTree,
+        compile: ProjectMetadata.Compile,
+        title: String,
+        read: SceneReader
+    ) throws -> String {
+        let chapters = try assembleChapters(binderTree: binderTree, compile: compile, read: read)
+        guard !chapters.isEmpty else { return "" }
+
+        var text = "# " + title + " {.hidden-heading #\(manuscriptAnchorID)}\n\n"
+        text += chapters
+            .map { chapter in
+                var chapterText = ""
+                if let heading = chapter.heading {
+                    chapterText += "## " + heading + " {#\(chapter.anchorID)}\n\n"
+                }
+                chapterText += chapter.body
+                return chapterText
+            }
+            .joined(separator: "\n\n")
+        return text
+    }
+
+    /// The one Contents-page entry `assembleShortStoryManuscript`'s wrapping heading
+    /// needs — a Short Story export gets a single "the story's title" link instead of
+    /// `chapterEntries`' one-per-chapter list, matching the single spine file it
+    /// actually produced. `nil` when there's nothing to link to (an empty manuscript),
+    /// mirroring `chapterEntries` returning `[]` in that case.
+    public static func shortStoryContentsEntry(
+        binderTree: BinderTree,
+        compile: ProjectMetadata.Compile,
+        title: String,
+        read: SceneReader
+    ) throws -> ChapterEntry? {
+        let chapters = try assembleChapters(binderTree: binderTree, compile: compile, read: read)
+        guard !chapters.isEmpty else { return nil }
+        return ChapterEntry(title: title, anchorID: manuscriptAnchorID)
+    }
+
+    private static let manuscriptAnchorID = "manuscript"
+
     private static func assembleChapters(
         binderTree: BinderTree,
         compile: ProjectMetadata.Compile,

@@ -205,9 +205,26 @@ enum EPUBStylesheetManager {
           text-indent: 1.5rem;
         }
 
-        h1, h2 {
+        h1 {
           page-break-before: always;
           margin: 2em auto 1em auto;
+          text-align: center;
+          font-weight: normal;
+          font-size: 1.3em;
+        }
+
+        /* Numbered scene breaks (§ ManuscriptAssembler.assembleShortStoryManuscript) —
+           the whole story is one continuous EPUB section (never split into a file per
+           chapter the way Novel is), so these `h2`s are plain in-line markers, not page
+           breaks: matches the reference EPUB's own `.section-number` rule exactly
+           (Sunrise At Sundown's real, unedited `stylesheet.css`) — spacing only, no
+           `page-break-before`. Deliberately its own rule, not folded into `h1` above:
+           `h1` there is real chapter-file boundaries (Title Page, Contents, etc., each
+           already its own EPUB spine file), where a forced page break is redundant but
+           harmless; `h2` here is the one place a forced break would be wrong, since it
+           would insert a page turn *inside* what's meant to read as one flowing story. */
+        h2 {
+          margin: 2em auto 1.33em auto;
           text-align: center;
           font-weight: normal;
           font-size: 1.3em;
@@ -216,32 +233,6 @@ enum EPUBStylesheetManager {
         hr {
           border: none;
           margin: 2em 0;
-        }
-
-        /* Numbered scene breaks (§ ManuscriptAssembler) — deliberately plain, unlike
-           Novel's boxed/underlined `.chapter-title`: a bare "1"/"2"/"3" doesn't read as
-           a titled chapter, so it gets the same treatment as every other heading rather
-           than a distinct bordered style. No top margin, and `page-break-before` left
-           `auto` — see Novel's `.chapter-title` (§ defaultCSS) for the full story: the
-           real Rook Takes reference EPUB gets its pre-title drop from an empty
-           padding paragraph's `line-height`, not a margin (which a forced break
-           zeroes out anyway), reproduced below via `section.chapter-title::before`. */
-        h1.chapter-title {
-          page-break-before: auto;
-          margin: 0 auto 1.5em auto;
-          text-align: center;
-          font-weight: normal;
-          font-size: 1.3em;
-        }
-
-        /* See Novel's `section.chapter-title::before` (§ defaultCSS) — same technique,
-           reproduced here since Short Story's plain heading still needs the same
-           pre-title drop the reference EPUB gives every chapter opener. */
-        section.chapter-title::before {
-          content: "\00a0";
-          display: block;
-          line-height: 8rem;
-          margin: 0;
         }
 
         /* Title Page (§ FrontBackMatterTemplate.titlePage) — vertically centered on

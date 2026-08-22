@@ -189,6 +189,72 @@ struct EPUBExportCoordinatorTests {
         #expect(contentsRange.upperBound < dedicationRange.lowerBound)
     }
 
+    @Test("short story template assembles one hidden-heading manuscript with a single Contents entry")
+    func shortStoryTemplateProducesOneContinuousSection() async throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let metadata = ProjectMetadata(title: "Rook Takes", author: "Tim Fleet", copyrightYear: 2026)
+
+        let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
+        let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")
+        let scene1URL = root.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
+        let scene2URL = root.appendingPathComponent("Manuscript/02 Departure/01 Goodbye.md")
+        let chapters = [
+            ChapterNode(url: root.appendingPathComponent("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: scene1URL, displayName: "Triage")], isLooseFile: false),
+            ChapterNode(url: root.appendingPathComponent("Manuscript/02 Departure"), displayName: "Departure", scenes: [SceneNode(url: scene2URL, displayName: "Goodbye")], isLooseFile: false)
+        ]
+        let tree = BinderTree(
+            manuscript: chapters,
+            frontMatter: [
+                SceneNode(url: titlePageURL, displayName: "Title Page"),
+                SceneNode(url: copyrightURL, displayName: "Copyright")
+            ],
+            backMatter: [],
+            notes: []
+        )
+        var exportMetadata = metadata
+        exportMetadata.compile.includeFrontMatter = true
+        exportMetadata.compile.chapterTitleFormat = "{n}"
+        let contents: [URL: String] = [
+            titlePageURL: FrontBackMatterTemplate.titlePage.content(for: metadata),
+            copyrightURL: FrontBackMatterTemplate.copyright.content(for: metadata),
+            scene1URL: "---\nstatus: draft\ncompile: true\n---\n\nFirst scene text.",
+            scene2URL: "---\nstatus: draft\ncompile: true\n---\n\nSecond scene text."
+        ]
+
+        let runner = MockProcessRunner()
+        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        let writer = MockAtomicFileWriter()
+        let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
+
+        _ = try await coordinator.export(
+            metadata: exportMetadata,
+            binderTree: tree,
+            workingTree: root,
+            outputDirectory: root,
+            pandocExecutableURL: pandocURL,
+            cssURL: nil,
+            epubTemplate: .shortStory,
+            read: { contents[$0]! }
+        )
+
+        let assembled = try #require(
+            writer.writes.first { $0.url.lastPathComponent == "assembled.md" }
+                .flatMap { String(data: $0.data, encoding: .utf8) }
+        )
+
+        // One Contents entry for the story title, not one per chapter.
+        #expect(assembled.contains("[Rook Takes](#manuscript)"))
+        #expect(assembled.contains("[1](#chapter-1)") == false)
+        #expect(assembled.contains("[2](#chapter-2)") == false)
+
+        // The manuscript itself is one hidden heading with bare numbered h2 scenes underneath.
+        #expect(assembled.contains("# Rook Takes {.hidden-heading #manuscript}"))
+        #expect(assembled.contains("## 1 {#chapter-1}"))
+        #expect(assembled.contains("## 2 {#chapter-2}"))
+        #expect(assembled.contains("# Chapter") == false)
+    }
+
     private func makeTempDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

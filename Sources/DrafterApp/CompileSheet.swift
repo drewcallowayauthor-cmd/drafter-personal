@@ -8,7 +8,7 @@ import SwiftUI
 enum CompileTarget: String, CaseIterable, Identifiable {
     case epub = "EPUB"
     case printPDF = "Print PDF"
-    case docx = "DOCX"
+    case docx = "Standard Manuscript Format"
 
     var id: String { rawValue }
 }
@@ -47,6 +47,9 @@ struct CompileSheet: View {
     @State private var trimSize: TrimSize
     @State private var bodyFont: String
     @State private var bodyPointSize: Double
+    @State private var firstLineIndentEm: Double
+    @State private var headingFont: String
+    @State private var manuscriptFont: String
     @State private var isOutputPickerPresented = false
     @State private var isCompiling = false
     @State private var compileError: String?
@@ -66,6 +69,9 @@ struct CompileSheet: View {
         self.onCompiled = onCompiled
         let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
         _outputDirectory = State(initialValue: desktop ?? FileManager.default.homeDirectoryForCurrentUser)
+        _epubTemplate = State(initialValue: ManuscriptTemplate.allCases.first {
+            $0.defaultChapterTitleFormat == metadata.compile.chapterTitleFormat
+        } ?? .novel)
         _chapterTitleFormat = State(initialValue: metadata.compile.chapterTitleFormat)
         _sceneSeparator = State(initialValue: metadata.compile.sceneSeparator)
         _includeFrontMatter = State(initialValue: metadata.compile.includeFrontMatter)
@@ -73,6 +79,9 @@ struct CompileSheet: View {
         _trimSize = State(initialValue: TrimSize(rawValue: metadata.print.trimSize) ?? .fiveByEight)
         _bodyFont = State(initialValue: metadata.print.bodyFont)
         _bodyPointSize = State(initialValue: metadata.print.bodyPointSize)
+        _firstLineIndentEm = State(initialValue: metadata.print.firstLineIndentEm)
+        _headingFont = State(initialValue: metadata.print.headingFont)
+        _manuscriptFont = State(initialValue: metadata.manuscript.bodyFont)
     }
 
     private var firstHeadingPreview: String {
@@ -89,13 +98,18 @@ struct CompileSheet: View {
                 VStack(alignment: .leading, spacing: 18) {
                     targetPicker
                     outputLocationRow
-                    frontBackMatterToggles
+                    if target != .docx {
+                        frontBackMatterToggles
+                    }
                     chapterFields
                     if target == .epub {
                         epubFields
                     }
                     if target == .printPDF {
                         printFields
+                    }
+                    if target == .docx {
+                        docxFields
                     }
                 }
                 .padding(18)
@@ -198,6 +212,16 @@ struct CompileSheet: View {
                 Text(template.rawValue)
             }
         }
+        .onChange(of: epubTemplate) { oldTemplate, newTemplate in
+            // The picker only swaps EPUB CSS; "Chapter Title Format" is a separate free-text
+            // field seeded from the project's saved settings, so switching templates here
+            // silently left short-story exports still reading "Chapter 1" instead of "1".
+            // Only follow the switch if the field still holds a template default the writer
+            // hasn't customized — an edited format is left alone either way.
+            if chapterTitleFormat == oldTemplate.defaultChapterTitleFormat {
+                chapterTitleFormat = newTemplate.defaultChapterTitleFormat
+            }
+        }
     }
 
     private var printFields: some View {
@@ -212,7 +236,15 @@ struct CompileSheet: View {
             NocturneDropdown(label: "Point Size", selection: $bodyPointSize, options: pointSizeOptions) {
                 String(format: "%g", $0)
             }
+            NocturneDropdown(label: "First-Line Indent", selection: $firstLineIndentEm, options: indentOptions) {
+                String(format: "%gem", $0)
+            }
+            NocturneDropdown(label: "Heading Font", selection: $headingFont, options: headingFontOptions) { $0 }
         }
+    }
+
+    private var docxFields: some View {
+        NocturneDropdown(label: "Manuscript Font", selection: $manuscriptFont, options: ["Times New Roman", "Courier New"]) { $0 }
     }
 
     /// KDP's recommended body-text serif fonts (Palatino is also `Print`'s own
@@ -235,18 +267,63 @@ struct CompileSheet: View {
         return curated.contains(bodyPointSize) ? curated : (curated + [bodyPointSize]).sorted()
     }
 
+    /// 1em is `Print`'s own default (§ ProjectMetadata.Print), measured off a real
+    /// reference; the rest span the range other manuscript/print conventions actually
+    /// use, from a tight 0.75em up to the SMF-style 1.5em (matching Standard
+    /// Manuscript Format's own 0.5in-at-12pt indent).
+    private var indentOptions: [Double] {
+        let curated: [Double] = [0.75, 1.0, 1.2, 1.5]
+        return curated.contains(firstLineIndentEm) ? curated : (curated + [firstLineIndentEm]).sorted()
+    }
+
+    /// Times New Roman is `Print`'s own default (measured off the same reference as
+    /// the indent above — a deliberate contrast against a Palatino/serif body, not a
+    /// fallback); Georgia and Helvetica round out common heading choices. The body
+    /// font itself is always offered too, for a project that wants the heading to
+    /// just match — and the project's saved choice stays included even if it's since
+    /// become unavailable, so switching targets never silently discards it.
+    private var headingFontOptions: [String] {
+        let installed = Set(NSFontManager.shared.availableFontFamilies)
+        let curated = ["Times New Roman", "Georgia", "Helvetica"].filter { installed.contains($0) }
+        var options = curated + [bodyFont]
+        if !options.contains(headingFont) { options.append(headingFont) }
+        return Array(Set(options)).sorted()
+    }
+
     /// Deliberately outside the scrollable body: a small manuscript compiles almost
     /// instantly, and burying the estimate in a trailing scrollable section gave no
     /// visible cue anything had happened at all.
     private var wordCountRow: some View {
         HStack {
-            Text("\(wordCountEstimate) words")
+            Text(wordAndPageEstimateText)
                 .font(Theme.Font.body(12))
                 .foregroundStyle(Theme.Color.textMuted)
             Spacer()
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
+    }
+
+    /// Print's page count is a rough pre-compile approximation (the real count only
+    /// comes out of `PrintExportCoordinator`'s actual two-pass typst compile); DOCX's
+    /// is the 250-words-per-page manuscript-page convention. EPUB pagination is
+    /// reader-dependent, so no estimate is shown for it.
+    private var wordAndPageEstimateText: String {
+        switch target {
+        case .printPDF:
+            let pages = PageEstimator.printPages(
+                wordCount: wordCountEstimate,
+                trimSize: trimSize,
+                pointSize: bodyPointSize,
+                leading: metadata.print.leading
+            )
+            return "\(wordCountEstimate) words · ~\(pages) pages"
+        case .docx:
+            let pages = PageEstimator.manuscriptPages(wordCount: wordCountEstimate)
+            return "\(wordCountEstimate) words · ~\(pages) manuscript pages"
+        case .epub:
+            return "\(wordCountEstimate) words"
+        }
     }
 
     @ViewBuilder
@@ -306,6 +383,9 @@ struct CompileSheet: View {
         exportMetadata.print.trimSize = trimSize.rawValue
         exportMetadata.print.bodyFont = bodyFont
         exportMetadata.print.bodyPointSize = bodyPointSize
+        exportMetadata.print.firstLineIndentEm = firstLineIndentEm
+        exportMetadata.print.headingFont = headingFont
+        exportMetadata.manuscript.bodyFont = manuscriptFont
 
         do {
             let outcome: CompileOutcome
@@ -322,7 +402,8 @@ struct CompileSheet: View {
                     workingTree: workingTree,
                     outputDirectory: outputDirectory,
                     pandocExecutableURL: pandocURL,
-                    cssURL: cssURL
+                    cssURL: cssURL,
+                    epubTemplate: epubTemplate
                 )
                 outcome = CompileOutcome(outputURL: result.outputURL)
 

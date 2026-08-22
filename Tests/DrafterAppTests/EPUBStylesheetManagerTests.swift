@@ -52,6 +52,15 @@ struct EPUBStylesheetManagerTests {
         #expect(EPUBStylesheetManager.shortStoryCSS.contains("border-bottom: 2px solid currentColor") == false)
     }
 
+    @Test("Short Story's numbered scene breaks (h2) don't force a page break, unlike its h1 chapter files")
+    func shortStorySceneBreaksDontPageBreak() throws {
+        #expect(EPUBStylesheetManager.shortStoryCSS.contains("h1 {\n  page-break-before: always;"))
+        #expect(EPUBStylesheetManager.shortStoryCSS.contains("h2 {\n  margin:"))
+        // The h2 rule block itself carries no page-break-before.
+        let h2RuleRange = try #require(EPUBStylesheetManager.shortStoryCSS.range(of: "h2 \\{[^}]*\\}", options: .regularExpression))
+        #expect(EPUBStylesheetManager.shortStoryCSS[h2RuleRange].contains("page-break-before") == false)
+    }
+
     private func makeTempDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

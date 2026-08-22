@@ -299,6 +299,76 @@ struct ManuscriptAssemblerTests {
         #expect(assembled.contains("Manuscript text."))
     }
 
+    @Test("short story assembly wraps the whole manuscript in one hidden heading with bare numbered h2 scenes")
+    func shortStoryWrapsManuscriptInOneHiddenHeading() throws {
+        let scene1 = url("Manuscript/01 Arrival/01 Triage.md")
+        let scene2 = url("Manuscript/02 Departure/01 Goodbye.md")
+        let chapters = [
+            ChapterNode(url: url("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: scene1, displayName: "Triage")], isLooseFile: false),
+            ChapterNode(url: url("Manuscript/02 Departure"), displayName: "Departure", scenes: [SceneNode(url: scene2, displayName: "Goodbye")], isLooseFile: false)
+        ]
+        let tree = BinderTree(manuscript: chapters, frontMatter: [], backMatter: [], notes: [])
+        var compile = ProjectMetadata.Compile()
+        compile.chapterTitleFormat = "{n}"
+        let contents: [URL: String] = [
+            scene1: scene("First scene text."),
+            scene2: scene("Second scene text.")
+        ]
+
+        let assembled = try ManuscriptAssembler.assembleShortStoryManuscript(
+            binderTree: tree,
+            compile: compile,
+            title: "Rook Takes",
+            read: { contents[$0]! }
+        )
+
+        #expect(assembled == """
+            # Rook Takes {.hidden-heading #manuscript}
+
+            ## 1 {#chapter-1}
+
+            First scene text.
+
+            ## 2 {#chapter-2}
+
+            Second scene text.
+            """)
+    }
+
+    @Test("short story Contents entry is a single title link, not one per chapter")
+    func shortStoryContentsEntryIsSingleTitleLink() throws {
+        let sceneURL = url("Manuscript/01 Arrival/01 Triage.md")
+        let chapter = ChapterNode(url: url("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: sceneURL, displayName: "Triage")], isLooseFile: false)
+        let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
+        var compile = ProjectMetadata.Compile()
+        compile.chapterTitleFormat = "{n}"
+        let contents: [URL: String] = [sceneURL: scene("Scene text.")]
+
+        let entry = try ManuscriptAssembler.shortStoryContentsEntry(
+            binderTree: tree,
+            compile: compile,
+            title: "Rook Takes",
+            read: { contents[$0]! }
+        )
+
+        #expect(entry == ManuscriptAssembler.ChapterEntry(title: "Rook Takes", anchorID: "manuscript"))
+    }
+
+    @Test("short story Contents entry is nil for an empty manuscript")
+    func shortStoryContentsEntryNilWhenEmpty() throws {
+        let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
+        let compile = ProjectMetadata.Compile()
+
+        let entry = try ManuscriptAssembler.shortStoryContentsEntry(
+            binderTree: tree,
+            compile: compile,
+            title: "Rook Takes",
+            read: { _ in "" }
+        )
+
+        #expect(entry == nil)
+    }
+
     private func url(_ path: String) -> URL {
         URL(fileURLWithPath: "/tmp/fixture/\(path)")
     }
