@@ -1078,10 +1078,13 @@ struct ContentView: View {
     /// The book cover's on-disk location (§4.5's `compile.coverImage`), or `nil` if
     /// none has been set yet or the file it points at no longer exists.
     private var coverImageURL: URL? {
-        guard let root = projectViewModel.workingTreeRoot, let path = projectViewModel.metadata?.compile.coverImage
+        guard let root = projectViewModel.workingTreeRoot, let path = projectViewModel.metadata?.compile.coverImage,
+              !path.isEmpty
         else { return nil }
         let url = root.appendingPathComponent(path)
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && !isDirectory.boolValue
+        return exists ? url : nil
     }
 
     /// A pinned first row in Front Matter showing the current cover (or a hint that

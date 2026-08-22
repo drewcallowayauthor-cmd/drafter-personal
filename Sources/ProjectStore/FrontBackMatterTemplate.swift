@@ -140,11 +140,14 @@ public enum FrontBackMatterTemplate: String, CaseIterable, Sendable {
             // heading that's never actually shown on the page. Rook Takes doesn't
             // use a dedication here at all — it opens with an epigraph (a quote +
             // attribution) instead, so that's the default; swap it for an actual
-            // dedication by hand on books where that's what's wanted.
+            // dedication by hand on books where that's what's wanted. `.dedication-page`
+            // (alongside `.centered-page`) gets extra top margin of its own — an
+            // epigraph reads better a few more lines down the page than Copyright's
+            // block of legal text does.
             return """
                 # Dedication {.hidden-heading #dedication}
 
-                ::: {.centered-page}
+                ::: {.centered-page .dedication-page}
                 *"Quote goes here."*
 
                 — Attribution
@@ -154,12 +157,17 @@ public enum FrontBackMatterTemplate: String, CaseIterable, Sendable {
         case .reviewAsk:
             // Hidden heading (only in the Contents link and the page's `<title>`) —
             // the visible "headline" is a bold first paragraph instead, matching the
-            // Rook Takes EPUB's own review-ask page (§9.2).
+            // Rook Takes EPUB's own review-ask page (§9.2). `.callout-heading` (a
+            // nested fenced div, not just a class on the paragraph) gets its own
+            // larger `margin-bottom` so the headline reads as a distinct line above
+            // the body text, not just another paragraph in the same rhythm.
             return """
                 # A Note From \(metadata.author) {.hidden-heading #review-ask}
 
-                ::: {.centered-page}
+                :::: {.centered-page}
+                ::: {.callout-heading}
                 **DID THIS BOOK KEEP YOU UP PAST YOUR BEDTIME?**
+                :::
 
                 If you enjoyed the ride, a quick review would mean the world. It
                 doesn't have to be fancy, a sentence or two is plenty, and it really
@@ -167,22 +175,24 @@ public enum FrontBackMatterTemplate: String, CaseIterable, Sendable {
                 thriller.
 
                 Leave a review on *Amazon* or *Goodreads*.
-                :::
+                ::::
                 """
 
         case .newsletter:
             return """
                 # Join the Newsletter {.hidden-heading #newsletter}
 
-                ::: {.centered-page}
+                :::: {.centered-page}
+                ::: {.callout-heading}
                 **WANT TO STAY UP TO DATE ON ALL THINGS \(metadata.author.uppercased())?**
+                :::
 
                 Sign up for my newsletter and you'll get new release updates first,
                 plus short stories that aren't published anywhere else. Not on
                 Amazon, not for sale. Just for readers on the list.
 
                 drewcalloway.com/#newsletter
-                :::
+                ::::
                 """
 
         case .aboutTheAuthor:

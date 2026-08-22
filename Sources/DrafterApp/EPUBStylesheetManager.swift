@@ -44,27 +44,56 @@ enum EPUBStylesheetManager {
         /* Chapter headings (§ ManuscriptAssembler) — the one heading style that *is*
            bold, underlined, and boxed to its own text width, matching the reference's
            `.bordered-title`. Reserved for actual chapters — nothing else gets this.
-           `margin-top` is a fixed `em` value, not a percentage — verified against a
-           real render that `margin-top: %` resolves against the containing block's
-           *width*, not its height (that's the CSS spec's own rule for percentage
-           margins, not an EPUB quirk), so it did roughly nothing toward pushing the
-           title down a reflowable page; a fixed `em` amount doesn't have that problem
-           and still scales sensibly with the reader's own font-size setting.
-           Scoped to `h1.chapter-title` specifically, never bare `.chapter-title` —
-           pandoc puts the heading's class on its wrapping `<section>` too (verified
-           against real pandoc output), so an unscoped class rule doesn't just style
-           the heading, it makes every paragraph in the whole chapter inherit
-           `font-weight: bold` and sit inside the same bordered box as the title. Same
-           reasoning applies to `.title-page-heading` and `.hidden-heading` below. */
+           Dropping the title down the page went through several wrong turns before
+           landing on what the real Rook Takes EPUB (Scrivener's own export) actually
+           does: `margin-top` (any unit — `%`, `em`, `vh`) never worked, because
+           `h1.chapter-title` also carries `page-break-before: always`, and per the
+           CSS Fragmentation spec a *forced* break zeroes out the margin adjoining it
+           (to avoid stray whitespace at a deliberate page boundary) — verified
+           against a real build in Apple Books, which enforces exactly that. The
+           reference EPUB sidesteps this entirely by never putting a top margin on
+           the title at all: it precedes the heading with a genuine empty paragraph
+           (`<p class="chapter-title-page-padding"><br /></p>`) whose `line-height`
+           reserves real box height, immune to margin/padding trimming since it isn't
+           a margin. `section.chapter-title::before` (below) replicates that via
+           generated content rather than an actual preceding paragraph in the
+           markdown — `--split-level=1` (§ PandocService) splits a new file *at* each
+           heading, so a real paragraph placed before "# Chapter N" in the source
+           would land at the end of the *previous* chapter's file, not the top of
+           this one. `page-break-before` is left `auto`: `--split-level=1` already
+           puts every chapter in its own spine file, so the forced break was pure
+           redundancy anyway — it existed only for a document that isn't
+           file-per-chapter, which this pipeline never produces. Scoped to
+           `h1.chapter-title` specifically, never bare `.chapter-title` — pandoc puts
+           the heading's class on its wrapping `<section>` too (verified against real
+           pandoc output), so an unscoped class rule doesn't just style the heading,
+           it makes every paragraph in the whole chapter inherit `font-weight: bold`
+           and sit inside the same bordered box as the title. Same reasoning applies
+           to `.title-page-heading` and `.hidden-heading` below. */
         h1.chapter-title {
-          page-break-before: always;
-          margin: 10em auto 1.5em auto;
+          page-break-before: auto;
+          margin: 0 auto 1.5em auto;
           text-align: center;
           font-weight: bold;
           font-size: 1.3em;
           border-bottom: 2px solid currentColor;
           padding-bottom: 0.15em;
           display: table;
+        }
+
+        /* The empty padding paragraph above, reproduced as generated content on the
+           section pandoc wraps the heading in (rather than a real paragraph in the
+           markdown — see the note on `h1.chapter-title` above for why) — `\00a0` (a
+           non-breaking space) rather than empty content so the block actually
+           establishes a line box for `line-height` to size against; an empty string
+           alone collapses to zero height in most renderers, the same way `<br />`
+           does the job in the reference's own real paragraph. `8rem` matches the
+           reference's own `.chapter-title-page-padding` value exactly. */
+        section.chapter-title::before {
+          content: "\00a0";
+          display: block;
+          line-height: 8rem;
+          margin: 0;
         }
 
         /* Title Page (§ FrontBackMatterTemplate.titlePage) — vertically centered on
@@ -139,6 +168,24 @@ enum EPUBStylesheetManager {
           text-indent: 0;
           margin-bottom: 1em;
         }
+
+        /* Dedication/epigraph (§ FrontBackMatterTemplate.dedication) — a few more
+           lines down the page than Copyright's block of legal text, which shares
+           `.centered-page`'s base 4em top margin. Same specificity as `.centered-page`
+           above, so source order (this rule comes after) is what makes it win. */
+        .dedication-page {
+          margin-top: 7em;
+        }
+
+        /* The review-ask and Newsletter back-matter pages' bold opening line (§
+           FrontBackMatterTemplate) — a nested fenced div, not just a class on the
+           paragraph, so it gets its own `margin-bottom` distinct from `.centered-page
+           p`'s standard 1em: an extra blank line between the headline and the body
+           text it introduces. Same specificity as `.centered-page p` above, so source
+           order (this rule comes after) is what makes it win. */
+        .callout-heading p {
+          margin-bottom: 2em;
+        }
         """
 
     /// The Short Story counterpart to `defaultCSS`: identical in every respect except
@@ -174,13 +221,27 @@ enum EPUBStylesheetManager {
         /* Numbered scene breaks (§ ManuscriptAssembler) — deliberately plain, unlike
            Novel's boxed/underlined `.chapter-title`: a bare "1"/"2"/"3" doesn't read as
            a titled chapter, so it gets the same treatment as every other heading rather
-           than a distinct bordered style. */
+           than a distinct bordered style. No top margin, and `page-break-before` left
+           `auto` — see Novel's `.chapter-title` (§ defaultCSS) for the full story: the
+           real Rook Takes reference EPUB gets its pre-title drop from an empty
+           padding paragraph's `line-height`, not a margin (which a forced break
+           zeroes out anyway), reproduced below via `section.chapter-title::before`. */
         h1.chapter-title {
-          page-break-before: always;
-          margin: 10em auto 1.5em auto;
+          page-break-before: auto;
+          margin: 0 auto 1.5em auto;
           text-align: center;
           font-weight: normal;
           font-size: 1.3em;
+        }
+
+        /* See Novel's `section.chapter-title::before` (§ defaultCSS) — same technique,
+           reproduced here since Short Story's plain heading still needs the same
+           pre-title drop the reference EPUB gives every chapter opener. */
+        section.chapter-title::before {
+          content: "\00a0";
+          display: block;
+          line-height: 8rem;
+          margin: 0;
         }
 
         /* Title Page (§ FrontBackMatterTemplate.titlePage) — vertically centered on
@@ -253,6 +314,24 @@ enum EPUBStylesheetManager {
           text-align: center;
           text-indent: 0;
           margin-bottom: 1em;
+        }
+
+        /* Dedication/epigraph (§ FrontBackMatterTemplate.dedication) — a few more
+           lines down the page than Copyright's block of legal text, which shares
+           `.centered-page`'s base 4em top margin. Same specificity as `.centered-page`
+           above, so source order (this rule comes after) is what makes it win. */
+        .dedication-page {
+          margin-top: 7em;
+        }
+
+        /* The review-ask and Newsletter back-matter pages' bold opening line (§
+           FrontBackMatterTemplate) — a nested fenced div, not just a class on the
+           paragraph, so it gets its own `margin-bottom` distinct from `.centered-page
+           p`'s standard 1em: an extra blank line between the headline and the body
+           text it introduces. Same specificity as `.centered-page p` above, so source
+           order (this rule comes after) is what makes it win. */
+        .callout-heading p {
+          margin-bottom: 2em;
         }
         """
 

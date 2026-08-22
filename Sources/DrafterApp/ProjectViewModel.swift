@@ -746,7 +746,7 @@ final class ProjectViewModel {
     /// rather than clearing it — every consumer (export, the Front Matter cover row)
     /// already checks the file exists before using it, so a dangling path is harmless.
     func removeCoverImage() async {
-        guard let workingTreeRoot, let metadata else { return }
+        guard let workingTreeRoot, let metadata, !metadata.compile.coverImage.isEmpty else { return }
         errorMessage = nil
         do {
             try FileManager.default.removeItem(at: workingTreeRoot.appendingPathComponent(metadata.compile.coverImage))

@@ -43,7 +43,10 @@ final class EPUBExportCoordinator {
         try fileWriter.write(Data(EPUBMetadataGenerator.metaYAML(for: metadata).utf8), to: metaURL)
 
         let coverURL = workingTree.appendingPathComponent(metadata.compile.coverImage)
-        let coverExists = FileManager.default.fileExists(atPath: coverURL.path)
+        var coverIsDirectory: ObjCBool = false
+        let coverExists = !metadata.compile.coverImage.isEmpty
+            && FileManager.default.fileExists(atPath: coverURL.path, isDirectory: &coverIsDirectory)
+            && !coverIsDirectory.boolValue
 
         let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
         let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle).epub")
