@@ -38,6 +38,8 @@ extension Notification.Name {
 
 @main
 struct DrafterApp: App {
+    @Environment(\.openWindow) private var openWindow
+
     init() {
         // `swift run` launches a bare executable, not a real .app bundle, so without
         // this the window never properly becomes key — clicks land, but keyboard
@@ -160,10 +162,24 @@ struct DrafterApp: App {
                 }
                 .keyboardShortcut("t", modifiers: [.command, .option])
             }
+            // Replaces the default "Drafter Help" item (which would otherwise open a
+            // nonexistent Help Book) with the in-app Help window below.
+            CommandGroup(replacing: .help) {
+                Button("Drafter Help") {
+                    openWindow(id: "help")
+                }
+                .keyboardShortcut("?", modifiers: .command)
+            }
         }
 
         Settings {
             SettingsView()
         }
+
+        Window("Drafter Help", id: "help") {
+            HelpView()
+                .preferredColorScheme(.dark)
+        }
+        .defaultSize(width: 820, height: 580)
     }
 }
