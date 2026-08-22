@@ -39,7 +39,7 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
 
         public init(
             chapterTitleFormat: String = "Chapter {n}",
-            sceneSeparator: String = "* * *",
+            sceneSeparator: String = "#",
             includeFrontMatter: Bool = true,
             includeBackMatter: Bool = true,
             coverImage: String = "Resources/cover.jpg"

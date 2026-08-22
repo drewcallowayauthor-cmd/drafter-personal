@@ -142,6 +142,14 @@ struct ProjectMetadataEditor: View {
             NocturneField(label: "Publisher", text: $draft.publisher)
             NocturneField(label: "ISBN", text: $draft.isbn)
             NocturneField(label: "Language", text: $draft.language)
+
+            sectionLabel("Manuscript")
+            NocturneField(label: "Address", text: $draft.manuscript.address)
+            NocturneField(label: "Phone", text: $draft.manuscript.phone)
+            NocturneField(label: "Email", text: $draft.manuscript.email)
+            NocturneField(label: "Agent Name", text: $draft.manuscript.agentName)
+            NocturneField(label: "Agent Address", text: $draft.manuscript.agentAddress)
+            NocturneDropdown(label: "Manuscript Font", selection: $draft.manuscript.bodyFont, options: ["Times New Roman", "Courier New"]) { $0 }
         }
     }
 

@@ -32,7 +32,7 @@ struct ManuscriptAssemblerTests {
             read: { contents[$0]! }
         )
 
-        #expect(assembled == "# Chapter 1 {.chapter-title #chapter-1}\n\nFirst scene text.\n\n* * *\n\nSecond scene text.")
+        #expect(assembled == "# Chapter 1 {.chapter-title #chapter-1}\n\nFirst scene text.\n\n#\n\nSecond scene text.")
     }
 
     @Test("a loose file at Manuscript root becomes its own single-scene chapter")

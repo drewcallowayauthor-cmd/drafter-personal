@@ -124,6 +124,21 @@ final class TypewriterTextView: NSTextView {
         didChangeText()
         setSelectedRange(result.newSelectedRange)
     }
+
+    /// Forces a plain-text paste (matching `isRichText = false`, §8.3) and normalizes
+    /// line endings via `PastedTextNormalizer` — see its doc comment for why.
+    override func paste(_ sender: Any?) {
+        guard let pasteboardString = NSPasteboard.general.string(forType: .string) else {
+            super.paste(sender)
+            return
+        }
+        let normalized = PastedTextNormalizer.normalize(pasteboardString)
+        let range = selectedRange()
+        guard shouldChangeText(in: range, replacementString: normalized) else { return }
+        textStorage?.replaceCharacters(in: range, with: normalized)
+        didChangeText()
+        setSelectedRange(NSRange(location: range.location + (normalized as NSString).length, length: 0))
+    }
 }
 
 /// A one-shot "select this range and scroll it into view" request from outside the text
