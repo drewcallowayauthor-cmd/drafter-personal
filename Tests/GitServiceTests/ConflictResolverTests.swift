@@ -63,10 +63,10 @@ struct ConflictResolverTests {
         let runner = MockProcessRunner()
         let resolver = makeResolver(runner: runner)
 
-        try await resolver.finalize(machineName: "Josiah-MacBook-Pro")
+        try await resolver.finalize(machineName: "Drew-MacBook-Pro")
 
         let invocations = await runner.invocations
-        #expect(invocations[0].arguments == ["commit", "-m", "resolve conflicts from Josiah-MacBook-Pro"])
+        #expect(invocations[0].arguments == ["commit", "-m", "resolve conflicts from Drew-MacBook-Pro"])
         #expect(invocations[1].arguments == ["push", "origin", "main"])
     }
 

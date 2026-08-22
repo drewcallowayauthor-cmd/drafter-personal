@@ -46,8 +46,8 @@ struct ConflictViewModelTests {
             sha: "abc",
             date: Date(timeIntervalSince1970: 1_755_000_000),
             subject: "checkpoint",
-            authorName: "Josiah",
-            machineName: "Josiah-MacBook-Pro"
+            authorName: "Drew",
+            machineName: "Drew-MacBook-Pro"
         )
 
         await viewModel.keepBoth(conflict)
@@ -73,14 +73,14 @@ struct ConflictViewModelTests {
     @Test("finalize commits and pushes once everything is resolved")
     func finalizeCommitsAndPushesWhenAllResolved() async throws {
         let runner = MockProcessRunner()
-        let viewModel = makeViewModel(paths: ["Manuscript/a.md"], runner: runner, machineName: "Josiah-Mac-Studio")
+        let viewModel = makeViewModel(paths: ["Manuscript/a.md"], runner: runner, machineName: "Drew-Mac-Studio")
         await viewModel.keepMine(viewModel.conflicts[0])
 
         let succeeded = await viewModel.finalize()
 
         #expect(succeeded == true)
         let invocations = await runner.invocations
-        #expect(invocations.contains { $0.arguments == ["commit", "-m", "resolve conflicts from Josiah-Mac-Studio"] })
+        #expect(invocations.contains { $0.arguments == ["commit", "-m", "resolve conflicts from Drew-Mac-Studio"] })
         #expect(invocations.contains { $0.arguments == ["push", "origin", "main"] })
     }
 

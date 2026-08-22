@@ -8,7 +8,7 @@ import Testing
 @MainActor
 @Suite("HistoryViewModel")
 struct HistoryViewModelTests {
-    private let workingTree = URL(fileURLWithPath: "/tmp/The Last Shift")
+    private let workingTree = URL(fileURLWithPath: "/tmp/Last Call")
 
     @Test("relativePath strips the working tree prefix")
     func relativePathStripsPrefix() {
@@ -22,7 +22,7 @@ struct HistoryViewModelTests {
         await runner.script(
             ProcessResult(
                 exitCode: 0,
-                standardOutput: "abc\u{1F}1755000000\u{1F}autosave — 1 file, +10 words\u{1F}Tim Fleet\u{1F}Machine-1\n",
+                standardOutput: "abc\u{1F}1755000000\u{1F}autosave — 1 file, +10 words\u{1F}Drew Calloway\u{1F}Machine-1\n",
                 standardError: ""
             ),
             forExecutableNamed: "git"
@@ -44,7 +44,7 @@ struct HistoryViewModelTests {
         await runner.script(
             ProcessResult(
                 exitCode: 0,
-                standardOutput: "abc\u{1F}1755000000\u{1F}checkpoint\u{1F}Tim Fleet\u{1F}Machine-1\n",
+                standardOutput: "abc\u{1F}1755000000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Machine-1\n",
                 standardError: ""
             ),
             forExecutableNamed: "git"
@@ -75,7 +75,7 @@ struct HistoryViewModelTests {
         await runner.script(
             ProcessResult(
                 exitCode: 0,
-                standardOutput: "abc\u{1F}1755000000\u{1F}checkpoint\u{1F}Tim Fleet\u{1F}Machine-1\n",
+                standardOutput: "abc\u{1F}1755000000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Machine-1\n",
                 standardError: ""
             ),
             forExecutableNamed: "git"
@@ -112,7 +112,7 @@ struct HistoryViewModelTests {
             sha: "abc123",
             date: Date(timeIntervalSince1970: 1_755_000_000),
             subject: "autosave — 1 file, +10 words",
-            authorName: "Tim Fleet",
+            authorName: "Drew Calloway",
             machineName: "Machine-1"
         )
 
@@ -139,7 +139,7 @@ struct HistoryViewModelTests {
             sha: "deadbeef",
             date: Date(),
             subject: "checkpoint",
-            authorName: "Tim Fleet",
+            authorName: "Drew Calloway",
             machineName: "Machine-1"
         )
 
@@ -191,9 +191,9 @@ private struct DelayedVersioningSource: VersioningSource {
                     continuation.resume()
                 }
             }
-            return [CommitLogEntry(sha: "first", date: Date(), subject: "first scene", authorName: "Tim Fleet", machineName: "Machine-1")]
+            return [CommitLogEntry(sha: "first", date: Date(), subject: "first scene", authorName: "Drew Calloway", machineName: "Machine-1")]
         }
-        return [CommitLogEntry(sha: "second", date: Date(), subject: "second scene", authorName: "Tim Fleet", machineName: "Machine-1")]
+        return [CommitLogEntry(sha: "second", date: Date(), subject: "second scene", authorName: "Drew Calloway", machineName: "Machine-1")]
     }
 
     func show(path: String, at id: String, in workingTree: URL) async throws -> String { "" }

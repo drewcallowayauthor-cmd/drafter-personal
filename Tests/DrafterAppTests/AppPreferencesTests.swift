@@ -42,7 +42,7 @@ struct AppPreferencesTests {
 
         let prefs = AppPreferences(defaults: defaults)
         prefs.projectsDirectoryPath = "/tmp/Projects"
-        prefs.defaultAuthorName = "Josiah"
+        prefs.defaultAuthorName = "Drew"
         prefs.reopenLastProjectOnLaunch = true
         prefs.editorFontSize = 18
         prefs.measuredWidthInCharacters = 72
@@ -53,7 +53,7 @@ struct AppPreferencesTests {
 
         let reloaded = AppPreferences(defaults: defaults)
         #expect(reloaded.projectsDirectoryPath == "/tmp/Projects")
-        #expect(reloaded.defaultAuthorName == "Josiah")
+        #expect(reloaded.defaultAuthorName == "Drew")
         #expect(reloaded.reopenLastProjectOnLaunch == true)
         #expect(reloaded.editorFontSize == 18)
         #expect(reloaded.measuredWidthInCharacters == 72)

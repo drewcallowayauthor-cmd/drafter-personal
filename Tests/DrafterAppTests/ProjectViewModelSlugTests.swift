@@ -5,7 +5,7 @@ import Testing
 struct ProjectViewModelSlugTests {
     @Test("matches §5.2's example exactly")
     func matchesDesignDocExample() {
-        #expect(ProjectViewModel.slug(for: "The Last Shift") == "the-last-shift")
+        #expect(ProjectViewModel.slug(for: "Last Call") == "last-call")
     }
 
     @Test("collapses runs of punctuation into a single hyphen")

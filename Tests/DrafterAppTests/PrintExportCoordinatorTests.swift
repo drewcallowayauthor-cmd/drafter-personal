@@ -28,7 +28,7 @@ struct PrintExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(
@@ -53,7 +53,7 @@ struct PrintExportCoordinatorTests {
         )
 
         #expect(result.pageCount == 100)
-        #expect(result.outputURL == root.appendingPathComponent("The Last Shift - interior.pdf"))
+        #expect(result.outputURL == root.appendingPathComponent("Last Call - interior.pdf"))
 
         let typstInvocations = await runner.invocations.filter { $0.executableURL == self.typstURL }
         #expect(typstInvocations.count == 1)
@@ -64,7 +64,7 @@ struct PrintExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(
@@ -108,7 +108,7 @@ struct PrintExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(

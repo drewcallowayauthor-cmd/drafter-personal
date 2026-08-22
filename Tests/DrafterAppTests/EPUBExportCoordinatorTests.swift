@@ -23,7 +23,7 @@ struct EPUBExportCoordinatorTests {
             isLooseFile: false
         )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -40,7 +40,7 @@ struct EPUBExportCoordinatorTests {
             read: { _ in "---\nstatus: draft\ncompile: true\n---\n\nThe board was wrong." }
         )
 
-        #expect(result.outputURL == root.appendingPathComponent("The Last Shift.epub"))
+        #expect(result.outputURL == root.appendingPathComponent("Last Call.epub"))
         #expect(result.wordCount > 0)
 
         let writtenPaths = writer.writes.map(\.url.lastPathComponent)
@@ -56,7 +56,7 @@ struct EPUBExportCoordinatorTests {
         #expect(pandocArgs.contains("--to=epub3"))
         #expect(pandocArgs.contains(where: { $0.hasSuffix("assembled.md") }))
         #expect(pandocArgs.contains(where: { $0.hasSuffix("meta.yaml") }))
-        #expect(pandocArgs.contains(where: { $0.hasSuffix("The Last Shift.epub") }))
+        #expect(pandocArgs.contains(where: { $0.hasSuffix("Last Call.epub") }))
     }
 
     @Test("a pandoc failure throws with stderr intact rather than silently succeeding")
@@ -64,7 +64,7 @@ struct EPUBExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(
@@ -98,7 +98,7 @@ struct EPUBExportCoordinatorTests {
             backMatter: [SceneNode(url: backURL, displayName: "About the Author")],
             notes: []
         )
-        var metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        var metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         metadata.compile.includeFrontMatter = true
         metadata.compile.includeBackMatter = true
 
@@ -127,7 +127,7 @@ struct EPUBExportCoordinatorTests {
     func splicesContentsPageAfterCopyright() async throws {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")
@@ -193,7 +193,7 @@ struct EPUBExportCoordinatorTests {
     func shortStoryTemplateProducesOneContinuousSection() async throws {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        let metadata = ProjectMetadata(title: "Rook Takes", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Rook Takes", author: "Drew Calloway", copyrightYear: 2026)
 
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")

@@ -15,21 +15,21 @@ struct EPUBMetadataGeneratorTests {
 
     @Test("includes the core fields")
     func includesCoreFields() {
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let yaml = EPUBMetadataGenerator.metaYAML(for: metadata, generatedDate: fixedDate)
 
-        #expect(yaml.contains("title: \"The Last Shift\""))
-        #expect(yaml.contains("creator: \"Tim Fleet\""))
+        #expect(yaml.contains("title: \"Last Call\""))
+        #expect(yaml.contains("creator: \"Drew Calloway\""))
         #expect(yaml.contains("date: \"2026-08-18\""))
         #expect(yaml.contains("language: \"en-US\""))
-        #expect(yaml.contains("rights: \"Copyright © 2026 by Tim Fleet\""))
+        #expect(yaml.contains("rights: \"Copyright © 2026 by Drew Calloway\""))
     }
 
     @Test("uses the ISBN as the identifier when present")
     func usesISBNWhenPresent() {
         let metadata = ProjectMetadata(
-            title: "The Last Shift",
-            author: "Tim Fleet",
+            title: "Last Call",
+            author: "Drew Calloway",
             copyrightYear: 2026,
             isbn: "978-0-000000-00-0"
         )
@@ -40,7 +40,7 @@ struct EPUBMetadataGeneratorTests {
 
     @Test("falls back to project.id as the identifier when there is no ISBN")
     func fallsBackToProjectIDWithoutISBN() {
-        let metadata = ProjectMetadata(id: "F4C2A1E9-TEST", title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(id: "F4C2A1E9-TEST", title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let yaml = EPUBMetadataGenerator.metaYAML(for: metadata, generatedDate: fixedDate)
 
         #expect(yaml.contains("identifier: \"F4C2A1E9-TEST\""))
@@ -48,7 +48,7 @@ struct EPUBMetadataGeneratorTests {
 
     @Test("omits subtitle, publisher, and description lines when they're empty")
     func omitsEmptyOptionalFields() {
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let yaml = EPUBMetadataGenerator.metaYAML(for: metadata, generatedDate: fixedDate)
 
         #expect(yaml.contains("subtitle:") == false)
@@ -59,9 +59,9 @@ struct EPUBMetadataGeneratorTests {
     @Test("includes subtitle, publisher, and description when present")
     func includesOptionalFieldsWhenPresent() {
         let metadata = ProjectMetadata(
-            title: "The Last Shift",
+            title: "Last Call",
             subtitle: "A Novel",
-            author: "Tim Fleet",
+            author: "Drew Calloway",
             copyrightYear: 2026,
             publisher: "Acme Books",
             description: "A story about a night shift."
@@ -75,7 +75,7 @@ struct EPUBMetadataGeneratorTests {
 
     @Test("escapes embedded quotes so the YAML stays valid")
     func escapesEmbeddedQuotes() {
-        let metadata = ProjectMetadata(title: "The \"Last\" Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "The \"Last\" Shift", author: "Drew Calloway", copyrightYear: 2026)
         let yaml = EPUBMetadataGenerator.metaYAML(for: metadata, generatedDate: fixedDate)
 
         #expect(yaml.contains("title: \"The \\\"Last\\\" Shift\""))

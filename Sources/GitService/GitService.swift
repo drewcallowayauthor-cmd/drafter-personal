@@ -137,7 +137,7 @@ public actor GitService {
 
     /// The most recent commit touching `path` reachable from `ref` — used by §5.7's
     /// conflict sheet to label each side ("Mine — edited 14 minutes ago on
-    /// Josiah-Mac-Studio"): `ref` is `HEAD` for "mine" and `MERGE_HEAD` for "theirs"
+    /// Drew-Mac-Studio"): `ref` is `HEAD` for "mine" and `MERGE_HEAD` for "theirs"
     /// during an unresolved merge. `nil` if `path` has no history reachable from `ref`.
     public func lastCommit(for path: String, at ref: String, in workingTree: URL) async throws -> CommitLogEntry? {
         let arguments = [

@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Build, sign, and zip Drafter.app
+        run: ./Scripts/build-release.sh "${{ github.ref_name }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/Drafter-*-macOS.zip
+          generate_release_notes: true
+          body: |
+            Unsigned build (ad-hoc signed, no Apple Developer ID) — macOS will show an
+            "unidentified developer" warning on first launch. Right-click `Drafter.app`
+            → **Open** → **Open** to bypass it; this is only needed once.

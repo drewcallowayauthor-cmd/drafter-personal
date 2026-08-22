@@ -1,0 +1,67 @@
+name: Drafter
+options:
+  bundleIdPrefix: com.drafter
+  deploymentTarget:
+    macOS: "14.0"
+
+packages:
+  DrafterPackage:
+    path: .
+
+targets:
+  Drafter:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/DrafterApp
+        excludes:
+          - "Resources/**"
+      - path: Xcode/Assets.xcassets
+      - path: Sources/DrafterApp/Resources/Fonts
+        type: folder
+        buildPhase: resources
+      - path: Sources/DrafterApp/Resources/DOCX
+        type: folder
+        buildPhase: resources
+      - path: Sources/DrafterApp/Resources/Binaries
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: DrafterPackage
+        product: DrafterCore
+      - package: DrafterPackage
+        product: GitService
+      - package: DrafterPackage
+        product: CredentialStore
+      - package: DrafterPackage
+        product: CompileService
+      - package: DrafterPackage
+        product: SnapshotService
+      - package: DrafterPackage
+        product: ProjectStore
+    settings:
+      base:
+        PRODUCT_NAME: Drafter
+        PRODUCT_BUNDLE_IDENTIFIER: com.drafter.Drafter
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        SWIFT_VERSION: "6.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        DEVELOPMENT_TEAM: ""
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Drafter
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        INFOPLIST_KEY_NSMainStoryboardFile: ""
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+    scheme:
+      testTargets: []
+      commandLineArguments: []

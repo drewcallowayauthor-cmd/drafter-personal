@@ -10,19 +10,19 @@ struct GitHubAPIClientTests {
     func createRepositoryDecodesResponse() async throws {
         let requester = MockHTTPRequester()
         await requester.script(statusCode: 201, jsonObject: [
-            "name": "the-last-shift",
-            "full_name": "josiah/the-last-shift",
-            "clone_url": "https://github.com/josiah/the-last-shift.git",
-            "html_url": "https://github.com/josiah/the-last-shift",
+            "name": "last-call",
+            "full_name": "drew/last-call",
+            "clone_url": "https://github.com/drew/last-call.git",
+            "html_url": "https://github.com/drew/last-call",
             "private": true
         ])
         let client = GitHubAPIClient(requester: requester)
 
-        let repo = try await client.createRepository(name: "the-last-shift", token: "ghp_abc")
+        let repo = try await client.createRepository(name: "last-call", token: "ghp_abc")
 
-        #expect(repo.name == "the-last-shift")
-        #expect(repo.fullName == "josiah/the-last-shift")
-        #expect(repo.cloneURL == URL(string: "https://github.com/josiah/the-last-shift.git"))
+        #expect(repo.name == "last-call")
+        #expect(repo.fullName == "drew/last-call")
+        #expect(repo.cloneURL == URL(string: "https://github.com/drew/last-call.git"))
         #expect(repo.isPrivate == true)
 
         let invocations = await requester.invocations
@@ -31,7 +31,7 @@ struct GitHubAPIClientTests {
         #expect(invocations[0].value(forHTTPHeaderField: "Authorization") == "Bearer ghp_abc")
         let body = try #require(invocations[0].httpBody)
         let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
-        #expect(json["name"] as? String == "the-last-shift")
+        #expect(json["name"] as? String == "last-call")
         #expect(json["private"] as? Bool == true)
     }
 
@@ -103,9 +103,9 @@ struct GitHubAPIClientTests {
         await requester.script(statusCode: 200, jsonObject: [
             [
                 "name": "book-one",
-                "full_name": "josiah/book-one",
-                "clone_url": "https://github.com/josiah/book-one.git",
-                "html_url": "https://github.com/josiah/book-one",
+                "full_name": "drew/book-one",
+                "clone_url": "https://github.com/drew/book-one.git",
+                "html_url": "https://github.com/drew/book-one",
                 "private": true
             ]
         ])
@@ -124,31 +124,31 @@ struct GitHubAPIClientTests {
     @Test("currentUser decodes login and email")
     func currentUserDecodesLoginAndEmail() async throws {
         let requester = MockHTTPRequester()
-        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": "josiah@example.com"])
+        await requester.script(statusCode: 200, jsonObject: ["login": "drew", "email": "drew@example.com"])
         let client = GitHubAPIClient(requester: requester)
 
         let user = try await client.currentUser(token: "ghp_abc")
 
-        #expect(user.login == "josiah")
-        #expect(user.email == "josiah@example.com")
+        #expect(user.login == "drew")
+        #expect(user.email == "drew@example.com")
     }
 
     @Test("currentUser tolerates a null email")
     func currentUserToleratesNullEmail() async throws {
         let requester = MockHTTPRequester()
-        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": NSNull()])
+        await requester.script(statusCode: 200, jsonObject: ["login": "drew", "email": NSNull()])
         let client = GitHubAPIClient(requester: requester)
 
         let user = try await client.currentUser(token: "ghp_abc")
 
-        #expect(user.login == "josiah")
+        #expect(user.login == "drew")
         #expect(user.email == nil)
     }
 
     @Test("every request carries the required GitHub API headers")
     func requestsCarryRequiredHeaders() async throws {
         let requester = MockHTTPRequester()
-        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": NSNull()])
+        await requester.script(statusCode: 200, jsonObject: ["login": "drew", "email": NSNull()])
         let client = GitHubAPIClient(requester: requester)
 
         _ = try await client.currentUser(token: "ghp_abc")
@@ -165,11 +165,11 @@ struct GitHubAPIClientTests {
         await requester.script(statusCode: 200, jsonObject: ["name": "project.json"])
         let client = GitHubAPIClient(requester: requester)
 
-        let exists = try await client.containsFile(fullName: "josiah/the-last-shift", path: "project.json", token: "ghp_abc")
+        let exists = try await client.containsFile(fullName: "drew/last-call", path: "project.json", token: "ghp_abc")
 
         #expect(exists == true)
         let invocations = await requester.invocations
-        #expect(invocations.first?.url?.path == "/repos/josiah/the-last-shift/contents/project.json")
+        #expect(invocations.first?.url?.path == "/repos/drew/last-call/contents/project.json")
     }
 
     @Test("containsFile returns false on 404 rather than throwing")
@@ -178,7 +178,7 @@ struct GitHubAPIClientTests {
         await requester.script(statusCode: 404, jsonObject: ["message": "Not Found"])
         let client = GitHubAPIClient(requester: requester)
 
-        let exists = try await client.containsFile(fullName: "josiah/other-repo", path: "project.json", token: "ghp_abc")
+        let exists = try await client.containsFile(fullName: "drew/other-repo", path: "project.json", token: "ghp_abc")
 
         #expect(exists == false)
     }
@@ -190,7 +190,7 @@ struct GitHubAPIClientTests {
         let client = GitHubAPIClient(requester: requester)
 
         do {
-            _ = try await client.containsFile(fullName: "josiah/the-last-shift", path: "project.json", token: "bad")
+            _ = try await client.containsFile(fullName: "drew/last-call", path: "project.json", token: "bad")
             Issue.record("expected containsFile to throw")
         } catch let error as DrafterError {
             #expect(error == .authenticationFailed)

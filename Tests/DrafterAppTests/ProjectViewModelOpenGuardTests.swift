@@ -104,8 +104,8 @@ struct ProjectViewModelOpenGuardTests {
         // hung." Local-file mode exercises the exact same registry guard through pure
         // file I/O.
         let metadata = ProjectMetadata(
-            title: "The Last Shift",
-            author: "Tim Fleet",
+            title: "Last Call",
+            author: "Drew Calloway",
             versionControl: .localFile,
             copyrightYear: 2026
         )

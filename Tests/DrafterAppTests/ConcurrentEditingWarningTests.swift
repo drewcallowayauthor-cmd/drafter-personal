@@ -13,31 +13,31 @@ struct ConcurrentEditingWarningTests {
     @Test("finds a recent commit from a different machine within the window")
     func findsRecentCommitFromDifferentMachine() async throws {
         let runner = MockProcessRunner()
-        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Josiah\u{1F}Josiah-MacBook-Pro\n"
+        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Drew\u{1F}Drew-MacBook-Pro\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTree,
-            ownMachineName: "Josiah-Mac-Studio",
+            ownMachineName: "Drew-Mac-Studio",
             now: now
         )
 
-        #expect(info == .init(machineName: "Josiah-MacBook-Pro", secondsAgo: 40))
+        #expect(info == .init(machineName: "Drew-MacBook-Pro", secondsAgo: 40))
     }
 
     @Test("ignores commits from its own machine")
     func ignoresOwnMachine() async throws {
         let runner = MockProcessRunner()
-        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Josiah\u{1F}Josiah-Mac-Studio\n"
+        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Drew\u{1F}Drew-Mac-Studio\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTree,
-            ownMachineName: "Josiah-Mac-Studio",
+            ownMachineName: "Drew-Mac-Studio",
             now: now
         )
 
@@ -47,14 +47,14 @@ struct ConcurrentEditingWarningTests {
     @Test("ignores commits older than the window")
     func ignoresOldCommits() async throws {
         let runner = MockProcessRunner()
-        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 600))\u{1F}autosave\u{1F}Josiah\u{1F}Josiah-MacBook-Pro\n"
+        let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 600))\u{1F}autosave\u{1F}Drew\u{1F}Drew-MacBook-Pro\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTree,
-            ownMachineName: "Josiah-Mac-Studio",
+            ownMachineName: "Drew-Mac-Studio",
             window: 300,
             now: now
         )
@@ -72,7 +72,7 @@ struct ConcurrentEditingWarningTests {
         let info = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTree,
-            ownMachineName: "Josiah-Mac-Studio",
+            ownMachineName: "Drew-Mac-Studio",
             now: now
         )
 
@@ -91,7 +91,7 @@ struct ConcurrentEditingWarningTests {
         let info = await ConcurrentEditingWarning.check(
             gitService: gitService,
             workingTree: workingTree,
-            ownMachineName: "Josiah-Mac-Studio",
+            ownMachineName: "Drew-Mac-Studio",
             now: now
         )
 

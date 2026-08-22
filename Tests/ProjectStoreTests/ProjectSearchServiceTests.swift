@@ -125,7 +125,7 @@ struct ProjectSearchServiceTests {
         try Data("Another Lantern hung by the door.".utf8)
             .write(to: secondChapterDirectory.appendingPathComponent("01 Second Scene.md"))
 
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let store = ProjectMetadataStore(fileWriter: LiveAtomicFileWriter())
         try store.save(metadata, to: root)
 

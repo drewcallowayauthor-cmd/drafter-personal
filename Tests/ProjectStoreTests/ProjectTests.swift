@@ -15,7 +15,7 @@ struct ProjectTests {
         let metadata = await project.metadata
         let tree = await project.binderTree
 
-        #expect(metadata.title == "The Last Shift")
+        #expect(metadata.title == "Last Call")
         #expect(tree.manuscript.map(\.displayName) == ["Arrival"])
     }
 
@@ -56,7 +56,7 @@ struct ProjectTests {
     func createScaffoldsNewProject() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
-        let metadata = ProjectMetadata(title: "New Book", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "New Book", author: "Drew Calloway", copyrightYear: 2026)
 
         let project = try Project.create(root: root, metadata: metadata, fileWriter: LiveAtomicFileWriter())
 
@@ -82,7 +82,7 @@ struct ProjectTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let metadata = ProjectMetadata(title: "New Book", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "New Book", author: "Drew Calloway", copyrightYear: 2026)
 
         #expect(throws: DrafterError.self) {
             try Project.create(root: root, metadata: metadata, fileWriter: LiveAtomicFileWriter())
@@ -322,7 +322,7 @@ struct ProjectTests {
         try FileManager.default.createDirectory(at: chapterDirectory, withIntermediateDirectories: true)
         try Data("Text.".utf8).write(to: chapterDirectory.appendingPathComponent("01 Triage.md"))
 
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let store = ProjectMetadataStore(fileWriter: LiveAtomicFileWriter())
         try store.save(metadata, to: root)
 

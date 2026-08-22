@@ -7,15 +7,15 @@ struct CommitMessageBuilderTests {
     func autosaveMatchesExample() {
         let message = CommitMessageBuilder.message(
             for: .autosave(filesChanged: 3, wordDelta: 412),
-            machine: "Josiah-MacBook-Pro"
+            machine: "Drew-MacBook-Pro"
         )
-        #expect(message == "autosave — 3 files, +412 words\n\nMachine: Josiah-MacBook-Pro")
+        #expect(message == "autosave — 3 files, +412 words\n\nMachine: Drew-MacBook-Pro")
     }
 
     @Test("session end groups thousands, matching the §5.4 example")
     func sessionEndGroupsThousands() {
-        let message = CommitMessageBuilder.message(for: .sessionEnd(wordDelta: 1840), machine: "Josiah-Mac-Studio")
-        #expect(message == "session end — +1,840 words\n\nMachine: Josiah-Mac-Studio")
+        let message = CommitMessageBuilder.message(for: .sessionEnd(wordDelta: 1840), machine: "Drew-Mac-Studio")
+        #expect(message == "session end — +1,840 words\n\nMachine: Drew-Mac-Studio")
     }
 
     @Test("focus lost has no word count")

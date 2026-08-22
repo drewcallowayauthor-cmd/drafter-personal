@@ -5,6 +5,6 @@ import Foundation
 /// (`DOCXExportCoordinator`) instead of pandoc's generic built-in defaults.
 enum BundledDOCXTemplate {
     static var referenceDocxURL: URL? {
-        Bundle.module.url(forResource: "reference", withExtension: "docx", subdirectory: "DOCX")
+        ResourceBundle.current.url(forResource: "reference", withExtension: "docx", subdirectory: "DOCX")
     }
 }

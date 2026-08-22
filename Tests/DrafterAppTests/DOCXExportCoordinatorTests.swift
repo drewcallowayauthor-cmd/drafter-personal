@@ -23,7 +23,7 @@ struct DOCXExportCoordinatorTests {
             isLooseFile: false
         )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -39,11 +39,11 @@ struct DOCXExportCoordinatorTests {
             read: { _ in "---\nstatus: draft\ncompile: true\n---\n\nThe board was wrong." }
         )
 
-        #expect(result.outputURL == root.appendingPathComponent("The Last Shift.docx"))
+        #expect(result.outputURL == root.appendingPathComponent("Last Call.docx"))
         let invocations = await runner.invocations
         let pandocArgs = invocations.first?.arguments ?? []
         #expect(pandocArgs.contains("--to=docx"))
-        #expect(pandocArgs.contains(where: { $0.hasSuffix("The Last Shift.docx") }))
+        #expect(pandocArgs.contains(where: { $0.hasSuffix("Last Call.docx") }))
 
         let assembledContent = writer.writes.first { $0.url.lastPathComponent == "assembled.md" }
             .flatMap { String(data: $0.data, encoding: .utf8) }
@@ -62,7 +62,7 @@ struct DOCXExportCoordinatorTests {
             isLooseFile: false
         )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
-        var metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        var metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         metadata.compile.chapterTitleFormat = "Chapter {n}"
 
         let runner = MockProcessRunner()
@@ -97,7 +97,7 @@ struct DOCXExportCoordinatorTests {
             isLooseFile: false
         )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -133,7 +133,7 @@ struct DOCXExportCoordinatorTests {
             isLooseFile: false
         )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -161,7 +161,7 @@ struct DOCXExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -187,7 +187,7 @@ struct DOCXExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -213,7 +213,7 @@ struct DOCXExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
@@ -239,7 +239,7 @@ struct DOCXExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let tree = BinderTree(manuscript: [], frontMatter: [], backMatter: [], notes: [])
-        let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
         await runner.script(

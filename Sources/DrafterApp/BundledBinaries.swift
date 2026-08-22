@@ -11,10 +11,10 @@ import Foundation
 /// `Resources/Binaries/` for each tool's license text and source pointer.
 enum BundledBinaries {
     static var pandocURL: URL? {
-        Bundle.module.url(forResource: "pandoc", withExtension: nil, subdirectory: "Binaries")
+        ResourceBundle.current.url(forResource: "pandoc", withExtension: nil, subdirectory: "Binaries")
     }
 
     static var typstURL: URL? {
-        Bundle.module.url(forResource: "typst", withExtension: nil, subdirectory: "Binaries")
+        ResourceBundle.current.url(forResource: "typst", withExtension: nil, subdirectory: "Binaries")
     }
 }

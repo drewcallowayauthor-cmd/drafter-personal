@@ -6,7 +6,7 @@ import Testing
 struct ConflictedCopyDetectorTests {
     @Test("recognizes Dropbox's conflicted-copy naming")
     func recognizesDropbox() {
-        let name = "02 Code Blue (Josiah's conflicted copy 2026-08-18).md"
+        let name = "02 Code Blue (Drew's conflicted copy 2026-08-18).md"
         #expect(ConflictedCopyDetector.candidateOriginalFilename(for: name) == "02 Code Blue.md")
     }
 
@@ -24,12 +24,12 @@ struct ConflictedCopyDetectorTests {
 
     @Test("recognizes OneDrive's machine-suffixed naming")
     func recognizesOneDrive() {
-        // A machine name containing its own hyphens (common — "Josiah-MacBook-Pro")
+        // A machine name containing its own hyphens (common — "Drew-MacBook-Pro")
         // is inherently ambiguous against a generic "<name>-<machine>" pattern with no
         // way to know where the title ends and the machine name begins; this is a
         // best-effort pattern (§7.5), not a guarantee, so it's only exercised here
         // with a single-token machine name.
-        let name = "02 Code Blue-JOSIAHSLAPTOP.md"
+        let name = "02 Code Blue-DREWSLAPTOP.md"
         #expect(ConflictedCopyDetector.candidateOriginalFilename(for: name) == "02 Code Blue.md")
     }
 

@@ -25,11 +25,11 @@ struct GitServiceRepositoryTests {
         let runner = MockProcessRunner()
         let service = GitService(processRunner: runner)
 
-        try await service.configureIdentity(name: "Tim Fleet", email: "tim@example.com", in: workingTree)
+        try await service.configureIdentity(name: "Drew Calloway", email: "drew@example.com", in: workingTree)
 
         let invocations = await runner.invocations
-        #expect(invocations[0].arguments == ["config", "user.name", "Tim Fleet"])
-        #expect(invocations[1].arguments == ["config", "user.email", "tim@example.com"])
+        #expect(invocations[0].arguments == ["config", "user.name", "Drew Calloway"])
+        #expect(invocations[1].arguments == ["config", "user.email", "drew@example.com"])
     }
 
     @Test("log with a path includes --follow and the path filter")
@@ -74,8 +74,8 @@ struct GitServiceRepositoryTests {
     func logParsesMultipleCommits() async throws {
         let runner = MockProcessRunner()
         let output = [
-            "abc123\u{1F}1755000000\u{1F}autosave — 1 file, +50 words\u{1F}Josiah Massari\u{1F}Josiah-MacBook-Pro",
-            "def456\u{1F}1754900000\u{1F}checkpoint\u{1F}Josiah Massari\u{1F}Josiah-Mac-Studio"
+            "abc123\u{1F}1755000000\u{1F}autosave — 1 file, +50 words\u{1F}Drew Calloway\u{1F}Drew-MacBook-Pro",
+            "def456\u{1F}1754900000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Drew-Mac-Studio"
         ].joined(separator: "\n") + "\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let service = GitService(processRunner: runner)
@@ -85,17 +85,17 @@ struct GitServiceRepositoryTests {
         #expect(entries.count == 2)
         #expect(entries[0].sha == "abc123")
         #expect(entries[0].subject == "autosave — 1 file, +50 words")
-        #expect(entries[0].authorName == "Josiah Massari")
-        #expect(entries[0].machineName == "Josiah-MacBook-Pro")
+        #expect(entries[0].authorName == "Drew Calloway")
+        #expect(entries[0].machineName == "Drew-MacBook-Pro")
         #expect(entries[0].date == Date(timeIntervalSince1970: 1_755_000_000))
         #expect(entries[1].sha == "def456")
-        #expect(entries[1].machineName == "Josiah-Mac-Studio")
+        #expect(entries[1].machineName == "Drew-Mac-Studio")
     }
 
     @Test("log tolerates an empty machine field for commits made outside the app")
     func logToleratesEmptyMachineField() async throws {
         let runner = MockProcessRunner()
-        let output = "abc123\u{1F}1755000000\u{1F}Initial commit\u{1F}Josiah Massari\u{1F}\n"
+        let output = "abc123\u{1F}1755000000\u{1F}Initial commit\u{1F}Drew Calloway\u{1F}\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let service = GitService(processRunner: runner)
 
@@ -131,7 +131,7 @@ struct GitServiceRepositoryTests {
     @Test("lastCommit runs log -1 scoped to the ref and path, and parses the single entry")
     func lastCommitRunsLogDashOne() async throws {
         let runner = MockProcessRunner()
-        let output = "abc123\u{1F}1755000000\u{1F}checkpoint\u{1F}Josiah Massari\u{1F}Josiah-Mac-Studio\n"
+        let output = "abc123\u{1F}1755000000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Drew-Mac-Studio\n"
         await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
         let service = GitService(processRunner: runner)
 
@@ -141,7 +141,7 @@ struct GitServiceRepositoryTests {
         #expect(invocations.first?.arguments.contains("MERGE_HEAD") == true)
         #expect(invocations.first?.arguments.suffix(2) == ["--", "Manuscript/scene.md"])
         #expect(entry?.sha == "abc123")
-        #expect(entry?.machineName == "Josiah-Mac-Studio")
+        #expect(entry?.machineName == "Drew-Mac-Studio")
     }
 
     @Test("lastCommit returns nil when the path has no history reachable from the ref")

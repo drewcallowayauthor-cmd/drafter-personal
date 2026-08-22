@@ -20,7 +20,7 @@ struct PandocServiceTests {
             metadataYAMLPath: "meta.yaml",
             cssPath: "epub.css",
             coverImagePath: "Resources/cover.jpg",
-            outputPath: "../The Last Shift.epub",
+            outputPath: "../Last Call.epub",
             in: workingDirectory
         )
 
@@ -34,7 +34,7 @@ struct PandocServiceTests {
             "--epub-cover-image=Resources/cover.jpg",
             "--css=epub.css",
             "--split-level=1",
-            "-o", "../The Last Shift.epub"
+            "-o", "../Last Call.epub"
         ])
         #expect(invocations.first?.currentDirectoryURL == workingDirectory)
     }

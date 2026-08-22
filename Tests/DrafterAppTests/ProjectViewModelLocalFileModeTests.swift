@@ -16,8 +16,8 @@ struct ProjectViewModelLocalFileModeTests {
 
         let viewModel = ProjectViewModel()
         await viewModel.createNewProject(
-            title: "The Last Shift",
-            author: "Tim Fleet",
+            title: "Last Call",
+            author: "Drew Calloway",
             location: location,
             versionControl: .localFile
         )
@@ -28,7 +28,7 @@ struct ProjectViewModelLocalFileModeTests {
         #expect(viewModel.snapshotService != nil)
         #expect(viewModel.versioningSource != nil)
 
-        let root = location.appendingPathComponent("the-last-shift")
+        let root = location.appendingPathComponent("last-call")
         #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent(".git").path))
         let history = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
         #expect(history.count == 1)
@@ -42,7 +42,7 @@ struct ProjectViewModelLocalFileModeTests {
         defer { try? FileManager.default.removeItem(at: location) }
 
         let creator = ProjectViewModel()
-        await creator.createNewProject(title: "Cloud Book", author: "Tim Fleet", location: location, versionControl: .localFile)
+        await creator.createNewProject(title: "Cloud Book", author: "Drew Calloway", location: location, versionControl: .localFile)
         #expect(creator.errorMessage == nil)
         let root = location.appendingPathComponent("cloud-book")
         await creator.closeProject()
@@ -96,7 +96,7 @@ struct ProjectViewModelLocalFileModeTests {
         let viewModel = ProjectViewModel()
         await viewModel.createNewProject(
             title: "Cover Test",
-            author: "Tim Fleet",
+            author: "Drew Calloway",
             location: location,
             versionControl: .localFile
         )

@@ -12,6 +12,6 @@ enum BundledFonts {
     /// The directory typst is pointed at via `--font-path` (`TypstService.compile`)
     /// so it can find the bundled `.ttf`s without them being installed anywhere.
     static var fontsDirectoryURL: URL? {
-        Bundle.module.url(forResource: "Fonts", withExtension: nil)
+        ResourceBundle.current.url(forResource: "Fonts", withExtension: nil)
     }
 }

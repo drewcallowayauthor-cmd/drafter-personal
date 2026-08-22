@@ -156,7 +156,7 @@ struct SyncCoordinatorTests {
             ProcessResult(
                 exitCode: 128,
                 standardOutput: "",
-                standardError: "remote: invalid credentials\nfatal: Authentication failed for 'https://github.com/josiah/book.git/'\n"
+                standardError: "remote: invalid credentials\nfatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
             ),
             forExecutableNamed: "git"
         )
@@ -177,7 +177,7 @@ struct SyncCoordinatorTests {
             ProcessResult(
                 exitCode: 128,
                 standardOutput: "",
-                standardError: "remote: Invalid username or token.\nfatal: Authentication failed for 'https://github.com/josiah/book.git/'\n"
+                standardError: "remote: Invalid username or token.\nfatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
             ),
             forExecutableNamed: "git"
         ) // push

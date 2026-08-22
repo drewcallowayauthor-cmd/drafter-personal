@@ -4,9 +4,9 @@ import Testing
 @Suite("FrontBackMatterTemplate")
 struct FrontBackMatterTemplateTests {
     private let metadata = ProjectMetadata(
-        title: "The Last Shift",
+        title: "Last Call",
         subtitle: "A Novel",
-        author: "Tim Fleet",
+        author: "Drew Calloway",
         copyrightYear: 2026,
         isbn: "978-0-000000-00-0"
     )
@@ -44,30 +44,30 @@ struct FrontBackMatterTemplateTests {
     @Test("title page includes a large-format heading anchor, a centered subtitle, and a byline author")
     func titlePageContent() {
         let content = FrontBackMatterTemplate.titlePage.content(for: metadata)
-        #expect(content.hasPrefix("# The Last Shift {.title-page-heading #title-page}\n\n::: {.centered-page}\n"))
+        #expect(content.hasPrefix("# Last Call {.title-page-heading #title-page}\n\n::: {.centered-page}\n"))
         #expect(content.contains("A Novel"))
-        #expect(content.contains("[Tim Fleet]{.byline}"))
+        #expect(content.contains("[Drew Calloway]{.byline}"))
         #expect(content.hasSuffix(":::"))
     }
 
     @Test("title page omits the subtitle line entirely when there is no subtitle")
     func titlePageOmitsEmptySubtitle() {
-        let noSubtitle = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let noSubtitle = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let content = FrontBackMatterTemplate.titlePage.content(for: noSubtitle)
         #expect(content.contains("A Novel") == false)
-        #expect(content.contains("[Tim Fleet]{.byline}"))
+        #expect(content.contains("[Drew Calloway]{.byline}"))
     }
 
     @Test("copyright includes the year, author, and ISBN line when present")
     func copyrightIncludesISBN() {
         let content = FrontBackMatterTemplate.copyright.content(for: metadata)
-        #expect(content.contains("Copyright © 2026 by Tim Fleet"))
+        #expect(content.contains("Copyright © 2026 by Drew Calloway"))
         #expect(content.contains("ISBN: 978-0-000000-00-0"))
     }
 
     @Test("copyright omits the ISBN line when there is no ISBN")
     func copyrightOmitsMissingISBN() {
-        let noISBN = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let noISBN = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let content = FrontBackMatterTemplate.copyright.content(for: noISBN)
         #expect(content.contains("ISBN:") == false)
     }

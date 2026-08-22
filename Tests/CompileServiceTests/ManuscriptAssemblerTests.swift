@@ -222,7 +222,7 @@ struct ManuscriptAssemblerTests {
         let titlePage = url("FrontMatter/02 Title Page.md")
         let copyright = url("FrontMatter/03 Copyright.md")
         let contents: [URL: String] = [
-            titlePage: "# The Last Shift\n\nTim Fleet",
+            titlePage: "# Last Call\n\nDrew Calloway",
             copyright: "# Copyright\n\nCopyright \u{00A9} 2026."
         ]
 
@@ -231,7 +231,7 @@ struct ManuscriptAssemblerTests {
             read: { contents[$0]! }
         )
 
-        #expect(assembled == "# The Last Shift\n\nTim Fleet\n\n# Copyright\n\nCopyright \u{00A9} 2026.")
+        #expect(assembled == "# Last Call\n\nDrew Calloway\n\n# Copyright\n\nCopyright \u{00A9} 2026.")
     }
 
     @Test("assembleFull joins front matter, manuscript, and back matter when both toggles are on")

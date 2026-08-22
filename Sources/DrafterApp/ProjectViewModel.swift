@@ -600,7 +600,7 @@ final class ProjectViewModel {
     }
 
     /// Slugifies a title into a filesystem- and GitHub-repo-safe folder/repo name
-    /// (§5.2: "Slugify the title → `the-last-shift`").
+    /// (§5.2: "Slugify the title → `last-call`").
     nonisolated static func slug(for title: String) -> String {
         let lowered = title.lowercased()
         let slugged = lowered.map { character -> Character in

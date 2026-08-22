@@ -6,7 +6,7 @@ import Testing
 
 @Suite("FrontBackMatterService")
 struct FrontBackMatterServiceTests {
-    private let metadata = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+    private let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
     @Test("generateMissing writes all six standard files to a fresh project")
     func generateMissingWritesAllSixFiles() throws {

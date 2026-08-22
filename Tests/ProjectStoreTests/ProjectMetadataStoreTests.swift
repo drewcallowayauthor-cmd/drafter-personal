@@ -11,9 +11,9 @@ struct ProjectMetadataStoreTests {
         {
           "schemaVersion": 2,
           "id": "F4C2A1E9-0000-0000-0000-000000000000",
-          "title": "The Last Shift",
+          "title": "Last Call",
           "subtitle": "",
-          "author": "Tim Fleet",
+          "author": "Drew Calloway",
           "series": { "name": "", "number": null },
           "copyrightYear": 2026,
           "publisher": "",
@@ -44,8 +44,8 @@ struct ProjectMetadataStoreTests {
         let store = ProjectMetadataStore(fileWriter: MockAtomicFileWriter())
         let metadata = try store.load(from: directory)
 
-        #expect(metadata.title == "The Last Shift")
-        #expect(metadata.author == "Tim Fleet")
+        #expect(metadata.title == "Last Call")
+        #expect(metadata.author == "Drew Calloway")
         #expect(metadata.target.words == 45000)
         #expect(metadata.compile.chapterTitleFormat == "Chapter {n}")
         #expect(metadata.print.trimSize == "5x8")
@@ -64,7 +64,7 @@ struct ProjectMetadataStoreTests {
         let directory = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
 
-        let original = ProjectMetadata(title: "The Last Shift", author: "Tim Fleet", copyrightYear: 2026)
+        let original = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
         let writer = MockAtomicFileWriter()
         let store = ProjectMetadataStore(fileWriter: writer)
 

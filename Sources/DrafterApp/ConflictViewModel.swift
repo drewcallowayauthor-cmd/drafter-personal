@@ -44,7 +44,7 @@ final class ConflictViewModel {
     }
 
     /// Loads each side's last-touched commit (§5.7's "Mine — edited 14 minutes ago on
-    /// Josiah-Mac-Studio" labels) — best-effort, since a missing label shouldn't block
+    /// Drew-Mac-Studio" labels) — best-effort, since a missing label shouldn't block
     /// resolving the conflict itself.
     func loadMetadata() async {
         for index in conflicts.indices {

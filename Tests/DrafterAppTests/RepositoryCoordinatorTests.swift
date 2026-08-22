@@ -15,27 +15,27 @@ struct RepositoryCoordinatorTests {
         let runner = MockProcessRunner()
         let requester = MockHTTPRequester()
         await requester.script(statusCode: 201, jsonObject: [
-            "name": "the-last-shift",
-            "full_name": "josiah/the-last-shift",
-            "clone_url": "https://github.com/josiah/the-last-shift.git",
-            "html_url": "https://github.com/josiah/the-last-shift",
+            "name": "last-call",
+            "full_name": "drew/last-call",
+            "clone_url": "https://github.com/drew/last-call.git",
+            "html_url": "https://github.com/drew/last-call",
             "private": true
         ])
-        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": "josiah@example.com"])
+        await requester.script(statusCode: 200, jsonObject: ["login": "drew", "email": "drew@example.com"])
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
         let repository = try await coordinator.connectToGitHub(
-            repositoryName: "the-last-shift",
-            authorName: "Tim Fleet",
+            repositoryName: "last-call",
+            authorName: "Drew Calloway",
             apiClient: GitHubAPIClient(requester: requester),
             token: "ghp_abc"
         )
 
-        #expect(repository.htmlURL == URL(string: "https://github.com/josiah/the-last-shift"))
+        #expect(repository.htmlURL == URL(string: "https://github.com/drew/last-call"))
         let invocations = await runner.invocations
-        #expect(invocations[0].arguments == ["remote", "add", "origin", "https://github.com/josiah/the-last-shift.git"])
-        #expect(invocations[1].arguments == ["config", "user.name", "Tim Fleet"])
-        #expect(invocations[2].arguments == ["config", "user.email", "josiah@example.com"])
+        #expect(invocations[0].arguments == ["remote", "add", "origin", "https://github.com/drew/last-call.git"])
+        #expect(invocations[1].arguments == ["config", "user.name", "Drew Calloway"])
+        #expect(invocations[2].arguments == ["config", "user.email", "drew@example.com"])
         #expect(invocations[3].arguments == ["push", "-u", "origin", "main"])
     }
 
@@ -46,24 +46,24 @@ struct RepositoryCoordinatorTests {
         let runner = MockProcessRunner()
         let requester = MockHTTPRequester()
         await requester.script(statusCode: 201, jsonObject: [
-            "name": "the-last-shift",
-            "full_name": "josiah/the-last-shift",
-            "clone_url": "https://github.com/josiah/the-last-shift.git",
-            "html_url": "https://github.com/josiah/the-last-shift",
+            "name": "last-call",
+            "full_name": "drew/last-call",
+            "clone_url": "https://github.com/drew/last-call.git",
+            "html_url": "https://github.com/drew/last-call",
             "private": true
         ])
-        await requester.script(statusCode: 200, jsonObject: ["login": "josiah", "email": NSNull()])
+        await requester.script(statusCode: 200, jsonObject: ["login": "drew", "email": NSNull()])
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
         _ = try await coordinator.connectToGitHub(
-            repositoryName: "the-last-shift",
-            authorName: "Tim Fleet",
+            repositoryName: "last-call",
+            authorName: "Drew Calloway",
             apiClient: GitHubAPIClient(requester: requester),
             token: "ghp_abc"
         )
 
         let invocations = await runner.invocations
-        #expect(invocations[2].arguments == ["config", "user.email", "josiah@users.noreply.github.com"])
+        #expect(invocations[2].arguments == ["config", "user.email", "drew@users.noreply.github.com"])
     }
 
     @Test("ensureInitialized runs init and configures identity when .git is missing")
@@ -74,12 +74,12 @@ struct RepositoryCoordinatorTests {
         await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
-        try await coordinator.ensureInitialized(authorName: "Tim Fleet")
+        try await coordinator.ensureInitialized(authorName: "Drew Calloway")
 
         let invocations = await runner.invocations
         #expect(invocations.contains { $0.arguments == ["init", "-b", "main"] })
-        #expect(invocations.contains { $0.arguments == ["config", "user.name", "Tim Fleet"] })
-        #expect(invocations.contains { $0.arguments.first == "config" && $0.arguments.last == "tim-fleet@drafter.local" })
+        #expect(invocations.contains { $0.arguments == ["config", "user.name", "Drew Calloway"] })
+        #expect(invocations.contains { $0.arguments.first == "config" && $0.arguments.last == "drew-calloway@drafter.local" })
     }
 
     @Test("ensureInitialized is a no-op when .git already exists")
@@ -90,7 +90,7 @@ struct RepositoryCoordinatorTests {
         let runner = MockProcessRunner()
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
-        try await coordinator.ensureInitialized(authorName: "Tim Fleet")
+        try await coordinator.ensureInitialized(authorName: "Drew Calloway")
 
         let invocations = await runner.invocations
         #expect(invocations.isEmpty)

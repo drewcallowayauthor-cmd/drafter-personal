@@ -45,12 +45,12 @@ struct GitServiceOperationsTests {
     func cloneRunsGitClone() async throws {
         let runner = MockProcessRunner()
         let service = GitService(processRunner: runner)
-        let destination = URL(fileURLWithPath: "/tmp/projects/the-last-shift")
+        let destination = URL(fileURLWithPath: "/tmp/projects/last-call")
 
-        try await service.clone(url: "https://github.com/josiah/the-last-shift.git", to: destination)
+        try await service.clone(url: "https://github.com/drew/last-call.git", to: destination)
 
         let invocations = await runner.invocations
-        #expect(invocations.first?.arguments == ["clone", "https://github.com/josiah/the-last-shift.git", destination.path])
+        #expect(invocations.first?.arguments == ["clone", "https://github.com/drew/last-call.git", destination.path])
         #expect(invocations.first?.currentDirectoryURL == destination.deletingLastPathComponent())
     }
 
@@ -84,10 +84,10 @@ struct GitServiceOperationsTests {
         let runner = MockProcessRunner()
         let service = GitService(processRunner: runner)
 
-        try await service.addRemote(url: "https://github.com/josiah/the-last-shift.git", in: workingTree)
+        try await service.addRemote(url: "https://github.com/drew/last-call.git", in: workingTree)
 
         let invocations = await runner.invocations
-        #expect(invocations.first?.arguments == ["remote", "add", "origin", "https://github.com/josiah/the-last-shift.git"])
+        #expect(invocations.first?.arguments == ["remote", "add", "origin", "https://github.com/drew/last-call.git"])
     }
 
     @Test("pushSettingUpstream runs push -u origin main")
@@ -105,14 +105,14 @@ struct GitServiceOperationsTests {
     func remoteURLReturnsTrimmedURL() async throws {
         let runner = MockProcessRunner()
         await runner.script(
-            ProcessResult(exitCode: 0, standardOutput: "https://github.com/josiah/book.git\n", standardError: ""),
+            ProcessResult(exitCode: 0, standardOutput: "https://github.com/drew/book.git\n", standardError: ""),
             forExecutableNamed: "git"
         )
         let service = GitService(processRunner: runner)
 
         let url = try await service.remoteURL(in: workingTree)
 
-        #expect(url == "https://github.com/josiah/book.git")
+        #expect(url == "https://github.com/drew/book.git")
     }
 
     @Test("remoteURL returns nil rather than throwing when no such remote exists")

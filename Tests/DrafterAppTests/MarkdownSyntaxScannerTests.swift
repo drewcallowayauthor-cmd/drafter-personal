@@ -35,12 +35,12 @@ struct MarkdownSyntaxScannerTests {
 
     @Test("finds a header marker and content")
     func findsHeader() {
-        let text = "# The Last Shift"
+        let text = "# Last Call"
         let ranges = MarkdownSyntaxScanner.scan(text)
         let nsText = text as NSString
 
         #expect(ranges.contains(SyntaxRange(range: nsText.range(of: "# "), kind: .headerMarker)))
-        #expect(ranges.contains(SyntaxRange(range: nsText.range(of: "The Last Shift"), kind: .headerContent)))
+        #expect(ranges.contains(SyntaxRange(range: nsText.range(of: "Last Call"), kind: .headerContent)))
     }
 
     @Test("plain prose with no markdown produces no ranges")
