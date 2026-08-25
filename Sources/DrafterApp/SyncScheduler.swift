@@ -23,7 +23,11 @@ final class SyncScheduler {
     private var periodicTask: Task<Void, Never>?
     private var pushDebounceTask: Task<Void, Never>?
 
-    init(syncCoordinator: SyncCoordinator, fetchInterval: Duration = .seconds(180), pushDebounceDelay: Duration = .seconds(30)) {
+    init(
+        syncCoordinator: SyncCoordinator,
+        fetchInterval: Duration = .seconds(180),
+        pushDebounceDelay: Duration = .seconds(30)
+    ) {
         self.syncCoordinator = syncCoordinator
         self.fetchInterval = fetchInterval
         self.pushDebounceDelay = pushDebounceDelay

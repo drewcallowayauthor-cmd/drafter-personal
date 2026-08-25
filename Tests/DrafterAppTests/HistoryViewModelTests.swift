@@ -22,7 +22,8 @@ struct HistoryViewModelTests {
         await runner.script(
             ProcessResult(
                 exitCode: 0,
-                standardOutput: "abc\u{1F}1755000000\u{1F}autosave — 1 file, +10 words\u{1F}Drew Calloway\u{1F}Machine-1\n",
+                standardOutput: "abc\u{1F}1755000000\u{1F}autosave — 1 file, +10 words\u{1F}Drew Calloway\u{1F}"
+                    + "Machine-1\n",
                 standardError: ""
             ),
             forExecutableNamed: "git"
@@ -49,7 +50,9 @@ struct HistoryViewModelTests {
             ),
             forExecutableNamed: "git"
         )
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let viewModel = HistoryViewModel(source: GitService(processRunner: runner))
         let firstScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         let secondScene = workingTree.appendingPathComponent("Manuscript/01 Arrival/01 Triage (restored).md")
@@ -90,7 +93,9 @@ struct HistoryViewModelTests {
         #expect(viewModel.entries.count == 1)
 
         let entry = viewModel.entries[0]
-        let lines = await viewModel.diffLines(against: entry, sceneURL: sceneURL, workingTree: workingTree, currentBody: "x")
+        let lines = await viewModel.diffLines(
+            against: entry, sceneURL: sceneURL, workingTree: workingTree, currentBody: "x"
+        )
 
         #expect(lines == nil)
         #expect(viewModel.actionErrorMessage != nil)
@@ -191,9 +196,15 @@ private struct DelayedVersioningSource: VersioningSource {
                     continuation.resume()
                 }
             }
-            return [CommitLogEntry(sha: "first", date: Date(), subject: "first scene", authorName: "Drew Calloway", machineName: "Machine-1")]
+            return [CommitLogEntry(
+                sha: "first", date: Date(), subject: "first scene",
+                authorName: "Drew Calloway", machineName: "Machine-1"
+            )]
         }
-        return [CommitLogEntry(sha: "second", date: Date(), subject: "second scene", authorName: "Drew Calloway", machineName: "Machine-1")]
+        return [CommitLogEntry(
+            sha: "second", date: Date(), subject: "second scene",
+            authorName: "Drew Calloway", machineName: "Machine-1"
+        )]
     }
 
     func show(path: String, at id: String, in workingTree: URL) async throws -> String { "" }

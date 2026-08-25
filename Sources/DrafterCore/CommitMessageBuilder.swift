@@ -55,11 +55,11 @@ public enum CommitMessageBuilder {
         }
     }
 
-    private static func signed(_ n: Int) -> String {
+    private static func signed(_ number: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.usesGroupingSeparator = true
-        let magnitude = formatter.string(from: NSNumber(value: abs(n))) ?? String(abs(n))
-        return n < 0 ? "-\(magnitude)" : "+\(magnitude)"
+        let magnitude = formatter.string(from: NSNumber(value: abs(number))) ?? String(abs(number))
+        return number < 0 ? "-\(magnitude)" : "+\(magnitude)"
     }
 }

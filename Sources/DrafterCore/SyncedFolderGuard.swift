@@ -16,7 +16,9 @@ public enum SyncedFolderGuard {
     /// Returns `.locationInsideSyncedFolder` if `url` resolves to a path under one of
     /// the blocked directories, `nil` otherwise. Resolves symlinks first, since Box
     /// Drive and friends are frequently reached through one.
-    public static func check(_ url: URL, homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser) -> DrafterError? {
+    public static func check(
+        _ url: URL, homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) -> DrafterError? {
         let resolvedPath = url.resolvingSymlinksInPath().path
         let home = homeDirectory.resolvingSymlinksInPath().path
         for relativePath in blockedRelativePaths {

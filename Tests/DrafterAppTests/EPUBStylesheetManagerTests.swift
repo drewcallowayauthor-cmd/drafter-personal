@@ -57,7 +57,9 @@ struct EPUBStylesheetManagerTests {
         #expect(EPUBStylesheetManager.shortStoryCSS.contains("h1 {\n  page-break-before: always;"))
         #expect(EPUBStylesheetManager.shortStoryCSS.contains("h2 {\n  margin:"))
         // The h2 rule block itself carries no page-break-before.
-        let h2RuleRange = try #require(EPUBStylesheetManager.shortStoryCSS.range(of: "h2 \\{[^}]*\\}", options: .regularExpression))
+        let h2RuleRange = try #require(
+            EPUBStylesheetManager.shortStoryCSS.range(of: "h2 \\{[^}]*\\}", options: .regularExpression)
+        )
         #expect(EPUBStylesheetManager.shortStoryCSS[h2RuleRange].contains("page-break-before") == false)
     }
 

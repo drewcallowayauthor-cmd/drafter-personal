@@ -181,7 +181,9 @@ public enum ManuscriptAssembler {
     /// manuscript + back matter (if enabled), joined the same way regardless of which
     /// target (EPUB, print, DOCX) consumes the result. Shared so the three export
     /// coordinators don't each reimplement this toggle-checking.
-    public static func assembleFull(binderTree: BinderTree, compile: ProjectMetadata.Compile, read: SceneReader) throws -> String {
+    public static func assembleFull(
+        binderTree: BinderTree, compile: ProjectMetadata.Compile, read: SceneReader
+    ) throws -> String {
         var parts: [String] = []
         if compile.includeFrontMatter, !binderTree.frontMatter.isEmpty {
             parts.append(try assembleMatter(binderTree.frontMatter, read: read))

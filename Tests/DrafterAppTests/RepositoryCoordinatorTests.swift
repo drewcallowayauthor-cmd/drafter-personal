@@ -71,7 +71,9 @@ struct RepositoryCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
         try await coordinator.ensureInitialized(authorName: "Drew Calloway")
@@ -79,14 +81,18 @@ struct RepositoryCoordinatorTests {
         let invocations = await runner.invocations
         #expect(invocations.contains { $0.arguments == ["init", "-b", "main"] })
         #expect(invocations.contains { $0.arguments == ["config", "user.name", "Drew Calloway"] })
-        #expect(invocations.contains { $0.arguments.first == "config" && $0.arguments.last == "drew-calloway@drafter.local" })
+        #expect(invocations.contains {
+            $0.arguments.first == "config" && $0.arguments.last == "drew-calloway@drafter.local"
+        })
     }
 
     @Test("ensureInitialized is a no-op when .git already exists")
     func ensureInitializedNoOpWhenPresent() async throws {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
-        try FileManager.default.createDirectory(at: root.appendingPathComponent(".git"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(".git"), withIntermediateDirectories: true
+        )
         let runner = MockProcessRunner()
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
@@ -116,7 +122,9 @@ struct RepositoryCoordinatorTests {
         #expect(didCommit == true)
         let invocations = await runner.invocations
         #expect(invocations.map(\.arguments).contains(["add", "-A"]))
-        #expect(invocations.contains { $0.arguments.first == "commit" && $0.arguments.last?.contains("pre-export") == true })
+        #expect(invocations.contains {
+            $0.arguments.first == "commit" && $0.arguments.last?.contains("pre-export") == true
+        })
     }
 
     @Test("commit is a no-op when there's nothing to commit — never an empty commit")
@@ -124,7 +132,9 @@ struct RepositoryCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = RepositoryCoordinator(gitService: GitService(processRunner: runner), workingTree: root)
 
         let didCommit = try await coordinator.commit(trigger: .preExport)

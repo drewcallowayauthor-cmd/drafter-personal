@@ -12,7 +12,9 @@ struct PandocServiceTests {
     @Test("exportEPUB builds the §9.3 command with cover and css included")
     func exportEPUBBuildsFullCommand() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let service = PandocService(processRunner: runner, pandocExecutableURL: pandocURL)
 
         _ = try await service.exportEPUB(
@@ -42,7 +44,9 @@ struct PandocServiceTests {
     @Test("exportEPUB omits cover and css flags when neither is available")
     func exportEPUBOmitsMissingCoverAndCSS() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let service = PandocService(processRunner: runner, pandocExecutableURL: pandocURL)
 
         _ = try await service.exportEPUB(

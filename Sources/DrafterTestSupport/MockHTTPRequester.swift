@@ -37,7 +37,10 @@ public actor MockHTTPRequester: HTTPRequesting {
             outcome = queue.removeFirst()
             if queue.isEmpty { queue = [outcome] }
         } else {
-            outcome = .success((Data(), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!))
+            outcome = .success((
+                Data(),
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            ))
         }
 
         switch outcome {

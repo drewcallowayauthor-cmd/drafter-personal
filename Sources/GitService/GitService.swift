@@ -228,7 +228,9 @@ public actor GitService {
     /// `git push -u <remote> <branch>` — the first push of a newly connected repo
     /// (§5.2 step 3), distinct from the ongoing `push(remote:branch:in:)` because only
     /// the first push needs to set the upstream tracking branch.
-    public func pushSettingUpstream(remote: String = "origin", branch: String = "main", in workingTree: URL) async throws {
+    public func pushSettingUpstream(
+        remote: String = "origin", branch: String = "main", in workingTree: URL
+    ) async throws {
         _ = try await run(["push", "-u", remote, branch], in: workingTree)
     }
 

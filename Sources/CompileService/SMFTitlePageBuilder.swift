@@ -59,12 +59,15 @@ public enum SMFTitlePageBuilder {
     private static func contactParagraph(firstLine: String, wordCount: Int? = nil) -> String {
         var text = escape(firstLine)
         if let wordCount {
-            let formatted = NumberFormatter.localizedString(from: NSNumber(value: roundedWordCount(wordCount)), number: .decimal)
+            let formatted = NumberFormatter.localizedString(
+                from: NSNumber(value: roundedWordCount(wordCount)), number: .decimal
+            )
             text += "\u{9}\(formatted) words."
         }
         return paragraph(style: "SMFContact", text: text, alreadyEscaped: true)
     }
 
+    // swiftlint:disable line_length
     /// An empty paragraph whose `pPr` carries a `sectPr`, ending the title page as its
     /// own OOXML section (§ real Shunn-format `.docx` reference examined for this
     /// feature). A `sectPr` embedded in a paragraph's `pPr` describes the section that
@@ -79,6 +82,7 @@ public enum SMFTitlePageBuilder {
         <w:p><w:pPr><w:sectPr><w:pgSz w:w="12240" w:h="15840" /><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0" /></w:sectPr></w:pPr></w:p>
         """
     }
+    // swiftlint:enable line_length
 
     private static func paragraph(style: String, text: String, alreadyEscaped: Bool = false) -> String {
         let content = alreadyEscaped ? text : escape(text)
@@ -89,8 +93,8 @@ public enum SMFTitlePageBuilder {
         return "<w:p><w:pPr><w:pStyle w:val=\"\(style)\" /></w:pPr>\(tabbedRuns)</w:p>"
     }
 
-    private static func escape(_ s: String) -> String {
-        s.replacingOccurrences(of: "&", with: "&amp;")
+    private static func escape(_ text: String) -> String {
+        text.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")

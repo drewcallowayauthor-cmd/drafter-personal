@@ -34,7 +34,9 @@ final class ConflictViewModel {
     ) {
         self.conflicts = paths.map { FileConflict(path: $0) }
         self.gitService = gitService
-        self.conflictResolver = ConflictResolver(gitService: gitService, atomicFileWriter: atomicFileWriter, workingTree: workingTree)
+        self.conflictResolver = ConflictResolver(
+            gitService: gitService, atomicFileWriter: atomicFileWriter, workingTree: workingTree
+        )
         self.workingTree = workingTree
         self.machineName = machineName
     }
@@ -52,11 +54,15 @@ final class ConflictViewModel {
             do {
                 conflicts[index].mine = try await gitService.lastCommit(for: path, at: "HEAD", in: workingTree)
             } catch {
+                // swiftlint:disable:next line_length
+                // swiftlint:disable:next line_length
                 DrafterLog.app.error("Failed to load 'mine' commit metadata for \(path, privacy: .public): \(error, privacy: .public)")
             }
             do {
                 conflicts[index].theirs = try await gitService.lastCommit(for: path, at: "MERGE_HEAD", in: workingTree)
             } catch {
+                // swiftlint:disable:next line_length
+                // swiftlint:disable:next line_length
                 DrafterLog.app.error("Failed to load 'theirs' commit metadata for \(path, privacy: .public): \(error, privacy: .public)")
             }
         }
@@ -70,6 +76,8 @@ final class ConflictViewModel {
         do {
             mine = try await gitService.show(path: conflict.path, at: "HEAD", in: workingTree)
         } catch {
+            // swiftlint:disable:next line_length
+            // swiftlint:disable:next line_length
             DrafterLog.app.error("Failed to load 'mine' content for \(conflict.path, privacy: .public): \(error, privacy: .public)")
             mine = nil
         }
@@ -77,6 +85,8 @@ final class ConflictViewModel {
         do {
             theirs = try await gitService.theirsContent(path: conflict.path, in: workingTree)
         } catch {
+            // swiftlint:disable:next line_length
+            // swiftlint:disable:next line_length
             DrafterLog.app.error("Failed to load 'theirs' content for \(conflict.path, privacy: .public): \(error, privacy: .public)")
             theirs = nil
         }
@@ -150,7 +160,7 @@ final class ConflictViewModel {
         let ext = url.pathExtension
 
         let machine = conflict.theirs?.machineName.isEmpty == false ? conflict.theirs!.machineName : "another machine"
-        let date = conflict.theirs.map(Self.shortDate) ?? Self.shortDate(Date())
+        let date = conflict.theirs.map { Self.shortDate($0) } ?? Self.shortDate(Date())
 
         let newName = ext.isEmpty ? "\(base) (from \(machine) \(date))" : "\(base) (from \(machine) \(date)).\(ext)"
         return directory.isEmpty || directory == "." ? newName : "\(directory)/\(newName)"

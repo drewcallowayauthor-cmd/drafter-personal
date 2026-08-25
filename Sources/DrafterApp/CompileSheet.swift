@@ -138,7 +138,9 @@ struct CompileSheet: View {
         }
         .task {
             wordCountEstimate = (
-                try? WordCountAggregator.aggregate(binderTree: binderTree) { try String(contentsOf: $0, encoding: .utf8) }
+                try? WordCountAggregator.aggregate(binderTree: binderTree) {
+                    try String(contentsOf: $0, encoding: .utf8)
+                }
             )?.project ?? 0
         }
     }
@@ -244,7 +246,9 @@ struct CompileSheet: View {
     }
 
     private var docxFields: some View {
-        NocturneDropdown(label: "Manuscript Font", selection: $manuscriptFont, options: ["Times New Roman", "Courier New"]) { $0 }
+        NocturneDropdown(
+            label: "Manuscript Font", selection: $manuscriptFont, options: ["Times New Roman", "Courier New"]
+        ) { $0 }
     }
 
     /// KDP's recommended body-text serif fonts (Palatino is also `Print`'s own
@@ -369,7 +373,9 @@ struct CompileSheet: View {
         defer { isCompiling = false }
 
         let pandocOverride = AppPreferences.shared.pandocPathOverride.map { URL(fileURLWithPath: $0) }
-        guard let pandocURL = BinaryResolver.resolve(name: "pandoc", override: pandocOverride, bundled: BundledBinaries.pandocURL) else {
+        guard let pandocURL = BinaryResolver.resolve(
+            name: "pandoc", override: pandocOverride, bundled: BundledBinaries.pandocURL
+        ) else {
             compileError = "pandoc isn't installed or couldn't be found (checked the app's own bundled copy — "
                 + "arm64 Macs only — plus ~/.local/bin, /opt/homebrew/bin, /usr/local/bin, and PATH)."
             return
@@ -395,7 +401,9 @@ struct CompileSheet: View {
                     template: epubTemplate,
                     fileWriter: LiveAtomicFileWriter()
                 )
-                let coordinator = EPUBExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let coordinator = EPUBExportCoordinator(
+                    processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter()
+                )
                 let result = try await coordinator.export(
                     metadata: exportMetadata,
                     binderTree: binderTree,
@@ -409,12 +417,16 @@ struct CompileSheet: View {
 
             case .printPDF:
                 let typstOverride = AppPreferences.shared.typstPathOverride.map { URL(fileURLWithPath: $0) }
-                guard let typstURL = BinaryResolver.resolve(name: "typst", override: typstOverride, bundled: BundledBinaries.typstURL) else {
+                guard let typstURL = BinaryResolver.resolve(
+                    name: "typst", override: typstOverride, bundled: BundledBinaries.typstURL
+                ) else {
                     compileError = "typst isn't installed or couldn't be found (checked the app's own bundled copy — "
                         + "arm64 Macs only — plus ~/.local/bin, /opt/homebrew/bin, /usr/local/bin, and PATH)."
                     return
                 }
-                let coordinator = PrintExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let coordinator = PrintExportCoordinator(
+                    processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter()
+                )
                 let result = try await coordinator.export(
                     metadata: exportMetadata,
                     binderTree: binderTree,
@@ -428,7 +440,9 @@ struct CompileSheet: View {
                 outcome = CompileOutcome(outputURL: result.outputURL)
 
             case .docx:
-                let coordinator = DOCXExportCoordinator(processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter())
+                let coordinator = DOCXExportCoordinator(
+                    processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter()
+                )
                 let result = try await coordinator.export(
                     metadata: exportMetadata,
                     binderTree: binderTree,

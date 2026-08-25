@@ -74,6 +74,7 @@ public actor SyncCoordinator {
         do {
             remoteBranchExists = try await gitService.refExists(remoteRef, in: workingTree)
         } catch {
+            // swiftlint:disable:next line_length
             DrafterLog.sync.error("refExists(\(self.remoteRef, privacy: .public)) failed, assuming it doesn't exist yet: \(error, privacy: .public)")
             remoteBranchExists = false
         }

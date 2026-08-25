@@ -20,10 +20,11 @@ struct FrontBackMatterServiceTests {
         )
 
         #expect(created.count == 6)
-        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("FrontMatter/01 Title Page.md").path))
         #expect(
-            FileManager.default.fileExists(atPath: root.appendingPathComponent("BackMatter/03 About the Author.md").path)
+            FileManager.default.fileExists(atPath: root.appendingPathComponent("FrontMatter/01 Title Page.md").path)
         )
+        let backMatterURL = root.appendingPathComponent("BackMatter/03 About the Author.md")
+        #expect(FileManager.default.fileExists(atPath: backMatterURL.path))
     }
 
     @Test("generateMissing leaves an existing file untouched, even if hand-edited")
@@ -31,7 +32,9 @@ struct FrontBackMatterServiceTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
-        try FileManager.default.createDirectory(at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
         try Data("Hand-edited content.".utf8).write(to: titlePageURL)
 
         let created = try FrontBackMatterService.generateMissing(
@@ -49,7 +52,9 @@ struct FrontBackMatterServiceTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
-        try FileManager.default.createDirectory(at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: titlePageURL.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
         try Data("Stale hand-edited content.".utf8).write(to: titlePageURL)
 
         try FrontBackMatterService.regenerate(

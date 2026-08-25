@@ -123,7 +123,9 @@ struct ProjectFindReplaceSheet: View {
         return groups
     }
 
-    private func sceneGroup(_ group: (sceneURL: URL, sceneDisplayName: String, matches: [ProjectSearchMatch])) -> some View {
+    private func sceneGroup(
+        _ group: (sceneURL: URL, sceneDisplayName: String, matches: [ProjectSearchMatch])
+    ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("\(group.sceneDisplayName) — \(group.matches.count) match\(group.matches.count == 1 ? "" : "es")")
                 .font(Theme.Font.heading(12))
@@ -175,7 +177,11 @@ struct ProjectFindReplaceSheet: View {
             if viewModel.isReplacing {
                 ProgressView().controlSize(.small)
             }
-            Text(viewModel.matches.isEmpty ? "" : "\(viewModel.matches.count) match\(viewModel.matches.count == 1 ? "" : "es")")
+            Text(
+                viewModel.matches.isEmpty
+                    ? ""
+                    : "\(viewModel.matches.count) match\(viewModel.matches.count == 1 ? "" : "es")"
+            )
                 .font(Theme.Font.body(12))
                 .foregroundStyle(Theme.Color.textMuted)
             Spacer()

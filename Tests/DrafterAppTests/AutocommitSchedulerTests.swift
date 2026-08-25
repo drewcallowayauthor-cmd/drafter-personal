@@ -77,7 +77,9 @@ struct AutocommitSchedulerTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let scheduler = makeScheduler(root: root, runner: runner, delay: .milliseconds(30))
 
         scheduler.recordActivity(wordDelta: 0)

@@ -69,7 +69,9 @@ struct FilenamePrefixTests {
 
     @Test("nextFilename with no extension omits the trailing dot, for a chapter folder")
     func nextFilenameWithNoExtensionOmitsDot() {
-        let filename = FilenamePrefix.nextFilename(existingFilenames: ["01 Arrival"], title: "The First Hour", extension: nil)
+        let filename = FilenamePrefix.nextFilename(
+            existingFilenames: ["01 Arrival"], title: "The First Hour", extension: nil
+        )
         #expect(filename == "02 The First Hour")
     }
 

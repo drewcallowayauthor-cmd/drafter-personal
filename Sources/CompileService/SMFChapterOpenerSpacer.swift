@@ -15,6 +15,7 @@ public enum SMFChapterOpenerSpacer {
     private static let headingLinePattern = #"^# .+ \{\.chapter-title #[^}]+\}$"#
 
     public static func insertSpacing(into manuscriptMarkdown: String, blankLines: Int = 14) -> String {
+        // swiftlint:disable:next force_try
         let regex = try! NSRegularExpression(pattern: headingLinePattern, options: [.anchorsMatchLines])
         let range = NSRange(manuscriptMarkdown.startIndex..., in: manuscriptMarkdown)
         let spacerBlock = spacerParagraphs(count: blankLines)

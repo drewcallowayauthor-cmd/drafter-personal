@@ -47,7 +47,9 @@ public actor Project {
         // to ignore anything for.
         if metadata.versionControl == .git {
             try fileWriter.write(Data(Self.gitignoreContents.utf8), to: root.appendingPathComponent(".gitignore"))
-            try fileWriter.write(Data(Self.gitattributesContents.utf8), to: root.appendingPathComponent(".gitattributes"))
+            try fileWriter.write(
+                Data(Self.gitattributesContents.utf8), to: root.appendingPathComponent(".gitattributes")
+            )
         }
 
         let metadataStore = ProjectMetadataStore(fileWriter: fileWriter)
@@ -133,8 +135,7 @@ public actor Project {
 
         let newStem: String
         if let spaceIndex = stem.firstIndex(of: " "), !stem[stem.startIndex..<spaceIndex].isEmpty,
-            stem[stem.startIndex..<spaceIndex].allSatisfy(\.isNumber)
-        {
+            stem[stem.startIndex..<spaceIndex].allSatisfy(\.isNumber) {
             newStem = "\(stem[stem.startIndex..<spaceIndex]) \(sanitizedTitle)"
         } else {
             newStem = sanitizedTitle
@@ -261,6 +262,7 @@ public actor Project {
             do {
                 try fileManager.removeItem(at: staleCoverURL)
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.projectStore.error("Failed to remove stale cover \(staleCoverURL.path, privacy: .public): \(error, privacy: .public)")
             }
         }
@@ -288,7 +290,9 @@ public actor Project {
     /// pending autosave first (so this doesn't overwrite it) and reloading it after (so
     /// the open editor doesn't go stale) — this actor only knows about the on-disk state.
     @discardableResult
-    public func replace(matches: [ProjectSearchMatch], replacement: String, fileWriter: AtomicFileWriting) throws -> Set<URL> {
+    public func replace(
+        matches: [ProjectSearchMatch], replacement: String, fileWriter: AtomicFileWriting
+    ) throws -> Set<URL> {
         try ProjectSearchService.replace(matches: matches, replacement: replacement, fileWriter: fileWriter)
     }
 
@@ -301,6 +305,7 @@ public actor Project {
         do {
             return try FileManager.default.contentsOfDirectory(atPath: directory.path)
         } catch {
+            // swiftlint:disable:next line_length
             DrafterLog.projectStore.error("Failed to list \(directory.path, privacy: .public): \(error, privacy: .public)")
             throw error
         }

@@ -9,7 +9,9 @@ public actor ConflictResolver {
     private let atomicFileWriter: AtomicFileWriting
     private let workingTree: URL
 
-    public init(gitService: GitService, atomicFileWriter: AtomicFileWriting = LiveAtomicFileWriter(), workingTree: URL) {
+    public init(
+        gitService: GitService, atomicFileWriter: AtomicFileWriting = LiveAtomicFileWriter(), workingTree: URL
+    ) {
         self.gitService = gitService
         self.atomicFileWriter = atomicFileWriter
         self.workingTree = workingTree

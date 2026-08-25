@@ -40,7 +40,9 @@ struct EPUBMetadataGeneratorTests {
 
     @Test("falls back to project.id as the identifier when there is no ISBN")
     func fallsBackToProjectIDWithoutISBN() {
-        let metadata = ProjectMetadata(id: "F4C2A1E9-TEST", title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
+        let metadata = ProjectMetadata(
+            id: "F4C2A1E9-TEST", title: "Last Call", author: "Drew Calloway", copyrightYear: 2026
+        )
         let yaml = EPUBMetadataGenerator.metaYAML(for: metadata, generatedDate: fixedDate)
 
         #expect(yaml.contains("identifier: \"F4C2A1E9-TEST\""))

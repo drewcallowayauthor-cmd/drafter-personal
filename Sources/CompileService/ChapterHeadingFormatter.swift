@@ -45,7 +45,8 @@ public enum ChapterHeadingFormatter {
         let lowered = text.lowercased()
         let mapped = String(
             lowered.unicodeScalars.map { scalar in
-                (CharacterSet.alphanumerics.contains(scalar) || scalar == " " || scalar == "-") ? Character(scalar) : " "
+                (CharacterSet.alphanumerics.contains(scalar) || scalar == " " || scalar == "-")
+                    ? Character(scalar) : " "
             }
         )
         let collapsed = mapped.split(separator: " ").joined(separator: "-")
@@ -64,18 +65,18 @@ enum NumberSpeller {
         "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
     ]
 
-    static func spell(_ n: Int) -> String {
-        guard n > 0 else { return String(n) }
-        if n < 20 { return ones[n] }
-        if n < 100 {
-            let (ten, one) = (n / 10, n % 10)
+    static func spell(_ number: Int) -> String {
+        guard number > 0 else { return String(number) }
+        if number < 20 { return ones[number] }
+        if number < 100 {
+            let (ten, one) = (number / 10, number % 10)
             return one == 0 ? tens[ten] : "\(tens[ten])-\(ones[one])"
         }
-        if n < 1000 {
-            let (hundred, remainder) = (n / 100, n % 100)
+        if number < 1000 {
+            let (hundred, remainder) = (number / 100, number % 100)
             let prefix = "\(ones[hundred]) Hundred"
             return remainder == 0 ? prefix : "\(prefix) \(spell(remainder))"
         }
-        return String(n)
+        return String(number)
     }
 }

@@ -11,7 +11,10 @@ struct OnboardingSheet: View {
 
     var body: some View {
         NocturneSheet(title: "Welcome to Drafter", width: 460, onClose: finish) {
-            Text("Choose how your projects will be versioned and synced by default. You can change this per project when you create it.")
+            Text(
+                "Choose how your projects will be versioned and synced by default. " +
+                    "You can change this per project when you create it."
+            )
                 .font(Theme.Font.body(13))
                 .foregroundStyle(Theme.Color.textMuted)
                 .fixedSize(horizontal: false, vertical: true)

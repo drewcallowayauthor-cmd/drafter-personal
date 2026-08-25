@@ -91,7 +91,9 @@ final class HistoryViewModel {
     /// The diff for §5.8's two-pane view: `entry`'s version of this scene against
     /// `currentBody` (the live in-editor text, which may itself be unsaved). Both sides
     /// are compared front-matter-stripped, matching what's actually shown in the editor.
-    func diffLines(against entry: CommitLogEntry, sceneURL: URL, workingTree: URL, currentBody: String) async -> [SceneDiffLine]? {
+    func diffLines(
+        against entry: CommitLogEntry, sceneURL: URL, workingTree: URL, currentBody: String
+    ) async -> [SceneDiffLine]? {
         do {
             let relativePath = Self.relativePath(of: sceneURL, in: workingTree)
             let rawOldContents = try await source.show(path: relativePath, at: entry.sha, in: workingTree)

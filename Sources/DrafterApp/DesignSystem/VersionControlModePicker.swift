@@ -39,7 +39,8 @@ struct VersionControlModePicker: View {
         case .git:
             "Private repo, automatic merging, structured conflict resolution. Needs a GitHub account."
         case .localFile:
-            "Snapshots stored next to your manuscript. Put the project in Box, Google Drive, iCloud Drive, or OneDrive to sync across machines — works without one too, just without sync."
+            "Snapshots stored next to your manuscript. Put the project in Box, Google Drive, iCloud Drive, " +
+                "or OneDrive to sync across machines — works without one too, just without sync."
         }
     }
 }

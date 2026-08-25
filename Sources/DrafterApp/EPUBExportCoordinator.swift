@@ -95,7 +95,8 @@ final class EPUBExportCoordinator {
             let copyrightIndex = binderTree.frontMatter.firstIndex {
                 FrontBackMatterTemplate.matching(filename: $0.url.lastPathComponent) == .copyright
             }
-            let splitIndex = copyrightIndex.map { binderTree.frontMatter.index(after: $0) } ?? binderTree.frontMatter.startIndex
+            let splitIndex = copyrightIndex.map { binderTree.frontMatter.index(after: $0) }
+                ?? binderTree.frontMatter.startIndex
 
             let beforeContents = Array(binderTree.frontMatter[..<splitIndex])
             let afterContents = Array(binderTree.frontMatter[splitIndex...])
@@ -104,7 +105,9 @@ final class EPUBExportCoordinator {
                 parts.append(try ManuscriptAssembler.assembleMatter(beforeContents, read: read))
             }
             let contentsMarkdown = EPUBTableOfContentsGenerator.markdown(
-                entries: try tableOfContentsEntries(metadata: metadata, binderTree: binderTree, compile: compile, epubTemplate: epubTemplate, read: read)
+                entries: try tableOfContentsEntries(
+                    metadata: metadata, binderTree: binderTree, compile: compile, epubTemplate: epubTemplate, read: read
+                )
             )
             if !contentsMarkdown.isEmpty {
                 parts.append(contentsMarkdown)
@@ -116,7 +119,9 @@ final class EPUBExportCoordinator {
 
         switch epubTemplate {
         case .novel:
-            parts.append(try ManuscriptAssembler.assembleManuscript(binderTree: binderTree, compile: compile, read: read))
+            parts.append(
+                try ManuscriptAssembler.assembleManuscript(binderTree: binderTree, compile: compile, read: read)
+            )
         case .shortStory:
             let manuscript = try ManuscriptAssembler.assembleShortStoryManuscript(
                 binderTree: binderTree,

@@ -75,6 +75,7 @@ public actor SnapshotService {
             do {
                 metadata = try readMetadata(folderName: name, in: workingTree)
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.snapshot.error("Failed to read metadata for snapshot \(name, privacy: .public): \(error, privacy: .public)")
                 metadata = nil
             }
@@ -90,13 +91,16 @@ public actor SnapshotService {
             do {
                 try fileManager.removeItem(at: historyDirectory.appendingPathComponent(name))
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.snapshot.error("Failed to prune snapshot \(name, privacy: .public): \(error, privacy: .public)")
             }
         }
     }
 
     /// §7.6's provider detection — display-only, never touches a provider API.
-    public nonisolated static func cloudProvider(for url: URL, homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser) -> String? {
+    public nonisolated static func cloudProvider(
+        for url: URL, homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) -> String? {
         let resolvedPath = url.resolvingSymlinksInPath().path
         let home = homeDirectory.resolvingSymlinksInPath().path
         let cloudStorage = (home as NSString).appendingPathComponent("Library/CloudStorage")
@@ -132,6 +136,7 @@ public actor SnapshotService {
         guard let data = fileManager.contents(atPath: fileURL.path) else {
             throw DrafterError.filesystem(underlying: "no snapshot \(folderName) contains \(relativePath)")
         }
+        // swiftlint:disable:next optional_data_string_conversion
         return String(decoding: data, as: UTF8.self)
     }
 
@@ -225,6 +230,7 @@ extension SnapshotService: VersioningSource {
         do {
             metadata = try readMetadata(folderName: folderName, in: workingTree)
         } catch {
+            // swiftlint:disable:next line_length
             DrafterLog.snapshot.error("Failed to read metadata for snapshot \(folderName, privacy: .public): \(error, privacy: .public)")
             metadata = SnapshotMetadata(subject: "snapshot", isProtectedFromPruning: false)
         }

@@ -11,9 +11,18 @@ struct SyncCoordinatorTests {
     @Test("identical to remote: fetches, sees no divergence, lands on idle")
     func identicalLandsOnIdle() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse (branch exists)
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "0\t0\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse (branch exists)
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "0\t0\n", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = makeCoordinator(runner: runner)
 
         let finalState = try await coordinator.syncNow()
@@ -26,10 +35,22 @@ struct SyncCoordinatorTests {
     @Test("behind only: fast-forwards and lands on idle")
     func behindOnlyFastForwards() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "0\t3\n", standardError: ""), forExecutableNamed: "git") // rev-list
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // ff merge
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "0\t3\n", standardError: ""), forExecutableNamed: "git"
+        )
+        // ff merge
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = makeCoordinator(runner: runner)
 
         let finalState = try await coordinator.syncNow()
@@ -42,10 +63,22 @@ struct SyncCoordinatorTests {
     @Test("ahead only: pushes and lands on idle, without ever merging")
     func aheadOnlyPushes() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git") // rev-list
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // push
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git"
+        )
+        // push
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = makeCoordinator(runner: runner)
 
         let finalState = try await coordinator.syncNow()
@@ -58,12 +91,18 @@ struct SyncCoordinatorTests {
     @Test("no remote branch yet: pushes directly without attempting divergence (§5.2 bootstrap / self-heal)")
     func noRemoteBranchYetPushesDirectly() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: ""),
             forExecutableNamed: "git"
         ) // rev-parse: no such ref
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // push -u
+        // push -u
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = makeCoordinator(runner: runner)
 
         let finalState = try await coordinator.syncNow()
@@ -77,11 +116,26 @@ struct SyncCoordinatorTests {
     @Test("diverged with a clean merge: merges with a labeled message, then pushes")
     func divergedCleanMergePushes() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git") // rev-list
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // merge
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // push
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git"
+        )
+        // merge
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // push
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let coordinator = makeCoordinator(runner: runner)
 
         let finalState = try await coordinator.syncNow()
@@ -92,13 +146,25 @@ struct SyncCoordinatorTests {
         #expect(invocations[4].arguments == ["push", "-u", "origin", "main"])
     }
 
-    @Test("a clean merge followed by a failed push reports the merge commit in pendingCommits, not the stale pre-merge ahead count")
+    @Test("a clean merge then a failed push reports the merge commit in pendingCommits, not the stale ahead count")
     func divergedCleanMergeThenFailedPushCountsTheMergeCommit() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "2\t3\n", standardError: ""), forExecutableNamed: "git") // rev-list: ahead 2, behind 3
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // merge (clean)
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list: ahead 2, behind 3
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "2\t3\n", standardError: ""), forExecutableNamed: "git"
+        )
+        // merge (clean)
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "network unreachable"),
             forExecutableNamed: "git"
@@ -115,9 +181,18 @@ struct SyncCoordinatorTests {
     @Test("diverged with a conflicting merge: lands on conflicted with the file list, never pushes")
     func divergedConflictedMergeStops() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "CONFLICT"),
             forExecutableNamed: "git"
@@ -156,7 +231,8 @@ struct SyncCoordinatorTests {
             ProcessResult(
                 exitCode: 128,
                 standardOutput: "",
-                standardError: "remote: invalid credentials\nfatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
+                standardError: "remote: invalid credentials\n"
+                    + "fatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
             ),
             forExecutableNamed: "git"
         )
@@ -170,14 +246,24 @@ struct SyncCoordinatorTests {
     @Test("a push rejected for bad credentials resolves to authenticationRequired, not offline")
     func authFailureOnPushResolvesToAuthenticationRequired() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(
                 exitCode: 128,
                 standardOutput: "",
-                standardError: "remote: Invalid username or token.\nfatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
+                standardError: "remote: Invalid username or token.\n"
+                    + "fatal: Authentication failed for 'https://github.com/drew/book.git/'\n"
             ),
             forExecutableNamed: "git"
         ) // push
@@ -191,9 +277,18 @@ struct SyncCoordinatorTests {
     @Test("a rejected push resolves to offline, carrying the ahead count as pending commits")
     func rejectedPushResolvesToOffline() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "2\t0\n", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "! [rejected]"),
             forExecutableNamed: "git"
@@ -208,9 +303,18 @@ struct SyncCoordinatorTests {
     @Test("once conflicted, further syncNow calls are a no-op until resolved")
     func conflictedShortCircuitsFurtherCalls() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "CONFLICT"),
             forExecutableNamed: "git"
@@ -233,9 +337,18 @@ struct SyncCoordinatorTests {
     @Test("markConflictResolved clears .conflicted back to .idle without touching git")
     func markConflictResolvedClearsToIdle() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "1\t1\n", standardError: ""), forExecutableNamed: "git"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "CONFLICT"),
             forExecutableNamed: "git"

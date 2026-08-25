@@ -145,6 +145,7 @@ public enum BinderTreeBuilder {
         do {
             return try contents(of: directory, fileManager: fileManager)
         } catch {
+            // swiftlint:disable:next line_length
             DrafterLog.projectStore.error("Failed to list \(directory.path, privacy: .public): \(error, privacy: .public)")
             throw error
         }

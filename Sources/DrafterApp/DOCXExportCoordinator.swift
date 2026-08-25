@@ -39,13 +39,17 @@ final class DOCXExportCoordinator {
         let buildDirectory = workingTree.appendingPathComponent("Build")
         try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
 
-        let assembledChapters = try ManuscriptAssembler.assembleManuscript(binderTree: binderTree, compile: Self.spelledOutChapterCompile(metadata.compile), read: read)
+        let assembledChapters = try ManuscriptAssembler.assembleManuscript(
+            binderTree: binderTree, compile: Self.spelledOutChapterCompile(metadata.compile), read: read
+        )
         // Word count is taken before SMFChapterOpenerSpacer/SMFSceneSeparatorFormatter
         // splice their raw-OOXML paragraphs in — WordCounter only strips HTML
         // comments/markdown syntax, not raw `{=openxml}` blocks, so counting the
         // post-splice text would tally that XML's own attribute tokens as words.
         let wordCount = WordCounter.count(assembledChapters)
-        let sceneSeparatorsFormatted = SMFSceneSeparatorFormatter.format(assembledChapters, separator: metadata.compile.sceneSeparator)
+        let sceneSeparatorsFormatted = SMFSceneSeparatorFormatter.format(
+            assembledChapters, separator: metadata.compile.sceneSeparator
+        )
         var manuscriptBody = SMFChapterOpenerSpacer.insertSpacing(into: sceneSeparatorsFormatted)
         if !assembledChapters.isEmpty {
             manuscriptBody = SMFEndOfManuscriptMarker.append(to: manuscriptBody)

@@ -26,7 +26,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -66,7 +68,9 @@ struct DOCXExportCoordinatorTests {
         metadata.compile.chapterTitleFormat = "Chapter {n}"
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -100,7 +104,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -136,7 +142,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -164,7 +172,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -190,7 +200,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
         _ = try await coordinator.export(
@@ -216,7 +228,9 @@ struct DOCXExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
         _ = try await coordinator.export(

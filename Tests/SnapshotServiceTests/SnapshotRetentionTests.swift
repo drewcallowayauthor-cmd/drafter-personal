@@ -14,7 +14,9 @@ struct SnapshotRetentionTests {
     func keepsRecentEntriesInFull() {
         let now = Date()
         let entries = (0..<10).map { hoursAgo in
-            SnapshotRetention.Entry(name: "h\(hoursAgo)", date: now.addingTimeInterval(-Double(hoursAgo) * 3600), isProtected: false)
+            SnapshotRetention.Entry(
+                name: "h\(hoursAgo)", date: now.addingTimeInterval(-Double(hoursAgo) * 3600), isProtected: false
+            )
         }
         #expect(SnapshotRetention.namesToPrune(entries: entries, now: now, calendar: utc).isEmpty)
     }
@@ -58,8 +60,12 @@ struct SnapshotRetentionTests {
             // worked merely by being "the newest kept per bucket," this would be the
             // one pruned. It must survive regardless.
             SnapshotRetention.Entry(name: "checkpoint", date: ancient, isProtected: true),
-            SnapshotRetention.Entry(name: "autosave-newer", date: ancient.addingTimeInterval(2 * 3600), isProtected: false),
-            SnapshotRetention.Entry(name: "autosave-older", date: ancient.addingTimeInterval(1 * 3600), isProtected: false)
+            SnapshotRetention.Entry(
+                name: "autosave-newer", date: ancient.addingTimeInterval(2 * 3600), isProtected: false
+            ),
+            SnapshotRetention.Entry(
+                name: "autosave-older", date: ancient.addingTimeInterval(1 * 3600), isProtected: false
+            )
         ]
 
         let pruned = SnapshotRetention.namesToPrune(entries: entries, now: now, calendar: utc)

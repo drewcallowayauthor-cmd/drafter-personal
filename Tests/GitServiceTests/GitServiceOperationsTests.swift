@@ -154,7 +154,9 @@ struct GitServiceOperationsTests {
     @Test("a clean merge returns .clean without inspecting conflicts")
     func cleanMergeReturnsClean() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let result = try await service.merge(with: "origin/main", in: workingTree)
@@ -191,7 +193,9 @@ struct GitServiceOperationsTests {
             ProcessResult(exitCode: 128, standardOutput: "", standardError: "fatal: not something we can merge"),
             forExecutableNamed: "git"
         )
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         await #expect(throws: DrafterError.self) {

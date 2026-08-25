@@ -24,7 +24,9 @@ public struct SceneDocument: Sendable, Equatable {
         self.savedBody = body
     }
 
-    private init(url: URL, frontMatter: SceneFrontMatter, body: String, savedFrontMatter: SceneFrontMatter, savedBody: String) {
+    private init(
+        url: URL, frontMatter: SceneFrontMatter, body: String, savedFrontMatter: SceneFrontMatter, savedBody: String
+    ) {
         self.url = url
         self.frontMatter = frontMatter
         self.body = body

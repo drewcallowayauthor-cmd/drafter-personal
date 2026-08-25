@@ -84,9 +84,18 @@ struct SyncSchedulerTests {
     }
 
     private func scriptIdenticalSync(_ runner: MockProcessRunner) async {
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // fetch
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git") // rev-parse
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "0\t0\n", standardError: ""), forExecutableNamed: "git") // rev-list
+        // fetch
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-parse
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
+        // rev-list
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "0\t0\n", standardError: ""), forExecutableNamed: "git"
+        )
     }
 
     private func makeScheduler(
@@ -99,6 +108,8 @@ struct SyncSchedulerTests {
             workingTree: URL(fileURLWithPath: "/tmp/project"),
             machineName: "Test-Machine"
         )
-        return SyncScheduler(syncCoordinator: coordinator, fetchInterval: fetchInterval, pushDebounceDelay: pushDebounceDelay)
+        return SyncScheduler(
+            syncCoordinator: coordinator, fetchInterval: fetchInterval, pushDebounceDelay: pushDebounceDelay
+        )
     }
 }

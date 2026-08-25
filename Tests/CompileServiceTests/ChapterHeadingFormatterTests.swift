@@ -10,7 +10,9 @@ struct ChapterHeadingFormatterTests {
 
     @Test("substitutes {n_word}")
     func substitutesNWord() {
-        #expect(ChapterHeadingFormatter.heading(format: "Chapter {n_word}", index: 3, title: "Arrival") == "Chapter Three")
+        #expect(
+            ChapterHeadingFormatter.heading(format: "Chapter {n_word}", index: 3, title: "Arrival") == "Chapter Three"
+        )
     }
 
     @Test("substitutes {title}")

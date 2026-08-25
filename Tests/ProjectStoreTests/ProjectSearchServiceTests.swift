@@ -79,7 +79,10 @@ struct ProjectSearchServiceTests {
         }
 
         let refreshedTree = try BinderTreeBuilder.build(projectRoot: root)
-        #expect(ProjectSearchService.search(binderTree: refreshedTree, options: ProjectSearchOptions(query: "lantern")).isEmpty)
+        let results = ProjectSearchService.search(
+            binderTree: refreshedTree, options: ProjectSearchOptions(query: "lantern")
+        )
+        #expect(results.isEmpty)
     }
 
     @Test("replace rewrites multiple matches in the same file without offset drift")

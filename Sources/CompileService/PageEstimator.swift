@@ -39,7 +39,10 @@ public enum PageEstimator {
         var gutterInches = GutterCalculator.gutterInches(forPageCount: 1)
         var pages = 0
         for _ in 0..<2 {
-            pages = estimatedPages(wordCount: wordCount, trimSize: trimSize, pointSize: pointSize, leading: leading, gutterInches: gutterInches)
+            pages = estimatedPages(
+                wordCount: wordCount, trimSize: trimSize, pointSize: pointSize, leading: leading,
+                gutterInches: gutterInches
+            )
             let neededGutter = GutterCalculator.gutterInches(forPageCount: pages)
             if neededGutter == gutterInches { break }
             gutterInches = neededGutter
@@ -47,7 +50,9 @@ public enum PageEstimator {
         return pages
     }
 
-    private static func estimatedPages(wordCount: Int, trimSize: TrimSize, pointSize: Double, leading: Double, gutterInches: Double) -> Int {
+    private static func estimatedPages(
+        wordCount: Int, trimSize: TrimSize, pointSize: Double, leading: Double, gutterInches: Double
+    ) -> Int {
         let outsideMargin = 0.5
         let topMargin = 0.75
         let bottomMargin = 0.8

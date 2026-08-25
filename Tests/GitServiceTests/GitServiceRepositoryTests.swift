@@ -35,7 +35,9 @@ struct GitServiceRepositoryTests {
     @Test("log with a path includes --follow and the path filter")
     func logWithPathIncludesFollowAndFilter() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         _ = try await service.log(for: "Manuscript/01 Arrival/01 Triage.md", in: workingTree)
@@ -49,7 +51,9 @@ struct GitServiceRepositoryTests {
     @Test("log without a path omits --follow for the project-wide timeline")
     func logWithoutPathOmitsFollow() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         _ = try await service.log(in: workingTree)
@@ -61,7 +65,9 @@ struct GitServiceRepositoryTests {
     @Test("log with a ref scopes to that branch, ahead of the format arg")
     func logWithRefScopesToBranch() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         _ = try await service.log(ref: "origin/main", in: workingTree)
@@ -77,7 +83,9 @@ struct GitServiceRepositoryTests {
             "abc123\u{1F}1755000000\u{1F}autosave — 1 file, +50 words\u{1F}Drew Calloway\u{1F}Drew-MacBook-Pro",
             "def456\u{1F}1754900000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Drew-Mac-Studio"
         ].joined(separator: "\n") + "\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entries = try await service.log(in: workingTree)
@@ -96,7 +104,9 @@ struct GitServiceRepositoryTests {
     func logToleratesEmptyMachineField() async throws {
         let runner = MockProcessRunner()
         let output = "abc123\u{1F}1755000000\u{1F}Initial commit\u{1F}Drew Calloway\u{1F}\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entries = try await service.log(in: workingTree)
@@ -108,7 +118,9 @@ struct GitServiceRepositoryTests {
     @Test("log on an empty repository returns no entries rather than throwing")
     func logOnEmptyRepositoryReturnsEmpty() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entries = try await service.log(in: workingTree)
@@ -120,7 +132,9 @@ struct GitServiceRepositoryTests {
     func logSkipsMalformedLine() async throws {
         let runner = MockProcessRunner()
         let output = "not-enough-fields\u{1F}only-two\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entries = try await service.log(in: workingTree)
@@ -132,7 +146,9 @@ struct GitServiceRepositoryTests {
     func lastCommitRunsLogDashOne() async throws {
         let runner = MockProcessRunner()
         let output = "abc123\u{1F}1755000000\u{1F}checkpoint\u{1F}Drew Calloway\u{1F}Drew-Mac-Studio\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entry = try await service.lastCommit(for: "Manuscript/scene.md", at: "MERGE_HEAD", in: workingTree)
@@ -147,7 +163,9 @@ struct GitServiceRepositoryTests {
     @Test("lastCommit returns nil when the path has no history reachable from the ref")
     func lastCommitReturnsNilWhenNoHistory() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         let entry = try await service.lastCommit(for: "Manuscript/scene.md", at: "HEAD", in: workingTree)

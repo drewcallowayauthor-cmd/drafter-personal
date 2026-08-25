@@ -28,7 +28,7 @@ struct NocturneTag: View {
     private var background: SwiftUI.Color {
         switch style {
         case .accent: Theme.Color.accent800
-        case .accent2: Theme.Color.accent2_800
+        case .accent2: Theme.Color.accent2800
         case .neutral: Theme.Color.neutral800
         case .outline: .clear
         }
@@ -37,7 +37,7 @@ struct NocturneTag: View {
     private var foreground: SwiftUI.Color {
         switch style {
         case .accent: Theme.Color.accent100
-        case .accent2: Theme.Color.accent2_100
+        case .accent2: Theme.Color.accent2100
         case .neutral: Theme.Color.neutral100
         case .outline: Theme.Color.accent
         }

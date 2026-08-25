@@ -149,7 +149,11 @@ struct ProjectMetadataEditor: View {
             NocturneField(label: "Email", text: $draft.manuscript.email)
             NocturneField(label: "Agent Name", text: $draft.manuscript.agentName)
             NocturneField(label: "Agent Address", text: $draft.manuscript.agentAddress)
-            NocturneDropdown(label: "Manuscript Font", selection: $draft.manuscript.bodyFont, options: ["Times New Roman", "Courier New"]) { $0 }
+            NocturneDropdown(
+                label: "Manuscript Font",
+                selection: $draft.manuscript.bodyFont,
+                options: ["Times New Roman", "Courier New"]
+            ) { $0 }
         }
     }
 
@@ -230,7 +234,9 @@ private struct LocalFileVersionControlTabContent: View {
     let onSnapshotNow: () async -> Void
 
     init(snapshotService: SnapshotService, workingTree: URL, onSnapshotNow: @escaping () async -> Void) {
-        _viewModel = State(initialValue: LocalFileVersionControlViewModel(snapshotService: snapshotService, workingTree: workingTree))
+        _viewModel = State(initialValue: LocalFileVersionControlViewModel(
+            snapshotService: snapshotService, workingTree: workingTree
+        ))
         self.onSnapshotNow = onSnapshotNow
     }
 

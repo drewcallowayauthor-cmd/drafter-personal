@@ -45,7 +45,9 @@ struct GeneralSettingsView: View {
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = "Choose"
-        panel.directoryURL = URL(fileURLWithPath: prefs.projectsDirectoryPath ?? ProjectViewModel.defaultProjectsDirectory().path)
+        panel.directoryURL = URL(
+            fileURLWithPath: prefs.projectsDirectoryPath ?? ProjectViewModel.defaultProjectsDirectory().path
+        )
         guard panel.runModal() == .OK, let url = panel.url else { return }
         prefs.projectsDirectoryPath = url.path
     }

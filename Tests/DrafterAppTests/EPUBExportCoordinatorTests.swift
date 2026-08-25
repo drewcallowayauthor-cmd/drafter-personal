@@ -26,7 +26,9 @@ struct EPUBExportCoordinatorTests {
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -103,7 +105,9 @@ struct EPUBExportCoordinatorTests {
         metadata.compile.includeBackMatter = true
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -157,7 +161,9 @@ struct EPUBExportCoordinatorTests {
         ]
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -200,8 +206,18 @@ struct EPUBExportCoordinatorTests {
         let scene1URL = root.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
         let scene2URL = root.appendingPathComponent("Manuscript/02 Departure/01 Goodbye.md")
         let chapters = [
-            ChapterNode(url: root.appendingPathComponent("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: scene1URL, displayName: "Triage")], isLooseFile: false),
-            ChapterNode(url: root.appendingPathComponent("Manuscript/02 Departure"), displayName: "Departure", scenes: [SceneNode(url: scene2URL, displayName: "Goodbye")], isLooseFile: false)
+            ChapterNode(
+                url: root.appendingPathComponent("Manuscript/01 Arrival"),
+                displayName: "Arrival",
+                scenes: [SceneNode(url: scene1URL, displayName: "Triage")],
+                isLooseFile: false
+            ),
+            ChapterNode(
+                url: root.appendingPathComponent("Manuscript/02 Departure"),
+                displayName: "Departure",
+                scenes: [SceneNode(url: scene2URL, displayName: "Goodbye")],
+                isLooseFile: false
+            )
         ]
         let tree = BinderTree(
             manuscript: chapters,
@@ -223,7 +239,9 @@ struct EPUBExportCoordinatorTests {
         ]
 
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 

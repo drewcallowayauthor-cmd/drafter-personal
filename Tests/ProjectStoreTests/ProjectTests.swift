@@ -113,7 +113,9 @@ struct ProjectTests {
         let project = try Project.open(root: root, fileWriter: LiveAtomicFileWriter())
         let chapterDirectory = root.appendingPathComponent("Manuscript/01 Arrival")
 
-        let sceneURL = try await project.createScene(title: "The Board", in: chapterDirectory, fileWriter: LiveAtomicFileWriter())
+        let sceneURL = try await project.createScene(
+            title: "The Board", in: chapterDirectory, fileWriter: LiveAtomicFileWriter()
+        )
 
         #expect(sceneURL.lastPathComponent == "02 The Board.md")
         let contents = try String(contentsOf: sceneURL, encoding: .utf8)

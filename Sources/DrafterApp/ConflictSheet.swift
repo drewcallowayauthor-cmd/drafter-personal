@@ -21,7 +21,9 @@ struct ConflictSheet: View {
         onCancel: @escaping () -> Void
     ) {
         _viewModel = State(
-            initialValue: ConflictViewModel(paths: paths, gitService: gitService, workingTree: workingTree, machineName: machineName)
+            initialValue: ConflictViewModel(
+                paths: paths, gitService: gitService, workingTree: workingTree, machineName: machineName
+            )
         )
         self.onResolved = onResolved
         self.onCancel = onCancel
@@ -29,7 +31,10 @@ struct ConflictSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(viewModel.conflicts.count) scene\(viewModel.conflicts.count == 1 ? "" : "s") changed on both machines")
+            Text(
+                "\(viewModel.conflicts.count) scene\(viewModel.conflicts.count == 1 ? "" : "s") " +
+                    "changed on both machines"
+            )
                 .font(Theme.Font.heading(17))
                 .foregroundStyle(Theme.Color.text)
                 .padding(.horizontal, 18)
@@ -88,12 +93,18 @@ struct ConflictSheet: View {
                 .foregroundStyle(Theme.Color.text)
 
             if let mine = conflict.mine {
-                Text("Mine — \(Self.relativeTime(mine)) on \(mine.machineName.isEmpty ? "this machine" : mine.machineName)")
+                Text(
+                    "Mine — \(Self.relativeTime(mine)) on " +
+                        "\(mine.machineName.isEmpty ? "this machine" : mine.machineName)"
+                )
                     .font(Theme.Font.body(12))
                     .foregroundStyle(Theme.Color.textMuted)
             }
             if let theirs = conflict.theirs {
-                Text("Theirs — \(Self.relativeTime(theirs)) on \(theirs.machineName.isEmpty ? "another machine" : theirs.machineName)")
+                Text(
+                    "Theirs — \(Self.relativeTime(theirs)) on " +
+                        "\(theirs.machineName.isEmpty ? "another machine" : theirs.machineName)"
+                )
                     .font(Theme.Font.body(12))
                     .foregroundStyle(Theme.Color.textMuted)
             }

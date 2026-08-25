@@ -55,7 +55,9 @@ struct GitServiceTests {
     @Test("runMaintenance invokes git gc")
     func runMaintenanceInvokesGitGC() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "git"
+        )
         let service = GitService(processRunner: runner)
 
         try await service.runMaintenance(workingTree: URL(fileURLWithPath: "/tmp/project"))

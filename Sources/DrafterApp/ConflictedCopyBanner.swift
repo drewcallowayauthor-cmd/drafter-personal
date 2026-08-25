@@ -48,7 +48,10 @@ struct ConflictedCopyBanner: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("A file may have synced with a conflict")
                     .font(.system(size: 12, weight: .semibold))
-                Text("\(match.conflictedURL.lastPathComponent) looks like a cloud-sync conflict copy of \(match.originalURL.lastPathComponent).")
+                Text(
+                    "\(match.conflictedURL.lastPathComponent) looks like a cloud-sync conflict copy of " +
+                        "\(match.originalURL.lastPathComponent)."
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

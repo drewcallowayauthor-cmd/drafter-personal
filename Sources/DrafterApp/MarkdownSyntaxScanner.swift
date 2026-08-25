@@ -19,6 +19,7 @@ public struct SyntaxRange: Equatable {
 }
 
 public enum MarkdownSyntaxScanner {
+    // swiftlint:disable force_try
     /// Drafter's markdown dialect is deliberately tiny (§4.6) and not expected to
     /// nest, so these patterns favor simplicity over handling every pathological case.
     private static let boldPattern = try! NSRegularExpression(pattern: "\\*\\*([^\\n*]+?)\\*\\*")
@@ -27,6 +28,7 @@ public enum MarkdownSyntaxScanner {
         pattern: "^(#{1,6}[ \\t]+)(.*)$",
         options: [.anchorsMatchLines]
     )
+    // swiftlint:enable force_try
 
     public static func scan(_ text: String) -> [SyntaxRange] {
         let fullRange = NSRange(location: 0, length: (text as NSString).length)

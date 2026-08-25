@@ -176,7 +176,9 @@ struct SceneTextView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = true
         textView.font = .systemFont(ofSize: fontSize)
         textView.string = text
-        MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: textView.font!, lineHeightMultiple: lineHeightMultiple)
+        MarkdownSyntaxHighlighter.applyAttributes(
+            to: textView.textStorage!, baseFont: textView.font!, lineHeightMultiple: lineHeightMultiple
+        )
 
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -202,7 +204,9 @@ struct SceneTextView: NSViewRepresentable {
         if textView.string != text {
             textView.string = text
             textView.font = desiredFont
-            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple)
+            MarkdownSyntaxHighlighter.applyAttributes(
+                to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple
+            )
             // This branch only fires for a wholesale content swap from outside the
             // user's own typing (opening a different scene, an external-change
             // reload, a history restore) — never from the text view's own edits
@@ -214,7 +218,9 @@ struct SceneTextView: NSViewRepresentable {
             textView.undoManager?.removeAllActions()
         } else if fontChanged || context.coordinator.lineHeightMultiple != lineHeightMultiple {
             textView.font = desiredFont
-            MarkdownSyntaxHighlighter.applyAttributes(to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple)
+            MarkdownSyntaxHighlighter.applyAttributes(
+                to: textView.textStorage!, baseFont: desiredFont, lineHeightMultiple: lineHeightMultiple
+            )
         }
         context.coordinator.lineHeightMultiple = lineHeightMultiple
         scrollView.measuredWidthInCharacters = measuredWidthInCharacters
@@ -226,8 +232,7 @@ struct SceneTextView: NSViewRepresentable {
         context.coordinator.typewriterCaretFraction = typewriterCaretFraction
 
         if let jumpRequest, jumpRequest.id != context.coordinator.lastAppliedJumpID,
-            jumpRequest.range.location + jumpRequest.range.length <= (textView.string as NSString).length
-        {
+            jumpRequest.range.location + jumpRequest.range.length <= (textView.string as NSString).length {
             context.coordinator.lastAppliedJumpID = jumpRequest.id
             textView.window?.makeFirstResponder(textView)
             textView.setSelectedRange(jumpRequest.range)
@@ -258,7 +263,9 @@ struct SceneTextView: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             if let textStorage = textView.textStorage, let font = textView.font {
-                MarkdownSyntaxHighlighter.applyAttributes(to: textStorage, baseFont: font, lineHeightMultiple: lineHeightMultiple)
+                MarkdownSyntaxHighlighter.applyAttributes(
+                    to: textStorage, baseFont: font, lineHeightMultiple: lineHeightMultiple
+                )
             }
             text.wrappedValue = textView.string
         }

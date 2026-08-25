@@ -40,7 +40,9 @@ struct ConflictViewModelTests {
             ProcessResult(exitCode: 0, standardOutput: "Their text.", standardError: ""),
             forExecutableNamed: "git"
         )
-        let viewModel = makeViewModel(paths: ["Manuscript/a.md"], runner: runner, atomicFileWriter: MockAtomicFileWriter())
+        let viewModel = makeViewModel(
+            paths: ["Manuscript/a.md"], runner: runner, atomicFileWriter: MockAtomicFileWriter()
+        )
         var conflict = viewModel.conflicts[0]
         conflict.theirs = CommitLogEntry(
             sha: "abc",

@@ -26,7 +26,9 @@ struct SnapshotServiceTests {
         )
 
         #expect(created)
-        let historyContents = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
+        let historyContents = try FileManager.default.contentsOfDirectory(
+            atPath: root.appendingPathComponent("History").path
+        )
         #expect(historyContents.count == 1)
         let snapshotScene = root
             .appendingPathComponent("History")
@@ -42,10 +44,14 @@ struct SnapshotServiceTests {
         let service = SnapshotService()
 
         _ = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
-        let secondCreated = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
+        let secondCreated = try await service.createSnapshot(
+            trigger: .checkpoint(label: nil), machineName: "M", in: root
+        )
 
         #expect(secondCreated == false)
-        let historyContents = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
+        let historyContents = try FileManager.default.contentsOfDirectory(
+            atPath: root.appendingPathComponent("History").path
+        )
         #expect(historyContents.count == 1)
     }
 
@@ -57,10 +63,14 @@ struct SnapshotServiceTests {
 
         _ = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
         try Data("A different opening line.".utf8).write(to: root.appendingPathComponent("Manuscript/01 Scene.md"))
-        let secondCreated = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
+        let secondCreated = try await service.createSnapshot(
+            trigger: .checkpoint(label: nil), machineName: "M", in: root
+        )
 
         #expect(secondCreated)
-        let historyContents = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
+        let historyContents = try FileManager.default.contentsOfDirectory(
+            atPath: root.appendingPathComponent("History").path
+        )
         #expect(historyContents.count == 2)
     }
 
@@ -76,10 +86,14 @@ struct SnapshotServiceTests {
 
         _ = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
         try FileManager.default.removeItem(at: notes)
-        let secondCreated = try await service.createSnapshot(trigger: .checkpoint(label: nil), machineName: "M", in: root)
+        let secondCreated = try await service.createSnapshot(
+            trigger: .checkpoint(label: nil), machineName: "M", in: root
+        )
 
         #expect(secondCreated)
-        let historyContents = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
+        let historyContents = try FileManager.default.contentsOfDirectory(
+            atPath: root.appendingPathComponent("History").path
+        )
         #expect(historyContents.count == 2)
     }
 
@@ -105,7 +119,9 @@ struct SnapshotServiceTests {
         _ = try await service.createSnapshot(trigger: .checkpoint(label: "first"), machineName: "M", in: root)
         // An unrelated file changes; the scene itself doesn't.
         try Data("cover data".utf8).write(to: root.appendingPathComponent("Resources.txt"))
-        _ = try await service.createSnapshot(trigger: .checkpoint(label: "unrelated change"), machineName: "M", in: root)
+        _ = try await service.createSnapshot(
+            trigger: .checkpoint(label: "unrelated change"), machineName: "M", in: root
+        )
         try Data("A revised opening line.".utf8).write(to: root.appendingPathComponent("Manuscript/01 Scene.md"))
         _ = try await service.createSnapshot(trigger: .checkpoint(label: "scene changed"), machineName: "M", in: root)
 

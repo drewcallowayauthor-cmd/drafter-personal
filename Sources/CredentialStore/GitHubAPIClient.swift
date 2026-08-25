@@ -86,7 +86,9 @@ public actor GitHubAPIClient {
     public func containsFile(fullName: String, path: String, token: String) async throws -> Bool {
         let encodedFullName = fullName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? fullName
         let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
-        let request = try makeRequest(path: "/repos/\(encodedFullName)/contents/\(encodedPath)", method: "GET", token: token)
+        let request = try makeRequest(
+            path: "/repos/\(encodedFullName)/contents/\(encodedPath)", method: "GET", token: token
+        )
         let (data, statusCode) = try await performRequest(request)
         if statusCode == 404 { return false }
         try Self.throwIfError(statusCode: statusCode, data: data)
@@ -119,7 +121,9 @@ public actor GitHubAPIClient {
                 throw DrafterError.offline
             }
             DrafterLog.credential.error("GitHub request failed: \(error, privacy: .public)")
-            throw DrafterError.githubAPIError(statusCode: -1, message: "Couldn't reach GitHub: \(error.localizedDescription)")
+            throw DrafterError.githubAPIError(
+                statusCode: -1, message: "Couldn't reach GitHub: \(error.localizedDescription)"
+            )
         }
     }
 
@@ -144,7 +148,9 @@ public actor GitHubAPIClient {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
             DrafterLog.credential.error("Failed to decode GitHub API response: \(error, privacy: .public)")
-            throw DrafterError.githubAPIError(statusCode: statusCode, message: "GitHub returned an unexpected response.")
+            throw DrafterError.githubAPIError(
+                statusCode: statusCode, message: "GitHub returned an unexpected response."
+            )
         }
     }
 

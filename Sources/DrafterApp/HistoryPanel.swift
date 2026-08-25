@@ -62,7 +62,8 @@ struct HistoryPanel: View {
             VStack(spacing: 0) {
                 DiffView(
                     lines: presentation.lines,
-                    oldLabel: "\(presentation.entry.subject) (\(Self.relativeFormatter.localizedString(for: presentation.entry.date, relativeTo: .now)))",
+                    oldLabel: "\(presentation.entry.subject) (" +
+                        "\(Self.relativeFormatter.localizedString(for: presentation.entry.date, relativeTo: .now)))",
                     newLabel: "Current"
                 )
                 Rectangle().fill(Theme.Color.divider).frame(height: 1)
@@ -82,7 +83,9 @@ struct HistoryPanel: View {
     @ViewBuilder
     private var content: some View {
         if let error = history.errorMessage {
-            ContentUnavailableView("Couldn't Load History", systemImage: "exclamationmark.triangle", description: Text(error))
+            ContentUnavailableView(
+                "Couldn't Load History", systemImage: "exclamationmark.triangle", description: Text(error)
+            )
         } else if history.isLoading {
             // Deliberately blank rather than "No History Yet" — that empty state is
             // only accurate once the fetch for the newly selected scene has actually
@@ -109,7 +112,11 @@ struct HistoryPanel: View {
                             }
                             .contextMenu {
                                 Button("Restore as Copy") {
-                                    Task { await history.restoreAsCopy(entry: entry, sceneURL: sceneURL, workingTree: workingTree) }
+                                    Task {
+                                        await history.restoreAsCopy(
+                                            entry: entry, sceneURL: sceneURL, workingTree: workingTree
+                                        )
+                                    }
                                 }
                             }
                     }

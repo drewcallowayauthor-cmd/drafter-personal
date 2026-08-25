@@ -13,8 +13,12 @@ struct PageEstimatorTests {
 
     @Test("print pages scale down as point size grows")
     func printPagesScaleWithPointSize() {
-        let small = PageEstimator.printPages(wordCount: 80_000, trimSize: .fiveHalfByEightHalf, pointSize: 11, leading: 1.4)
-        let large = PageEstimator.printPages(wordCount: 80_000, trimSize: .fiveHalfByEightHalf, pointSize: 14, leading: 1.4)
+        let small = PageEstimator.printPages(
+            wordCount: 80_000, trimSize: .fiveHalfByEightHalf, pointSize: 11, leading: 1.4
+        )
+        let large = PageEstimator.printPages(
+            wordCount: 80_000, trimSize: .fiveHalfByEightHalf, pointSize: 14, leading: 1.4
+        )
         #expect(small > 0)
         #expect(large > small)
     }

@@ -88,6 +88,7 @@ public struct LiveProcessRunner: ProcessRunning {
             do {
                 try process.run()
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.app.error("Failed to launch \(executableURL.lastPathComponent, privacy: .public): \(error, privacy: .public)")
                 continuation.resume(
                     throwing: DrafterError.processLaunchFailed(

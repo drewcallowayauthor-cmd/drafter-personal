@@ -25,7 +25,8 @@ final class LocalFileVersionControlViewModel {
     init(snapshotService: SnapshotService, workingTree: URL) {
         self.snapshotService = snapshotService
         self.workingTree = workingTree
-        providerText = SnapshotService.cloudProvider(for: workingTree).map { "Syncing via \($0)" } ?? "Not in a synced folder"
+        providerText = SnapshotService.cloudProvider(for: workingTree).map { "Syncing via \($0)" }
+            ?? "Not in a synced folder"
     }
 
     func load() async {

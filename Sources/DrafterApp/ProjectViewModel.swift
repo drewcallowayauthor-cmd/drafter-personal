@@ -348,7 +348,9 @@ final class ProjectViewModel {
         self.metadata = resolvedMetadata
         binderTree = await project.binderTree
         workingTreeRoot = root
-        RecentProjects.record(title: resolvedMetadata.title.isEmpty ? root.lastPathComponent : resolvedMetadata.title, root: root)
+        RecentProjects.record(
+            title: resolvedMetadata.title.isEmpty ? root.lastPathComponent : resolvedMetadata.title, root: root
+        )
         AppPreferences.shared.lastOpenedProjectPath = root.path
         AppPreferences.shared.lastPickedVersionControlMode = resolvedMetadata.versionControl.rawValue
 
@@ -454,7 +456,9 @@ final class ProjectViewModel {
         case .git:
             if let gitService { OpenProjectHandle.shared.setGit(workingTreeRoot: root, gitService: gitService) }
         case .localFile:
-            if let snapshotService { OpenProjectHandle.shared.setLocalFile(workingTreeRoot: root, snapshotService: snapshotService) }
+            if let snapshotService {
+                OpenProjectHandle.shared.setLocalFile(workingTreeRoot: root, snapshotService: snapshotService)
+            }
         }
     }
 
@@ -533,7 +537,11 @@ final class ProjectViewModel {
     /// `/usr/bin/git` default when unset.
     private static func makeGitService(authToken: String?) -> GitService {
         if let overridePath = AppPreferences.shared.gitPathOverride {
-            return GitService(processRunner: LiveProcessRunner(), gitExecutableURL: URL(fileURLWithPath: overridePath), authToken: authToken)
+            return GitService(
+                processRunner: LiveProcessRunner(),
+                gitExecutableURL: URL(fileURLWithPath: overridePath),
+                authToken: authToken
+            )
         }
         return GitService(processRunner: LiveProcessRunner(), authToken: authToken)
     }
@@ -651,7 +659,9 @@ final class ProjectViewModel {
     func createScene(title: String, in directory: URL) async -> URL? {
         guard let project else { return nil }
         do {
-            let sceneURL = try await project.createScene(title: title, in: directory, fileWriter: LiveAtomicFileWriter())
+            let sceneURL = try await project.createScene(
+                title: title, in: directory, fileWriter: LiveAtomicFileWriter()
+            )
             binderTree = await project.binderTree
             return sceneURL
         } catch {
@@ -768,7 +778,9 @@ final class ProjectViewModel {
     func replace(matches: [ProjectSearchMatch], replacement: String) async -> Set<URL> {
         guard let project else { return [] }
         do {
-            return try await project.replace(matches: matches, replacement: replacement, fileWriter: LiveAtomicFileWriter())
+            return try await project.replace(
+                matches: matches, replacement: replacement, fileWriter: LiveAtomicFileWriter()
+            )
         } catch {
             errorMessage = error.localizedDescription
             return []

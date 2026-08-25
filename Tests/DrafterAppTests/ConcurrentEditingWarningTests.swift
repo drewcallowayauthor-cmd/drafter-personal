@@ -14,7 +14,9 @@ struct ConcurrentEditingWarningTests {
     func findsRecentCommitFromDifferentMachine() async throws {
         let runner = MockProcessRunner()
         let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Drew\u{1F}Drew-MacBook-Pro\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
@@ -31,7 +33,9 @@ struct ConcurrentEditingWarningTests {
     func ignoresOwnMachine() async throws {
         let runner = MockProcessRunner()
         let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}autosave\u{1F}Drew\u{1F}Drew-Mac-Studio\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
@@ -48,7 +52,9 @@ struct ConcurrentEditingWarningTests {
     func ignoresOldCommits() async throws {
         let runner = MockProcessRunner()
         let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 600))\u{1F}autosave\u{1F}Drew\u{1F}Drew-MacBook-Pro\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(
@@ -66,7 +72,9 @@ struct ConcurrentEditingWarningTests {
     func ignoresCommitsWithNoMachineTrailer() async throws {
         let runner = MockProcessRunner()
         let output = "abc\u{1F}\(Int(now.timeIntervalSince1970 - 40))\u{1F}manual edit\u{1F}Someone\u{1F}\n"
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: output, standardError: ""), forExecutableNamed: "git"
+        )
         let gitService = GitService(processRunner: runner)
 
         let info = await ConcurrentEditingWarning.check(

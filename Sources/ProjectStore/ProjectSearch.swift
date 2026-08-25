@@ -53,10 +53,13 @@ public enum ProjectSearchService {
             do {
                 document = try SceneDocument.load(from: scene.url)
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.projectStore.error("Skipping \(scene.url.path, privacy: .public) in search — failed to load: \(error, privacy: .public)")
                 continue
             }
-            results.append(contentsOf: matches(in: document.body, regex: regex, sceneURL: scene.url, displayName: scene.displayName))
+            results.append(contentsOf: matches(
+                in: document.body, regex: regex, sceneURL: scene.url, displayName: scene.displayName
+            ))
         }
         return results
     }
@@ -77,6 +80,7 @@ public enum ProjectSearchService {
             do {
                 document = try SceneDocument.load(from: sceneURL)
             } catch {
+                // swiftlint:disable:next line_length
                 DrafterLog.projectStore.error("Skipping \(sceneURL.path, privacy: .public) in replace — failed to load: \(error, privacy: .public)")
                 continue
             }
@@ -138,7 +142,9 @@ public enum ProjectSearchService {
     /// A window of plain-text context around a match, entirely in `NSString`/UTF-16
     /// terms so `snippetMatchRange` lines up with what `Text`'s `AttributedString`
     /// highlighting (also UTF-16-indexed) expects.
-    private static func snippet(in nsBody: NSString, around range: NSRange, contextLength: Int = 40) -> (String, NSRange) {
+    private static func snippet(
+        in nsBody: NSString, around range: NSRange, contextLength: Int = 40
+    ) -> (String, NSRange) {
         let start = max(range.location - contextLength, 0)
         let end = min(range.location + range.length + contextLength, nsBody.length)
         let snippetText = nsBody.substring(with: NSRange(location: start, length: end - start))

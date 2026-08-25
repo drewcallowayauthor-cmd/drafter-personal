@@ -24,8 +24,8 @@ public enum DOCXHeaderPatcher {
         return stylesXML.replacingOccurrences(of: "Times New Roman", with: font)
     }
 
-    private static func xmlEscape(_ s: String) -> String {
-        s.replacingOccurrences(of: "&", with: "&amp;")
+    private static func xmlEscape(_ text: String) -> String {
+        text.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")

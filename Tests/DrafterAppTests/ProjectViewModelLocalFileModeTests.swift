@@ -42,7 +42,9 @@ struct ProjectViewModelLocalFileModeTests {
         defer { try? FileManager.default.removeItem(at: location) }
 
         let creator = ProjectViewModel()
-        await creator.createNewProject(title: "Cloud Book", author: "Drew Calloway", location: location, versionControl: .localFile)
+        await creator.createNewProject(
+            title: "Cloud Book", author: "Drew Calloway", location: location, versionControl: .localFile
+        )
         #expect(creator.errorMessage == nil)
         let root = location.appendingPathComponent("cloud-book")
         await creator.closeProject()

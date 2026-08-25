@@ -13,8 +13,14 @@ struct VersioningSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             steppedRow(label: "Autosave Interval", value: $prefs.autosaveDelaySeconds, range: 1...10, suffix: "s")
-            steppedRow(label: "Autocommit Debounce", value: $prefs.autocommitDebounceSeconds, range: 15...300, step: 15, suffix: "s")
-            steppedRow(label: "Sync Fetch Interval", value: $prefs.syncFetchIntervalSeconds, range: 30...600, step: 30, suffix: "s")
+            steppedRow(
+                label: "Autocommit Debounce", value: $prefs.autocommitDebounceSeconds,
+                range: 15...300, step: 15, suffix: "s"
+            )
+            steppedRow(
+                label: "Sync Fetch Interval", value: $prefs.syncFetchIntervalSeconds,
+                range: 30...600, step: 30, suffix: "s"
+            )
 
             Rectangle().fill(Theme.Color.divider).frame(height: 1)
 
@@ -65,7 +71,9 @@ struct VersioningSettingsView: View {
         }
     }
 
-    private func steppedRow(label: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double = 1, suffix: String) -> some View {
+    private func steppedRow(
+        label: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double = 1, suffix: String
+    ) -> some View {
         HStack {
             Text(label)
                 .font(Theme.Font.body(13))

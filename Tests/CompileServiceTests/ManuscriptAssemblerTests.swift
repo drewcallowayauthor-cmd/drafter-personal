@@ -138,7 +138,11 @@ struct ManuscriptAssemblerTests {
             read: { contents[$0]! }
         )
 
-        #expect(assembled == "# Prologue {.chapter-title #prologue}\n\nBefore it all began.\n\n# Chapter 1 {.chapter-title #chapter-1}\n\nIt began.")
+        #expect(
+            assembled ==
+                // swiftlint:disable:next line_length
+                "# Prologue {.chapter-title #prologue}\n\nBefore it all began.\n\n# Chapter 1 {.chapter-title #chapter-1}\n\nIt began."
+        )
     }
 
     @Test("chapterEntries mirrors assembleManuscript's headings/anchors, including a Prologue's own anchor")
@@ -163,7 +167,9 @@ struct ManuscriptAssemblerTests {
             arrivalScene: scene("It began.")
         ]
 
-        let entries = try ManuscriptAssembler.chapterEntries(binderTree: tree, compile: compile, read: { contents[$0]! })
+        let entries = try ManuscriptAssembler.chapterEntries(
+            binderTree: tree, compile: compile, read: { contents[$0]! }
+        )
 
         #expect(entries == [
             .init(title: "Prologue", anchorID: "prologue"),
@@ -260,7 +266,9 @@ struct ManuscriptAssemblerTests {
             backURL: "# About the Author"
         ]
 
-        let assembled = try ManuscriptAssembler.assembleFull(binderTree: tree, compile: compile, read: { contents[$0]! })
+        let assembled = try ManuscriptAssembler.assembleFull(
+            binderTree: tree, compile: compile, read: { contents[$0]! }
+        )
 
         #expect(assembled.contains("# Title Page"))
         #expect(assembled.contains("Manuscript text."))
@@ -293,7 +301,9 @@ struct ManuscriptAssemblerTests {
         compile.includeFrontMatter = false
         let contents: [URL: String] = [sceneURL: scene("Manuscript text."), frontURL: "# Title Page"]
 
-        let assembled = try ManuscriptAssembler.assembleFull(binderTree: tree, compile: compile, read: { contents[$0]! })
+        let assembled = try ManuscriptAssembler.assembleFull(
+            binderTree: tree, compile: compile, read: { contents[$0]! }
+        )
 
         #expect(assembled.contains("# Title Page") == false)
         #expect(assembled.contains("Manuscript text."))
@@ -304,8 +314,18 @@ struct ManuscriptAssemblerTests {
         let scene1 = url("Manuscript/01 Arrival/01 Triage.md")
         let scene2 = url("Manuscript/02 Departure/01 Goodbye.md")
         let chapters = [
-            ChapterNode(url: url("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: scene1, displayName: "Triage")], isLooseFile: false),
-            ChapterNode(url: url("Manuscript/02 Departure"), displayName: "Departure", scenes: [SceneNode(url: scene2, displayName: "Goodbye")], isLooseFile: false)
+            ChapterNode(
+                url: url("Manuscript/01 Arrival"),
+                displayName: "Arrival",
+                scenes: [SceneNode(url: scene1, displayName: "Triage")],
+                isLooseFile: false
+            ),
+            ChapterNode(
+                url: url("Manuscript/02 Departure"),
+                displayName: "Departure",
+                scenes: [SceneNode(url: scene2, displayName: "Goodbye")],
+                isLooseFile: false
+            )
         ]
         let tree = BinderTree(manuscript: chapters, frontMatter: [], backMatter: [], notes: [])
         var compile = ProjectMetadata.Compile()
@@ -338,7 +358,12 @@ struct ManuscriptAssemblerTests {
     @Test("short story Contents entry is a single title link, not one per chapter")
     func shortStoryContentsEntryIsSingleTitleLink() throws {
         let sceneURL = url("Manuscript/01 Arrival/01 Triage.md")
-        let chapter = ChapterNode(url: url("Manuscript/01 Arrival"), displayName: "Arrival", scenes: [SceneNode(url: sceneURL, displayName: "Triage")], isLooseFile: false)
+        let chapter = ChapterNode(
+            url: url("Manuscript/01 Arrival"),
+            displayName: "Arrival",
+            scenes: [SceneNode(url: sceneURL, displayName: "Triage")],
+            isLooseFile: false
+        )
         let tree = BinderTree(manuscript: [chapter], frontMatter: [], backMatter: [], notes: [])
         var compile = ProjectMetadata.Compile()
         compile.chapterTitleFormat = "{n}"

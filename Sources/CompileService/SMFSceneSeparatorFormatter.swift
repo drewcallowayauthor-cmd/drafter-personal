@@ -23,11 +23,12 @@ public enum SMFSceneSeparatorFormatter {
     }
 
     private static func separatorParagraph(text: String) -> String {
-        "```{=openxml}\n<w:p><w:pPr><w:pStyle w:val=\"SMFSceneBreak\" /></w:pPr><w:r><w:t xml:space=\"preserve\">\(xmlEscape(text))</w:t></w:r></w:p>\n```"
+        "```{=openxml}\n<w:p><w:pPr><w:pStyle w:val=\"SMFSceneBreak\" /></w:pPr><w:r><w:t xml:space=\"preserve\">"
+            + "\(xmlEscape(text))</w:t></w:r></w:p>\n```"
     }
 
-    private static func xmlEscape(_ s: String) -> String {
-        s.replacingOccurrences(of: "&", with: "&amp;")
+    private static func xmlEscape(_ text: String) -> String {
+        text.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")

@@ -9,7 +9,9 @@ import UniformTypeIdentifiers
 /// Scene and Targets sections are later additions to the same pane.
 struct ContentView: View {
     @State private var projectViewModel = ProjectViewModel()
-    @State private var sceneEditor = SceneEditorViewModel(autosaveDelay: .seconds(AppPreferences.shared.autosaveDelaySeconds))
+    @State private var sceneEditor = SceneEditorViewModel(
+        autosaveDelay: .seconds(AppPreferences.shared.autosaveDelaySeconds)
+    )
     @State private var historyViewModel: HistoryViewModel?
     @State private var conflictedCopyViewModel = ConflictedCopyViewModel()
     @State private var targetsViewModel = TargetsViewModel()
@@ -91,7 +93,10 @@ struct ContentView: View {
         content
         .confirmationDialog(
             "Regenerate “\(regenerateConfirmation?.displayName ?? "")” from Template?",
-            isPresented: Binding(get: { regenerateConfirmation != nil }, set: { if !$0 { regenerateConfirmation = nil } }),
+            isPresented: Binding(
+                get: { regenerateConfirmation != nil },
+                set: { if !$0 { regenerateConfirmation = nil } }
+            ),
             titleVisibility: .visible
         ) {
             Button("Regenerate", role: .destructive) { performRegenerate() }
@@ -99,7 +104,13 @@ struct ContentView: View {
         } message: {
             Text("This overwrites any hand edits with the standard template content.")
         }
-        .alert("Couldn't Generate Front/Back Matter", isPresented: Binding(get: { frontBackMatterError != nil }, set: { if !$0 { frontBackMatterError = nil } })) {
+        .alert(
+            "Couldn't Generate Front/Back Matter",
+            isPresented: Binding(
+                get: { frontBackMatterError != nil },
+                set: { if !$0 { frontBackMatterError = nil } }
+            )
+        ) {
             Button("OK") {}
         } message: {
             Text(frontBackMatterError ?? "")
@@ -187,7 +198,9 @@ struct ContentView: View {
                     isGitHubConnected: projectViewModel.syncScheduler != nil,
                     onConnectToGitHub: { Task { await projectViewModel.connectToGitHub() } },
                     onSnapshotNow: {
-                        await projectViewModel.autocommitScheduler?.flush(trigger: .checkpoint(label: "manual snapshot"))
+                        await projectViewModel.autocommitScheduler?.flush(
+                            trigger: .checkpoint(label: "manual snapshot")
+                        )
                     },
                     onSave: { updated in
                         Task { await projectViewModel.save(metadata: updated) }
@@ -205,8 +218,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isConflictSheetPresented) {
             if case .conflicted(let paths) = projectViewModel.syncScheduler?.state,
-                let gitService = projectViewModel.gitService, let workingTree = projectViewModel.workingTreeRoot
-            {
+                let gitService = projectViewModel.gitService, let workingTree = projectViewModel.workingTreeRoot {
                 ConflictSheet(
                     paths: paths,
                     gitService: gitService,
@@ -341,8 +353,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isCompileSheetPresented) {
             if let metadata = projectViewModel.metadata, let binderTree = projectViewModel.binderTree,
-                let workingTree = projectViewModel.workingTreeRoot
-            {
+                let workingTree = projectViewModel.workingTreeRoot {
                 CompileSheet(
                     metadata: metadata,
                     binderTree: binderTree,
@@ -356,7 +367,9 @@ struct ContentView: View {
         .sheet(isPresented: $isProjectFindReplacePresented) {
             ProjectFindReplaceSheet(
                 performSearch: { options in await projectViewModel.search(options: options) },
-                performReplace: { matches, replacement in await projectViewModel.replace(matches: matches, replacement: replacement) },
+                performReplace: { matches, replacement in
+                    await projectViewModel.replace(matches: matches, replacement: replacement)
+                },
                 flushOpenScene: { sceneEditor.saveNow() },
                 reloadIfOpen: { rewrittenURLs in
                     if let selectedSceneURL, rewrittenURLs.contains(selectedSceneURL) {
@@ -588,7 +601,10 @@ struct ContentView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(Theme.Font.body(11))
                     .foregroundStyle(.yellow)
-                    .help("The last background commit failed. Your edits are still saved to disk — this will retry on the next change.")
+                    .help(
+                        "The last background commit failed. Your edits are still saved to disk — "
+                            + "this will retry on the next change."
+                    )
             }
         }
     }
@@ -625,7 +641,9 @@ struct ContentView: View {
         case .fetching, .merging, .pushing:
             return "Syncing…"
         case .offline(let pendingCommits):
-            return pendingCommits > 0 ? "Offline — \(pendingCommits) commit\(pendingCommits == 1 ? "" : "s") pending" : "Offline"
+            return pendingCommits > 0
+                ? "Offline — \(pendingCommits) commit\(pendingCommits == 1 ? "" : "s") pending"
+                : "Offline"
         case .conflicted:
             return "Conflict — action needed"
         case .authenticationRequired:
@@ -658,8 +676,7 @@ struct ContentView: View {
     @ViewBuilder
     private var historySection: some View {
         if let historyViewModel, let sceneURL = selectedSceneURL, isOpenableScene(sceneURL),
-            let workingTree = projectViewModel.workingTreeRoot
-        {
+            let workingTree = projectViewModel.workingTreeRoot {
             HistoryPanel(
                 history: historyViewModel,
                 sceneURL: sceneURL,
@@ -686,7 +703,9 @@ struct ContentView: View {
                                 .foregroundStyle(Theme.Color.text)
                                 .listRowBackground(rowBackground(for: chapter.url))
                                 .contextMenu {
-                                    binderRenameDeleteMenu(url: chapter.url, currentTitle: chapter.displayName, isChapter: true)
+                                    binderRenameDeleteMenu(
+                                        url: chapter.url, currentTitle: chapter.displayName, isChapter: true
+                                    )
                                 }
                         } else {
                             DisclosureGroup(isExpanded: isChapterExpandedBinding(chapter.url)) {
@@ -707,7 +726,9 @@ struct ContentView: View {
                             .contextMenu {
                                 Button("New Scene…") { newSceneChapterURL = chapter.url }
                                 Divider()
-                                binderRenameDeleteMenu(url: chapter.url, currentTitle: chapter.displayName, isChapter: true)
+                                binderRenameDeleteMenu(
+                                    url: chapter.url, currentTitle: chapter.displayName, isChapter: true
+                                )
                             }
                         }
                     }
@@ -726,10 +747,14 @@ struct ContentView: View {
                                 .listRowBackground(rowBackground(for: scene.url))
                                 .contextMenu {
                                     regenerateMenuItem(for: scene)
-                                    binderRenameDeleteMenu(url: scene.url, currentTitle: scene.displayName, isChapter: false)
+                                    binderRenameDeleteMenu(
+                                        url: scene.url, currentTitle: scene.displayName, isChapter: false
+                                    )
                                 }
                         }
-                        .onMove { source, destination in moveFlatSection(tree.frontMatter, from: source, to: destination) }
+                        .onMove { source, destination in
+                            moveFlatSection(tree.frontMatter, from: source, to: destination)
+                        }
                     }
                     // Dropping an image file here sets it as the book cover (§4.5's
                     // `compile.coverImage`) rather than adding a binder row — the cover
@@ -744,10 +769,14 @@ struct ContentView: View {
                                 .listRowBackground(rowBackground(for: scene.url))
                                 .contextMenu {
                                     regenerateMenuItem(for: scene)
-                                    binderRenameDeleteMenu(url: scene.url, currentTitle: scene.displayName, isChapter: false)
+                                    binderRenameDeleteMenu(
+                                        url: scene.url, currentTitle: scene.displayName, isChapter: false
+                                    )
                                 }
                         }
-                        .onMove { source, destination in moveFlatSection(tree.backMatter, from: source, to: destination) }
+                        .onMove { source, destination in
+                            moveFlatSection(tree.backMatter, from: source, to: destination)
+                        }
                     }
                 }
                 // Always visible (unlike Front/Back Matter, which only appear once
@@ -814,7 +843,9 @@ struct ContentView: View {
     @ViewBuilder
     private var detail: some View {
         if let error = sceneEditor.errorMessage {
-            ContentUnavailableView("Couldn't Open Scene", systemImage: "exclamationmark.triangle", description: Text(error))
+            ContentUnavailableView(
+                "Couldn't Open Scene", systemImage: "exclamationmark.triangle", description: Text(error)
+            )
         } else if let document = sceneEditor.document {
             VStack(spacing: 0) {
                 if externalChangeConflictURL == document.url {
@@ -833,7 +864,9 @@ struct ContentView: View {
         } else if let attachment = selectedAttachment {
             attachmentDetail(attachment)
         } else if let error = projectViewModel.errorMessage {
-            ContentUnavailableView("Couldn't Open Project", systemImage: "exclamationmark.triangle", description: Text(error))
+            ContentUnavailableView(
+                "Couldn't Open Project", systemImage: "exclamationmark.triangle", description: Text(error)
+            )
         } else if projectViewModel.metadata != nil, let tree = projectViewModel.binderTree, tree.manuscript.isEmpty {
             emptyBinderDetail
         } else if let metadata = projectViewModel.metadata {
@@ -895,7 +928,9 @@ struct ContentView: View {
         // branches are about whatever scene the editor currently has open, read fresh
         // each time onExternalChange fires rather than captured, since which scene is
         // open changes independently of the project.
-        projectViewModel.onExternalChange = { changedURLs in Task { await handleExternalChange(changedURLs: changedURLs) } }
+        projectViewModel.onExternalChange = { changedURLs in
+            Task { await handleExternalChange(changedURLs: changedURLs) }
+        }
         await openDebugProjectIfRequested()
         await reopenLastProjectIfRequested()
     }
@@ -929,7 +964,8 @@ struct ContentView: View {
         await projectViewModel.refresh()
         // §7.5: a cloud client's own conflict-copy file is exactly the kind of change
         // that arrives via FSEvents rather than through the app's own writes.
-        if let workingTreeRoot = projectViewModel.workingTreeRoot, projectViewModel.metadata?.versionControl == .localFile {
+        if let workingTreeRoot = projectViewModel.workingTreeRoot,
+           projectViewModel.metadata?.versionControl == .localFile {
             conflictedCopyViewModel.scan(workingTree: workingTreeRoot)
         }
         guard let document = sceneEditor.document else { return }
@@ -967,6 +1003,8 @@ struct ContentView: View {
                     let onDisk = try String(contentsOf: url, encoding: .utf8)
                     externalChangeDiffLines = SceneDiff.diff(old: sceneEditor.document?.body ?? "", new: onDisk)
                 } catch {
+                    // swiftlint:disable:next line_length
+                    // swiftlint:disable:next line_length
                     DrafterLog.app.error("Failed to read \(url.path, privacy: .public) for external-change compare: \(error, privacy: .public)")
                     externalChangeDiffLines = [
                         SceneDiffLine(
@@ -1027,7 +1065,9 @@ struct ContentView: View {
                 Menu("Move to Chapter") {
                     ForEach(otherChapters) { target in
                         Button(target.displayName) {
-                            Task { await projectViewModel.moveScene(scene.url, toChapterDirectory: target.url, before: nil) }
+                            Task {
+                                await projectViewModel.moveScene(scene.url, toChapterDirectory: target.url, before: nil)
+                            }
                         }
                     }
                 }
@@ -1039,7 +1079,9 @@ struct ContentView: View {
     /// drops land immediately before the row dropped on, in that row's chapter —
     /// which may be a different chapter than the dragged scene's current one.
     private func handleSceneDrop(_ items: [String], into chapter: ChapterNode, before targetScene: SceneNode?) -> Bool {
-        guard !chapter.isLooseFile, let urlString = items.first, let sourceURL = URL(string: urlString) else { return false }
+        guard !chapter.isLooseFile, let urlString = items.first, let sourceURL = URL(string: urlString) else {
+            return false
+        }
         Task { await projectViewModel.moveScene(sourceURL, toChapterDirectory: chapter.url, before: targetScene?.url) }
         return true
     }
@@ -1083,7 +1125,8 @@ struct ContentView: View {
         else { return nil }
         let url = root.appendingPathComponent(path)
         var isDirectory: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && !isDirectory.boolValue
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+            && !isDirectory.boolValue
         return exists ? url : nil
     }
 
@@ -1100,8 +1143,7 @@ struct ContentView: View {
                 // "no cover set".
                 if let nsImage = NSImage(contentsOf: coverImageURL) {
                     Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
+                        .resizable().scaledToFit()
                         .frame(width: 22, height: 30)
                         .clipShape(RoundedRectangle(cornerRadius: 2))
                 } else {
@@ -1158,7 +1200,9 @@ struct ContentView: View {
             if let ownChapter = chapters.first(where: { $0.url == selectedSceneURL }) {
                 return ownChapter.url
             }
-            if let containingChapter = chapters.first(where: { chapter in chapter.scenes.contains { $0.url == selectedSceneURL } }) {
+            if let containingChapter = chapters.first(where: { chapter in
+                chapter.scenes.contains { $0.url == selectedSceneURL }
+            }) {
                 return containingChapter.url
             }
         }
@@ -1227,7 +1271,11 @@ struct ContentView: View {
     private func generateMissingFrontBackMatter() {
         guard let metadata = projectViewModel.metadata, let root = projectViewModel.workingTreeRoot else { return }
         do {
-            _ = try FrontBackMatterService.generateMissing(metadata: metadata, workingTree: root, fileWriter: LiveAtomicFileWriter())
+            _ = try FrontBackMatterService.generateMissing(
+                metadata: metadata,
+                workingTree: root,
+                fileWriter: LiveAtomicFileWriter()
+            )
             Task { await projectViewModel.refresh() }
         } catch {
             frontBackMatterError = error.localizedDescription

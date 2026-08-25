@@ -9,7 +9,9 @@ struct MarkdownSyntaxScannerTests {
         let ranges = MarkdownSyntaxScanner.scan("It was *never* going to work.")
         let nsText = "It was *never* going to work." as NSString
 
-        #expect(ranges.contains(SyntaxRange(range: nsText.range(of: "*", range: NSRange(location: 7, length: 1)), kind: .italicMarker)))
+        #expect(ranges.contains(
+            SyntaxRange(range: nsText.range(of: "*", range: NSRange(location: 7, length: 1)), kind: .italicMarker)
+        ))
         #expect(ranges.contains(SyntaxRange(range: nsText.range(of: "never"), kind: .italicContent)))
     }
 

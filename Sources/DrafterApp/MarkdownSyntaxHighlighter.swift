@@ -10,7 +10,9 @@ import AppKit
 /// first thing to revisit if very long scenes (§12.2's >20k-word case) show hitching —
 /// the fix would be scoping the rescan to the edited paragraph instead of the whole text.
 public enum MarkdownSyntaxHighlighter {
-    public static func applyAttributes(to textStorage: NSTextStorage, baseFont: NSFont, lineHeightMultiple: CGFloat = 1.0) {
+    public static func applyAttributes(
+        to textStorage: NSTextStorage, baseFont: NSFont, lineHeightMultiple: CGFloat = 1.0
+    ) {
         let text = textStorage.string
         let fullRange = NSRange(location: 0, length: (text as NSString).length)
         guard fullRange.length > 0 else { return }

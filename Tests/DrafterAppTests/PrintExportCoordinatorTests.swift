@@ -35,8 +35,12 @@ struct PrintExportCoordinatorTests {
             ProcessResult(exitCode: 0, standardOutput: fakeDefaultTemplate, standardError: ""),
             forExecutableNamed: "pandoc"
         )
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst"
+        )
         let coordinator = PrintExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
         let result = try await coordinator.export(
@@ -71,8 +75,12 @@ struct PrintExportCoordinatorTests {
             ProcessResult(exitCode: 0, standardOutput: fakeDefaultTemplate, standardError: ""),
             forExecutableNamed: "pandoc"
         )
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst"
+        )
         let writer = MockAtomicFileWriter()
         let coordinator = PrintExportCoordinator(processRunner: runner, fileWriter: writer)
 
@@ -115,7 +123,9 @@ struct PrintExportCoordinatorTests {
             ProcessResult(exitCode: 0, standardOutput: fakeDefaultTemplate, standardError: ""),
             forExecutableNamed: "pandoc"
         )
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
         await runner.script(
             ProcessResult(exitCode: 1, standardOutput: "", standardError: "error: file not found"),
             forExecutableNamed: "typst"

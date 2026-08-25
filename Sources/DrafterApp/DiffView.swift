@@ -45,7 +45,9 @@ struct DiffView: View {
     }
 
     @ViewBuilder
-    private func column(text: String?, words: [DiffOp<String>]?, kind: SceneDiffLine.Kind, isOldSide: Bool) -> some View {
+    private func column(
+        text: String?, words: [DiffOp<String>]?, kind: SceneDiffLine.Kind, isOldSide: Bool
+    ) -> some View {
         Group {
             if let words {
                 wordText(words)

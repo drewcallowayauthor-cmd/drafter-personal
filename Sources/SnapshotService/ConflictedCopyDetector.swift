@@ -25,10 +25,12 @@ public enum ConflictedCopyDetector {
     private static let patterns: [NSRegularExpression] = [
         // Dropbox: "<name> (<user>'s conflicted copy <date>).md"
         // Box:     "<name> (Conflicted copy <date>).md"
+        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"^(.+) \([^()]*[Cc]onflicted copy[^()]*\)(\.[^.]+)$"#),
         // iCloud Drive: "<name> 2.md", "<name> 3.md", …
-        try! NSRegularExpression(pattern: #"^(.+) \d+(\.[^.]+)$"#),
+        try! NSRegularExpression(pattern: #"^(.+) \d+(\.[^.]+)$"#), // swiftlint:disable:this force_try
         // OneDrive: "<name>-<machine>.md"
+        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"^(.+)-[A-Za-z0-9][A-Za-z0-9 ]*(\.[^.]+)$"#)
     ]
 
@@ -59,6 +61,7 @@ public enum ConflictedCopyDetector {
         do {
             topLevelNames = try fileManager.contentsOfDirectory(atPath: workingTree.path)
         } catch {
+            // swiftlint:disable:next line_length
             DrafterLog.snapshot.error("Failed to scan \(workingTree.path, privacy: .public) for conflicted copies: \(error, privacy: .public)")
             topLevelNames = []
         }
@@ -67,7 +70,8 @@ public enum ConflictedCopyDetector {
             guard !topLevelName.hasPrefix("."), !excludedTopLevelNames.contains(topLevelName) else { continue }
             let directory = workingTree.appendingPathComponent(topLevelName)
             var isDirectory: ObjCBool = false
-            guard fileManager.fileExists(atPath: directory.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            guard fileManager.fileExists(atPath: directory.path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
                 continue
             }
             guard

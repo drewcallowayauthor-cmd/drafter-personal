@@ -13,7 +13,9 @@ public actor RepositoryCoordinator: CheckpointCoordinating {
     private let workingTree: URL
     private let machineName: String
 
-    public init(gitService: GitService, workingTree: URL, machineName: String = RepositoryCoordinator.defaultMachineName()) {
+    public init(
+        gitService: GitService, workingTree: URL, machineName: String = RepositoryCoordinator.defaultMachineName()
+    ) {
         self.gitService = gitService
         self.workingTree = workingTree
         self.machineName = machineName
@@ -42,7 +44,9 @@ public actor RepositoryCoordinator: CheckpointCoordinating {
     public func commit(trigger: CommitTrigger) async throws -> Bool {
         guard try await gitService.hasUncommittedChanges(in: workingTree) else { return false }
         try await gitService.stageAll(in: workingTree)
-        try await gitService.commit(message: CommitMessageBuilder.message(for: trigger, machine: machineName), in: workingTree)
+        try await gitService.commit(
+            message: CommitMessageBuilder.message(for: trigger, machine: machineName), in: workingTree
+        )
         return true
     }
 

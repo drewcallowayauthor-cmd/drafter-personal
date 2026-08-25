@@ -12,7 +12,9 @@ struct TypstServiceTests {
     @Test("compile runs typst compile <input> <output>")
     func compileRunsCorrectCommand() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst"
+        )
         let service = TypstService(processRunner: runner, typstExecutableURL: typstURL)
 
         _ = try await service.compile(inputPath: "main.typ", outputPath: "../Book.pdf", in: workingDirectory)
@@ -25,7 +27,9 @@ struct TypstServiceTests {
     @Test("compile adds a --font-path argument per font directory, before the input/output paths")
     func compileAddsFontPathArguments() async throws {
         let runner = MockProcessRunner()
-        await runner.script(ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst")
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "typst"
+        )
         let service = TypstService(processRunner: runner, typstExecutableURL: typstURL)
 
         _ = try await service.compile(
@@ -36,7 +40,8 @@ struct TypstServiceTests {
         )
 
         let invocations = await runner.invocations
-        #expect(invocations.first?.arguments == ["compile", "--font-path", "/App/Fonts/EBGaramond", "main.typ", "../Book.pdf"])
+        let expectedArguments = ["compile", "--font-path", "/App/Fonts/EBGaramond", "main.typ", "../Book.pdf"]
+        #expect(invocations.first?.arguments == expectedArguments)
     }
 
     @Test("a non-zero exit returns the result with stderr intact rather than throwing")

@@ -54,7 +54,9 @@ struct ConflictResolverTests {
 
         let writes = writer.writes
         #expect(writes.count == 1)
-        #expect(writes[0].url == workingTree.appendingPathComponent("Manuscript/scene (from MacBook Pro 2026-08-17).md"))
+        #expect(
+            writes[0].url == workingTree.appendingPathComponent("Manuscript/scene (from MacBook Pro 2026-08-17).md")
+        )
         #expect(String(data: writes[0].data, encoding: .utf8) == "Their version of the scene.\n")
     }
 
@@ -70,7 +72,11 @@ struct ConflictResolverTests {
         #expect(invocations[1].arguments == ["push", "origin", "main"])
     }
 
-    private func makeResolver(runner: MockProcessRunner, writer: MockAtomicFileWriter = MockAtomicFileWriter()) -> ConflictResolver {
-        ConflictResolver(gitService: GitService(processRunner: runner), atomicFileWriter: writer, workingTree: workingTree)
+    private func makeResolver(
+        runner: MockProcessRunner, writer: MockAtomicFileWriter = MockAtomicFileWriter()
+    ) -> ConflictResolver {
+        ConflictResolver(
+            gitService: GitService(processRunner: runner), atomicFileWriter: writer, workingTree: workingTree
+        )
     }
 }

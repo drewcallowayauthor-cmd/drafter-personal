@@ -49,7 +49,9 @@ final class PrintExportCoordinator {
         let buildDirectory = workingTree.appendingPathComponent("Build")
         try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
 
-        let assembled = try ManuscriptAssembler.assembleFull(binderTree: binderTree, compile: metadata.compile, read: read)
+        let assembled = try ManuscriptAssembler.assembleFull(
+            binderTree: binderTree, compile: metadata.compile, read: read
+        )
         let assembledURL = buildDirectory.appendingPathComponent("assembled.md")
         try fileWriter.write(Data(assembled.utf8), to: assembledURL)
 
@@ -59,7 +61,9 @@ final class PrintExportCoordinator {
         let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)
         let typstService = TypstService(processRunner: processRunner, typstExecutableURL: typstExecutableURL)
 
-        let templateResult = try await pandocService.run(arguments: ["--print-default-template=typst"], in: buildDirectory)
+        let templateResult = try await pandocService.run(
+            arguments: ["--print-default-template=typst"], in: buildDirectory
+        )
         guard templateResult.succeeded else {
             throw DrafterError.processFailed(
                 command: "pandoc --print-default-template=typst",
@@ -99,7 +103,9 @@ final class PrintExportCoordinator {
                 in: buildDirectory
             )
             guard pandocResult.succeeded else {
-                throw DrafterError.processFailed(command: "pandoc", exitCode: pandocResult.exitCode, stderr: pandocResult.standardError)
+                throw DrafterError.processFailed(
+                    command: "pandoc", exitCode: pandocResult.exitCode, stderr: pandocResult.standardError
+                )
             }
 
             let rawTypst = try readGeneratedTypst(mainTypstURL)
@@ -119,7 +125,9 @@ final class PrintExportCoordinator {
                 in: buildDirectory
             )
             guard typstResult.succeeded else {
-                throw DrafterError.processFailed(command: "typst compile", exitCode: typstResult.exitCode, stderr: typstResult.standardError)
+                throw DrafterError.processFailed(
+                    command: "typst compile", exitCode: typstResult.exitCode, stderr: typstResult.standardError
+                )
             }
 
             guard let count = pageCounter(outputURL) else {

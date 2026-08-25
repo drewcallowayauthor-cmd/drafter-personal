@@ -98,6 +98,7 @@ public enum TypstDocumentGenerator {
         let backMatterLabels = typstLabelList(FrontBackMatterTemplate.allCases.filter { $0.section == .back })
         let hiddenHeadingLabels = typstLabelList(FrontBackMatterTemplate.allCases.filter { !$0.showsHeadingOnPage })
 
+        // swiftlint:disable line_length
         return """
             // Front/back matter headings are identified by label (see the type doc
             // comment above) rather than by heading level, since chapters and matter
@@ -406,6 +407,7 @@ public enum TypstDocumentGenerator {
               doc
             }
             """
+        // swiftlint:enable line_length
     }
 
     /// A font's real zero-leading line pitch, in em — i.e. how tall Typst renders a
@@ -543,7 +545,9 @@ public enum TypstDocumentGenerator {
     /// same reason: a later `set par(first-line-indent:)` reached through a heading's
     /// own `show` rule doesn't retroactively re-break a paragraph that already exists
     /// (verified directly — the indent kept applying regardless).
-    public static func applyFlushFirstParagraphAfterChapterHeadings(to typstSource: String, firstLineIndentEm: Double) -> String {
+    public static func applyFlushFirstParagraphAfterChapterHeadings(
+        to typstSource: String, firstLineIndentEm: Double
+    ) -> String {
         // About the Author's own first paragraph ("Drew Calloway writes...") is flush
         // left in the reference too, same as a chapter's opening paragraph — its body
         // is ordinary block prose (§ `applyCenteredMatterStyling`'s doc comment), not a
@@ -567,9 +571,12 @@ public enum TypstDocumentGenerator {
         // full-book compile and finding About the Author's opening line still
         // indented, unlike every other chapter/section it's meant to match).
         let pattern = "<(?!(?:\(matterAnchors))>)([a-zA-Z0-9-]+)>\n(.+?)(?:\n\n|\\z)"
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else { return typstSource }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return typstSource
+        }
         let range = NSRange(typstSource.startIndex..., in: typstSource)
-        let template = "<$1>\n#set par(first-line-indent: 0em)\n$2\n\n#set par(first-line-indent: \(firstLineIndentEm)em)\n\n"
+        let template = "<$1>\n#set par(first-line-indent: 0em)\n$2\n\n"
+            + "#set par(first-line-indent: \(firstLineIndentEm)em)\n\n"
         return regex.stringByReplacingMatches(in: typstSource, range: range, withTemplate: template)
     }
 

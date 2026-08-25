@@ -14,38 +14,40 @@ public enum DiffOp<Element: Equatable>: Equatable {
 /// never over the whole scene's word count at once.
 enum DiffAlgorithm {
     static func diff<Element: Equatable>(_ old: [Element], _ new: [Element]) -> [DiffOp<Element>] {
-        let m = old.count
-        let n = new.count
-        var lengths = Array(repeating: Array(repeating: 0, count: n + 1), count: m + 1)
-        for i in stride(from: m - 1, through: 0, by: -1) {
-            for j in stride(from: n - 1, through: 0, by: -1) {
-                lengths[i][j] = old[i] == new[j] ? lengths[i + 1][j + 1] + 1 : max(lengths[i + 1][j], lengths[i][j + 1])
+        let oldCount = old.count
+        let newCount = new.count
+        var lengths = Array(repeating: Array(repeating: 0, count: newCount + 1), count: oldCount + 1)
+        for oldIdx in stride(from: oldCount - 1, through: 0, by: -1) {
+            for newIdx in stride(from: newCount - 1, through: 0, by: -1) {
+                lengths[oldIdx][newIdx] = old[oldIdx] == new[newIdx]
+                    ? lengths[oldIdx + 1][newIdx + 1] + 1
+                    : max(lengths[oldIdx + 1][newIdx], lengths[oldIdx][newIdx + 1])
             }
         }
 
         var result: [DiffOp<Element>] = []
-        var i = 0
-        var j = 0
-        while i < m, j < n {
-            if old[i] == new[j] {
-                result.append(.equal(old[i]))
-                i += 1
-                j += 1
-            } else if lengths[i + 1][j] >= lengths[i][j + 1] {
-                result.append(.delete(old[i]))
-                i += 1
+        var oldIdx = 0
+        var newIdx = 0
+        while oldIdx < oldCount, newIdx < newCount {
+            if old[oldIdx] == new[newIdx] {
+                result.append(.equal(old[oldIdx]))
+                oldIdx += 1
+                newIdx += 1
+            } else if lengths[oldIdx + 1][newIdx] >= lengths[oldIdx][newIdx + 1] {
+                result.append(.delete(old[oldIdx]))
+                oldIdx += 1
             } else {
-                result.append(.insert(new[j]))
-                j += 1
+                result.append(.insert(new[newIdx]))
+                newIdx += 1
             }
         }
-        while i < m {
-            result.append(.delete(old[i]))
-            i += 1
+        while oldIdx < oldCount {
+            result.append(.delete(old[oldIdx]))
+            oldIdx += 1
         }
-        while j < n {
-            result.append(.insert(new[j]))
-            j += 1
+        while newIdx < newCount {
+            result.append(.insert(new[newIdx]))
+            newIdx += 1
         }
         return result
     }
@@ -87,7 +89,9 @@ public enum SceneDiff {
         while index < ops.count {
             switch ops[index] {
             case .equal(let line):
-                results.append(SceneDiffLine(kind: .unchanged, oldText: line, newText: line, oldWords: nil, newWords: nil))
+                results.append(
+                    SceneDiffLine(kind: .unchanged, oldText: line, newText: line, oldWords: nil, newWords: nil)
+                )
                 index += 1
 
             default:
@@ -116,10 +120,14 @@ public enum SceneDiff {
                     )
                 }
                 for extra in deletes[pairCount...] {
-                    results.append(SceneDiffLine(kind: .removed, oldText: extra, newText: nil, oldWords: nil, newWords: nil))
+                    results.append(
+                        SceneDiffLine(kind: .removed, oldText: extra, newText: nil, oldWords: nil, newWords: nil)
+                    )
                 }
                 for extra in inserts[pairCount...] {
-                    results.append(SceneDiffLine(kind: .added, oldText: nil, newText: extra, oldWords: nil, newWords: nil))
+                    results.append(
+                        SceneDiffLine(kind: .added, oldText: nil, newText: extra, oldWords: nil, newWords: nil)
+                    )
                 }
             }
         }

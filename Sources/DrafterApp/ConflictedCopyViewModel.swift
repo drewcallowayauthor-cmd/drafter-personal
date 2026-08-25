@@ -36,8 +36,10 @@ final class ConflictedCopyViewModel {
             actionErrorMessage = "Couldn't read one of these files."
             return nil
         }
+        // swiftlint:disable optional_data_string_conversion
         let originalBody = SceneFrontMatter.parse(String(decoding: originalData, as: UTF8.self)).body
         let conflictedBody = SceneFrontMatter.parse(String(decoding: conflictedData, as: UTF8.self)).body
+        // swiftlint:enable optional_data_string_conversion
         return SceneDiff.diff(old: originalBody, new: conflictedBody)
     }
 

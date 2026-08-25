@@ -5,6 +5,7 @@ import Foundation
 /// History panel. `checkpoint` and `pre-export` subjects carry no word count and
 /// correctly parse to `nil` — the UI shows nothing for those rather than a stray zero.
 public enum CommitSubjectWordDelta {
+    // swiftlint:disable:next force_try
     private static let pattern = try! NSRegularExpression(pattern: "([+-])([\\d,]+) words?")
 
     public static func parse(_ subject: String) -> Int? {

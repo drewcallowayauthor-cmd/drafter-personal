@@ -220,10 +220,17 @@ struct TypstDocumentGeneratorTests {
             <about-the-author>
             Drew Calloway writes crime thrillers.
             """
-        let result = TypstDocumentGenerator.applyFlushFirstParagraphAfterChapterHeadings(to: source, firstLineIndentEm: 1.0)
+        let result = TypstDocumentGenerator.applyFlushFirstParagraphAfterChapterHeadings(
+            to: source, firstLineIndentEm: 1.0
+        )
 
-        #expect(result.contains("<chapter-1>\n#set par(first-line-indent: 0em)\nFirst paragraph, wrapped across\ntwo source lines by pandoc."))
-        #expect(result.contains("#set par(first-line-indent: 1.0em)\n\nSecond paragraph stays at the normal indent."))
+        #expect(
+            // swiftlint:disable:next line_length
+            result.contains("<chapter-1>\n#set par(first-line-indent: 0em)\nFirst paragraph, wrapped across\ntwo source lines by pandoc.")
+        )
+        #expect(
+            result.contains("#set par(first-line-indent: 1.0em)\n\nSecond paragraph stays at the normal indent.")
+        )
         // Copyright's body copy is handled by `applyCenteredMatterStyling` instead —
         // this pass must not also touch it.
         #expect(result.contains("<copyright>\n#block[\nCopyright body copy"))
@@ -233,7 +240,10 @@ struct TypstDocumentGeneratorTests {
         // multi-line string literal drops the final `\n`) — About the Author really is
         // the very last thing pandoc emits for a full compile, EOF and all, and this
         // must still flush it rather than requiring a `\n\n` that will never come.
-        #expect(result.contains("<about-the-author>\n#set par(first-line-indent: 0em)\nDrew Calloway writes crime thrillers."))
+        #expect(
+            // swiftlint:disable:next line_length
+            result.contains("<about-the-author>\n#set par(first-line-indent: 0em)\nDrew Calloway writes crime thrillers.")
+        )
     }
 
     @Test("applySceneBreakOrnament replaces pandoc's default divider call")
@@ -247,7 +257,7 @@ struct TypstDocumentGeneratorTests {
         #expect(result.contains("More text."))
     }
 
-    @Test("applySceneBreakOrnament escapes the asterisks — unescaped '* * *' is invalid typst markup (unclosed strong-emphasis delimiter)")
+    @Test("applySceneBreakOrnament escapes asterisks — unescaped '* * *' is invalid (unclosed emphasis delimiter)")
     func escapesAsterisksForTypstMarkup() {
         let result = TypstDocumentGenerator.applySceneBreakOrnament(to: "#divider()")
 
