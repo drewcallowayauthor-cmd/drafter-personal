@@ -1,5 +1,12 @@
 import Foundation
 
+/// `ProjectMetadata.Print`'s coding keys, kept at file scope rather than nested inside
+/// `Print` (itself nested inside `ProjectMetadata`) — SwiftLint's nesting rule caps
+/// types at one level deep, and `Print` is already at that limit.
+private enum PrintCodingKeys: String, CodingKey {
+    case trimSize, bodyFont, bodyPointSize, leading, chapterOpensOn, firstLineIndentEm, headingFont
+}
+
 /// §5's onboarding choice, fixed at project creation (§4.5). `git` wires up
 /// `GitService`/`RepositoryCoordinator`; `localFile` wires up `SnapshotService` instead.
 public enum VersionControlMode: String, Codable, Sendable, Equatable {
@@ -86,16 +93,12 @@ public struct ProjectMetadata: Codable, Sendable, Equatable {
             self.headingFont = headingFont
         }
 
-        private enum CodingKeys: String, CodingKey {
-            case trimSize, bodyFont, bodyPointSize, leading, chapterOpensOn, firstLineIndentEm, headingFont
-        }
-
         /// Hand-written so `firstLineIndentEm`/`headingFont` — added after the
         /// original schema — default rather than failing to decode a `project.json`
         /// written before they existed, mirroring `ProjectMetadata.init(from:)`'s own
         /// `versionControl` precedent.
         public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let container = try decoder.container(keyedBy: PrintCodingKeys.self)
             trimSize = try container.decode(String.self, forKey: .trimSize)
             bodyFont = try container.decode(String.self, forKey: .bodyFont)
             bodyPointSize = try container.decode(Double.self, forKey: .bodyPointSize)

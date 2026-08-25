@@ -67,12 +67,14 @@ extension CompileSheet {
             processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter()
         )
         let result = try await coordinator.export(
-            metadata: exportMetadata,
-            binderTree: binderTree,
-            workingTree: workingTree,
-            outputDirectory: outputDirectory,
-            pandocExecutableURL: pandocURL,
-            cssURL: cssURL,
+            EPUBExportCoordinator.ExportRequest(
+                metadata: exportMetadata,
+                binderTree: binderTree,
+                workingTree: workingTree,
+                outputDirectory: outputDirectory,
+                pandocExecutableURL: pandocURL,
+                cssURL: cssURL
+            ),
             epubTemplate: epubTemplate
         )
         return CompileOutcome(outputURL: result.outputURL)

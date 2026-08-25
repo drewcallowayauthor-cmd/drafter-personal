@@ -57,11 +57,8 @@ public actor SyncCoordinator {
         }
 
         try await transition(to: .fetching)
-        do {
-            try await gitService.fetch(remote: remote, in: workingTree)
-        } catch {
-            DrafterLog.sync.error("fetch failed: \(error, privacy: .public)")
-            return try await transition(to: failureState(for: error))
+        if let result = try await performFetch() {
+            return result
         }
 
         // A brand-new GitHub repo has no branches at all until the first push
@@ -70,67 +67,93 @@ public actor SyncCoordinator {
         // ahead": just push and let that create it. This also self-heals a project
         // whose initial connection got as far as `addRemote` but never completed the
         // push (e.g. an auth failure mid-connection).
-        let remoteBranchExists: Bool
-        do {
-            remoteBranchExists = try await gitService.refExists(remoteRef, in: workingTree)
-        } catch {
-            // swiftlint:disable:next line_length
-            DrafterLog.sync.error("refExists(\(self.remoteRef, privacy: .public)) failed, assuming it doesn't exist yet: \(error, privacy: .public)")
-            remoteBranchExists = false
-        }
-        guard remoteBranchExists else {
+        guard await remoteBranchExists() else {
             return try await push()
         }
 
-        let divergence: (ahead: Int, behind: Int)
-        do {
-            divergence = try await gitService.divergence(from: remoteRef, in: workingTree)
-        } catch {
-            DrafterLog.sync.error("divergence check failed: \(error, privacy: .public)")
+        guard let divergence = try await computeDivergence() else {
             return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
         }
         lastKnownAheadCount = divergence.ahead
 
+        return try await integrate(divergence)
+    }
+
+    private func performFetch() async throws -> SyncState? {
+        do {
+            try await gitService.fetch(remote: remote, in: workingTree)
+            return nil
+        } catch {
+            DrafterLog.sync.error("fetch failed: \(error, privacy: .public)")
+            return try await transition(to: failureState(for: error))
+        }
+    }
+
+    private func remoteBranchExists() async -> Bool {
+        do {
+            return try await gitService.refExists(remoteRef, in: workingTree)
+        } catch {
+            // swiftlint:disable:next line_length
+            DrafterLog.sync.error("refExists(\(self.remoteRef, privacy: .public)) failed, assuming it doesn't exist yet: \(error, privacy: .public)")
+            return false
+        }
+    }
+
+    private func computeDivergence() async throws -> (ahead: Int, behind: Int)? {
+        do {
+            return try await gitService.divergence(from: remoteRef, in: workingTree)
+        } catch {
+            DrafterLog.sync.error("divergence check failed: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
+    private func integrate(_ divergence: (ahead: Int, behind: Int)) async throws -> SyncState {
         switch (divergence.ahead, divergence.behind) {
         case (0, 0):
             return try await transition(to: .idle)
-
         case (0, let behind) where behind > 0:
-            try await transition(to: .merging)
-            do {
-                try await gitService.fastForwardMerge(to: remoteRef, in: workingTree)
-            } catch {
-                DrafterLog.sync.error("fast-forward merge failed: \(error, privacy: .public)")
-                return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
-            }
-            return try await transition(to: .idle)
-
+            return try await fastForward()
         case (let ahead, 0) where ahead > 0:
             return try await push()
-
         default:
-            try await transition(to: .merging)
-            let result: MergeResult
-            do {
-                result = try await gitService.merge(
-                    with: remoteRef,
-                    message: "merge from \(machineName)",
-                    in: workingTree
-                )
-            } catch {
-                DrafterLog.sync.error("three-way merge failed: \(error, privacy: .public)")
-                return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
-            }
-            switch result {
-            case .clean:
-                // The merge itself created a new local commit on top of the pre-merge
-                // ahead count, so a push failure right after this needs to report one
-                // more pending commit than `divergence` saw before the merge ran.
-                lastKnownAheadCount += 1
-                return try await push()
-            case .conflicted(let paths):
-                return try await transition(to: .conflicted(paths: paths))
-            }
+            return try await threeWayMerge()
+        }
+    }
+
+    private func fastForward() async throws -> SyncState {
+        try await transition(to: .merging)
+        do {
+            try await gitService.fastForwardMerge(to: remoteRef, in: workingTree)
+        } catch {
+            DrafterLog.sync.error("fast-forward merge failed: \(error, privacy: .public)")
+            return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
+        }
+        return try await transition(to: .idle)
+    }
+
+    private func threeWayMerge() async throws -> SyncState {
+        try await transition(to: .merging)
+        let result: MergeResult
+        do {
+            result = try await gitService.merge(
+                with: remoteRef,
+                message: "merge from \(machineName)",
+                in: workingTree
+            )
+        } catch {
+            DrafterLog.sync.error("three-way merge failed: \(error, privacy: .public)")
+            return try await transition(to: .offline(pendingCommits: lastKnownAheadCount))
+        }
+        switch result {
+        case .clean:
+            // The merge itself created a new local commit on top of the pre-merge
+            // ahead count, so a push failure right after this needs to report one
+            // more pending commit than `divergence` saw before the merge ran.
+            lastKnownAheadCount += 1
+            return try await push()
+        case .conflicted(let paths):
+            return try await transition(to: .conflicted(paths: paths))
         }
     }
 

@@ -1,6 +1,13 @@
 import Foundation
 import ProjectStore
 
+// swiftlint:disable file_length type_body_length
+// This file is dominated by one cohesive, whitespace-sensitive Typst template literal
+// (`confFunction`, below) assembled from many `\(...)` interpolations threaded through
+// raw Typst syntax. Splitting it into smaller pieces via string concatenation would add
+// real risk of subtle formatting/interpolation bugs for a rule that doesn't reflect an
+// actual maintainability concern here — it's a big data blob, not branching logic.
+
 /// Generates the full custom Typst template (§9.4) passed to pandoc's `--template`.
 ///
 /// Discovered by directly compiling test documents rather than guessing at the API:
@@ -51,6 +58,7 @@ public enum TypstDocumentGenerator {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     private static func confFunction(trimSize: TrimSize, gutterInches: Double, print: ProjectMetadata.Print) -> String {
         // Read directly out of the reference's own Scrivener project file
         // (`Boyd Rook.scriv/Settings/Compile Formats/Paperback (5.06" x 7.81")

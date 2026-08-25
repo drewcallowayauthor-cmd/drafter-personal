@@ -96,116 +96,128 @@ public enum FrontBackMatterTemplate: String, CaseIterable, Sendable {
 
     public func content(for metadata: ProjectMetadata) -> String {
         switch self {
-        case .titlePage:
-            // `.title-page-heading` gets its own large/centered (not boxed-uppercase
-            // chapter-style) treatment; `.centered-page` centers the subtitle/byline
-            // under it instead of them sitting at the body's normal left margin.
-            let subtitleLine = metadata.subtitle.isEmpty ? "" : "\(metadata.subtitle)\n\n"
-            return """
-                # \(metadata.title) {.title-page-heading #title-page}
-
-                ::: {.centered-page}
-                \(subtitleLine)[\(metadata.author)]{.byline}
-                :::
-                """
-
-        case .copyright:
-            // `.hidden-heading` keeps this a real, split-able, linkable H1 — a
-            // finished Scrivener export's own Copyright page has no visible on-page
-            // title either, just the legal text, centered — while still giving it a
-            // page and a Contents entry. Wording/order matched against the Rook
-            // Takes EPUB (§9.2) — the house style for Drew Calloway books.
-            let isbnLine = metadata.isbn.isEmpty ? "" : "\nISBN: \(metadata.isbn)"
-            return """
-                # Copyright {.hidden-heading #copyright}
-
-                ::: {.centered-page}
-                *\(metadata.title)* is a work of fiction. Names, characters, places,
-                and incidents are either products of the author's imagination or are
-                used fictitiously. Any resemblance to actual persons, living or dead,
-                events, or locales is entirely coincidental.
-
-                Copyright © \(metadata.copyrightYear) by \(metadata.author)
-
-                All rights reserved. No part of this book may be reproduced in any
-                form or by any electronic or mechanical means, including information
-                storage and retrieval systems, without written permission from the
-                author, except for the use of brief quotations in a book review.
-                \(isbnLine)
-                :::
-                """
-
-        case .dedication:
-            // `.hidden-heading` — same as Copyright: a real, linkable, split-able
-            // heading that's never actually shown on the page. Rook Takes doesn't
-            // use a dedication here at all — it opens with an epigraph (a quote +
-            // attribution) instead, so that's the default; swap it for an actual
-            // dedication by hand on books where that's what's wanted. `.dedication-page`
-            // (alongside `.centered-page`) gets extra top margin of its own — an
-            // epigraph reads better a few more lines down the page than Copyright's
-            // block of legal text does.
-            return """
-                # Dedication {.hidden-heading #dedication}
-
-                ::: {.centered-page .dedication-page}
-                *"Quote goes here."*
-
-                — Attribution
-                :::
-                """
-
-        case .reviewAsk:
-            // Hidden heading (only in the Contents link and the page's `<title>`) —
-            // the visible "headline" is a bold first paragraph instead, matching the
-            // Rook Takes EPUB's own review-ask page (§9.2). `.callout-heading` (a
-            // nested fenced div, not just a class on the paragraph) gets its own
-            // larger `margin-bottom` so the headline reads as a distinct line above
-            // the body text, not just another paragraph in the same rhythm.
-            return """
-                # A Note From \(metadata.author) {.hidden-heading #review-ask}
-
-                :::: {.centered-page}
-                ::: {.callout-heading}
-                **DID THIS BOOK KEEP YOU UP PAST YOUR BEDTIME?**
-                :::
-
-                If you enjoyed the ride, a quick review would mean the world. It
-                doesn't have to be fancy, a sentence or two is plenty, and it really
-                does help the next reader find their way to a good late-night
-                thriller.
-
-                Leave a review on *Amazon* or *Goodreads*.
-                ::::
-                """
-
-        case .newsletter:
-            return """
-                # Join the Newsletter {.hidden-heading #newsletter}
-
-                :::: {.centered-page}
-                ::: {.callout-heading}
-                **WANT TO STAY UP TO DATE ON ALL THINGS \(metadata.author.uppercased())?**
-                :::
-
-                Sign up for my newsletter and you'll get new release updates first,
-                plus short stories that aren't published anywhere else. Not on
-                Amazon, not for sale. Just for readers on the list.
-
-                drewcalloway.com/#newsletter
-                ::::
-                """
-
-        case .aboutTheAuthor:
-            return """
-                # About the Author {#about-the-author}
-
-                **\(metadata.author)** writes crime thrillers from a small apartment
-                in central Texas. A lifelong music lover and devoted people-watcher,
-                he finds most of his best ideas in coffee shops, grocery lines, and
-                other places where strangers cross paths. He's usually got
-                headphones in, half-listening to a playlist, half-listening to
-                something he probably wasn't meant to overhear.
-                """
+        case .titlePage: return Self.titlePageContent(for: metadata)
+        case .copyright: return Self.copyrightContent(for: metadata)
+        case .dedication: return Self.dedicationContent
+        case .reviewAsk: return Self.reviewAskContent(for: metadata)
+        case .newsletter: return Self.newsletterContent(for: metadata)
+        case .aboutTheAuthor: return Self.aboutTheAuthorContent(for: metadata)
         }
+    }
+
+    /// `.title-page-heading` gets its own large/centered (not boxed-uppercase
+    /// chapter-style) treatment; `.centered-page` centers the subtitle/byline under it
+    /// instead of them sitting at the body's normal left margin.
+    private static func titlePageContent(for metadata: ProjectMetadata) -> String {
+        let subtitleLine = metadata.subtitle.isEmpty ? "" : "\(metadata.subtitle)\n\n"
+        return """
+            # \(metadata.title) {.title-page-heading #title-page}
+
+            ::: {.centered-page}
+            \(subtitleLine)[\(metadata.author)]{.byline}
+            :::
+            """
+    }
+
+    /// `.hidden-heading` keeps this a real, split-able, linkable H1 — a finished
+    /// Scrivener export's own Copyright page has no visible on-page title either, just
+    /// the legal text, centered — while still giving it a page and a Contents entry.
+    /// Wording/order matched against the Rook Takes EPUB (§9.2) — the house style for
+    /// Drew Calloway books.
+    private static func copyrightContent(for metadata: ProjectMetadata) -> String {
+        let isbnLine = metadata.isbn.isEmpty ? "" : "\nISBN: \(metadata.isbn)"
+        return """
+            # Copyright {.hidden-heading #copyright}
+
+            ::: {.centered-page}
+            *\(metadata.title)* is a work of fiction. Names, characters, places,
+            and incidents are either products of the author's imagination or are
+            used fictitiously. Any resemblance to actual persons, living or dead,
+            events, or locales is entirely coincidental.
+
+            Copyright © \(metadata.copyrightYear) by \(metadata.author)
+
+            All rights reserved. No part of this book may be reproduced in any
+            form or by any electronic or mechanical means, including information
+            storage and retrieval systems, without written permission from the
+            author, except for the use of brief quotations in a book review.
+            \(isbnLine)
+            :::
+            """
+    }
+
+    /// `.hidden-heading` — same as Copyright: a real, linkable, split-able heading
+    /// that's never actually shown on the page. Rook Takes doesn't use a dedication
+    /// here at all — it opens with an epigraph (a quote + attribution) instead, so
+    /// that's the default; swap it for an actual dedication by hand on books where
+    /// that's what's wanted. `.dedication-page` (alongside `.centered-page`) gets
+    /// extra top margin of its own — an epigraph reads better a few more lines down
+    /// the page than Copyright's block of legal text does.
+    private static var dedicationContent: String {
+        """
+        # Dedication {.hidden-heading #dedication}
+
+        ::: {.centered-page .dedication-page}
+        *"Quote goes here."*
+
+        — Attribution
+        :::
+        """
+    }
+
+    /// Hidden heading (only in the Contents link and the page's `<title>`) — the
+    /// visible "headline" is a bold first paragraph instead, matching the Rook Takes
+    /// EPUB's own review-ask page (§9.2). `.callout-heading` (a nested fenced div, not
+    /// just a class on the paragraph) gets its own larger `margin-bottom` so the
+    /// headline reads as a distinct line above the body text, not just another
+    /// paragraph in the same rhythm.
+    private static func reviewAskContent(for metadata: ProjectMetadata) -> String {
+        """
+        # A Note From \(metadata.author) {.hidden-heading #review-ask}
+
+        :::: {.centered-page}
+        ::: {.callout-heading}
+        **DID THIS BOOK KEEP YOU UP PAST YOUR BEDTIME?**
+        :::
+
+        If you enjoyed the ride, a quick review would mean the world. It
+        doesn't have to be fancy, a sentence or two is plenty, and it really
+        does help the next reader find their way to a good late-night
+        thriller.
+
+        Leave a review on *Amazon* or *Goodreads*.
+        ::::
+        """
+    }
+
+    private static func newsletterContent(for metadata: ProjectMetadata) -> String {
+        """
+        # Join the Newsletter {.hidden-heading #newsletter}
+
+        :::: {.centered-page}
+        ::: {.callout-heading}
+        **WANT TO STAY UP TO DATE ON ALL THINGS \(metadata.author.uppercased())?**
+        :::
+
+        Sign up for my newsletter and you'll get new release updates first,
+        plus short stories that aren't published anywhere else. Not on
+        Amazon, not for sale. Just for readers on the list.
+
+        drewcalloway.com/#newsletter
+        ::::
+        """
+    }
+
+    private static func aboutTheAuthorContent(for metadata: ProjectMetadata) -> String {
+        """
+        # About the Author {#about-the-author}
+
+        **\(metadata.author)** writes crime thrillers from a small apartment
+        in central Texas. A lifelong music lover and devoted people-watcher,
+        he finds most of his best ideas in coffee shops, grocery lines, and
+        other places where strangers cross paths. He's usually got
+        headphones in, half-listening to a playlist, half-listening to
+        something he probably wasn't meant to overhear.
+        """
     }
 }

@@ -33,12 +33,14 @@ struct EPUBExportCoordinatorTests {
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
         let result = try await coordinator.export(
-            metadata: metadata,
-            binderTree: tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            cssURL: nil,
+            EPUBExportCoordinator.ExportRequest(
+                metadata: metadata,
+                binderTree: tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                cssURL: nil
+            ),
             read: { _ in "---\nstatus: draft\ncompile: true\n---\n\nThe board was wrong." }
         )
 
@@ -77,12 +79,14 @@ struct EPUBExportCoordinatorTests {
 
         do {
             _ = try await coordinator.export(
-                metadata: metadata,
-                binderTree: tree,
-                workingTree: root,
-                outputDirectory: root,
-                pandocExecutableURL: pandocURL,
-                cssURL: nil,
+                EPUBExportCoordinator.ExportRequest(
+                    metadata: metadata,
+                    binderTree: tree,
+                    workingTree: root,
+                    outputDirectory: root,
+                    pandocExecutableURL: pandocURL,
+                    cssURL: nil
+                ),
                 read: { _ in "" }
             )
             Issue.record("Expected export to throw")
@@ -115,12 +119,14 @@ struct EPUBExportCoordinatorTests {
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
         _ = try await coordinator.export(
-            metadata: metadata,
-            binderTree: tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            cssURL: nil,
+            EPUBExportCoordinator.ExportRequest(
+                metadata: metadata,
+                binderTree: tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                cssURL: nil
+            ),
             read: { url in url == frontURL ? "# Title Page" : "# About the Author" }
         )
 
@@ -145,12 +151,14 @@ struct EPUBExportCoordinatorTests {
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
         _ = try await coordinator.export(
-            metadata: metadata,
-            binderTree: fixture.tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            cssURL: nil,
+            EPUBExportCoordinator.ExportRequest(
+                metadata: metadata,
+                binderTree: fixture.tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                cssURL: nil
+            ),
             read: { fixture.contents[$0]! }
         )
 
@@ -225,12 +233,14 @@ struct EPUBExportCoordinatorTests {
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
         _ = try await coordinator.export(
-            metadata: exportMetadata,
-            binderTree: fixture.tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            cssURL: nil,
+            EPUBExportCoordinator.ExportRequest(
+                metadata: exportMetadata,
+                binderTree: fixture.tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                cssURL: nil
+            ),
             epubTemplate: .shortStory,
             read: { fixture.contents[$0]! }
         )

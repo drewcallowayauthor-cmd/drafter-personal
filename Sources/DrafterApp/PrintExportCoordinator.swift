@@ -31,26 +31,6 @@ final class PrintExportCoordinator {
         /// Extra directories typst should search for fonts — how a bundled font
         /// (§ `BundledFonts`) is found without being installed on the Mac.
         var fontDirectoryURLs: [URL] = []
-
-        init(
-            metadata: ProjectMetadata,
-            binderTree: BinderTree,
-            workingTree: URL,
-            outputDirectory: URL,
-            pandocExecutableURL: URL,
-            typstExecutableURL: URL,
-            trimSize: TrimSize,
-            fontDirectoryURLs: [URL] = []
-        ) {
-            self.metadata = metadata
-            self.binderTree = binderTree
-            self.workingTree = workingTree
-            self.outputDirectory = outputDirectory
-            self.pandocExecutableURL = pandocExecutableURL
-            self.typstExecutableURL = typstExecutableURL
-            self.trimSize = trimSize
-            self.fontDirectoryURLs = fontDirectoryURLs
-        }
     }
 
     /// Fixed inputs to a single compile pass, gathered once per `export(_:)` call so
@@ -172,7 +152,11 @@ final class PrintExportCoordinator {
             print: context.print
         )
         try fileWriter.write(Data(templateContent.utf8), to: context.templateURL)
+        try await runPandocToTypst(context)
+        return try await compileTypstToPDF(context)
+    }
 
+    private func runPandocToTypst(_ context: PassContext) async throws {
         let pandocResult = try await context.pandocService.run(
             arguments: [
                 context.assembledURL.path,
@@ -200,7 +184,9 @@ final class PrintExportCoordinator {
             firstLineIndentEm: context.print.firstLineIndentEm
         )
         try fileWriter.write(Data(patchedTypst.utf8), to: context.mainTypstURL)
+    }
 
+    private func compileTypstToPDF(_ context: PassContext) async throws -> Int {
         let typstResult = try await context.typstService.compile(
             inputPath: context.mainTypstURL.path,
             outputPath: context.outputURL.path,

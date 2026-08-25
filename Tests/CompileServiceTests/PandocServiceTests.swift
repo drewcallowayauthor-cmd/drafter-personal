@@ -18,11 +18,13 @@ struct PandocServiceTests {
         let service = PandocService(processRunner: runner, pandocExecutableURL: pandocURL)
 
         _ = try await service.exportEPUB(
-            assembledMarkdownPath: "assembled.md",
-            metadataYAMLPath: "meta.yaml",
-            cssPath: "epub.css",
-            coverImagePath: "Resources/cover.jpg",
-            outputPath: "../Last Call.epub",
+            PandocService.EPUBExportOptions(
+                assembledMarkdownPath: "assembled.md",
+                metadataYAMLPath: "meta.yaml",
+                cssPath: "epub.css",
+                coverImagePath: "Resources/cover.jpg",
+                outputPath: "../Last Call.epub"
+            ),
             in: workingDirectory
         )
 
@@ -50,11 +52,13 @@ struct PandocServiceTests {
         let service = PandocService(processRunner: runner, pandocExecutableURL: pandocURL)
 
         _ = try await service.exportEPUB(
-            assembledMarkdownPath: "assembled.md",
-            metadataYAMLPath: "meta.yaml",
-            cssPath: nil,
-            coverImagePath: nil,
-            outputPath: "out.epub",
+            PandocService.EPUBExportOptions(
+                assembledMarkdownPath: "assembled.md",
+                metadataYAMLPath: "meta.yaml",
+                cssPath: nil,
+                coverImagePath: nil,
+                outputPath: "out.epub"
+            ),
             in: workingDirectory
         )
 
@@ -73,11 +77,13 @@ struct PandocServiceTests {
         let service = PandocService(processRunner: runner, pandocExecutableURL: pandocURL)
 
         let result = try await service.exportEPUB(
-            assembledMarkdownPath: "assembled.md",
-            metadataYAMLPath: "meta.yaml",
-            cssPath: "missing.css",
-            coverImagePath: nil,
-            outputPath: "out.epub",
+            PandocService.EPUBExportOptions(
+                assembledMarkdownPath: "assembled.md",
+                metadataYAMLPath: "meta.yaml",
+                cssPath: "missing.css",
+                coverImagePath: nil,
+                outputPath: "out.epub"
+            ),
             in: workingDirectory
         )
 

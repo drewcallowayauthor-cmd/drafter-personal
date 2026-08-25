@@ -14,6 +14,17 @@ final class EPUBExportCoordinator {
         let wordCount: Int
     }
 
+    /// Everything `export(_:epubTemplate:read:)` needs to run, bundled into one value
+    /// so the entry point stays under SwiftLint's parameter-count limit.
+    struct ExportRequest {
+        let metadata: ProjectMetadata
+        let binderTree: BinderTree
+        let workingTree: URL
+        let outputDirectory: URL
+        let pandocExecutableURL: URL
+        let cssURL: URL?
+    }
+
     private let processRunner: ProcessRunning
     private let fileWriter: AtomicFileWriting
 
@@ -23,15 +34,14 @@ final class EPUBExportCoordinator {
     }
 
     func export(
-        metadata: ProjectMetadata,
-        binderTree: BinderTree,
-        workingTree: URL,
-        outputDirectory: URL,
-        pandocExecutableURL: URL,
-        cssURL: URL?,
+        _ request: ExportRequest,
         epubTemplate: ManuscriptTemplate = .novel,
         read: @escaping SceneReader = { try String(contentsOf: $0, encoding: .utf8) }
     ) async throws -> ExportResult {
+        let metadata = request.metadata
+        let binderTree = request.binderTree
+        let workingTree = request.workingTree
+
         let buildDirectory = workingTree.appendingPathComponent("Build")
         try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
 
@@ -56,15 +66,19 @@ final class EPUBExportCoordinator {
             && !coverIsDirectory.boolValue
 
         let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
-        let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle).epub")
+        let outputURL = request.outputDirectory.appendingPathComponent("\(sanitizedTitle).epub")
 
-        let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)
+        let pandocService = PandocService(
+            processRunner: processRunner, pandocExecutableURL: request.pandocExecutableURL
+        )
         let result = try await pandocService.exportEPUB(
-            assembledMarkdownPath: assembledURL.path,
-            metadataYAMLPath: metaURL.path,
-            cssPath: cssURL?.path,
-            coverImagePath: coverExists ? coverURL.path : nil,
-            outputPath: outputURL.path,
+            PandocService.EPUBExportOptions(
+                assembledMarkdownPath: assembledURL.path,
+                metadataYAMLPath: metaURL.path,
+                cssPath: request.cssURL?.path,
+                coverImagePath: coverExists ? coverURL.path : nil,
+                outputPath: outputURL.path
+            ),
             in: buildDirectory
         )
 
