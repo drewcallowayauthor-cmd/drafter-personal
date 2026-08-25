@@ -90,7 +90,7 @@ extension CompileSheet {
         let coordinator = PrintExportCoordinator(
             processRunner: LiveProcessRunner(), fileWriter: LiveAtomicFileWriter()
         )
-        let result = try await coordinator.export(
+        let result = try await coordinator.export(PrintExportCoordinator.ExportRequest(
             metadata: exportMetadata,
             binderTree: binderTree,
             workingTree: workingTree,
@@ -99,7 +99,7 @@ extension CompileSheet {
             typstExecutableURL: typstURL,
             trimSize: trimSize,
             fontDirectoryURLs: BundledFonts.fontsDirectoryURL.map { [$0] } ?? []
-        )
+        ))
         return CompileOutcome(outputURL: result.outputURL)
     }
 

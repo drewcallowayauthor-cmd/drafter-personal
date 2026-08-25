@@ -135,7 +135,49 @@ struct EPUBExportCoordinatorTests {
         let root = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let metadata = ProjectMetadata(title: "Last Call", author: "Drew Calloway", copyrightYear: 2026)
+        let fixture = makeContentsPageFixture(root: root, metadata: metadata)
 
+        let runner = MockProcessRunner()
+        await runner.script(
+            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
+        )
+        let writer = MockAtomicFileWriter()
+        let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
+
+        _ = try await coordinator.export(
+            metadata: metadata,
+            binderTree: fixture.tree,
+            workingTree: root,
+            outputDirectory: root,
+            pandocExecutableURL: pandocURL,
+            cssURL: nil,
+            read: { fixture.contents[$0]! }
+        )
+
+        let assembled = try #require(
+            writer.writes.first { $0.url.lastPathComponent == "assembled.md" }
+                .flatMap { String(data: $0.data, encoding: .utf8) }
+        )
+
+        #expect(assembled.contains("[Title Page](#title-page)"))
+        #expect(assembled.contains("[Copyright](#copyright)"))
+        #expect(assembled.contains("[Dedication](#dedication)"))
+        #expect(assembled.contains("[Chapter 1](#chapter-1)"))
+
+        // Contents itself sits after Copyright's body and before Dedication's.
+        let copyrightBodyRange = try #require(assembled.range(of: "All rights reserved"))
+        let contentsRange = try #require(assembled.range(of: "# Contents"))
+        let dedicationRange = try #require(assembled.range(of: "# Dedication"))
+        #expect(copyrightBodyRange.upperBound < contentsRange.lowerBound)
+        #expect(contentsRange.upperBound < dedicationRange.lowerBound)
+    }
+
+    private struct BinderFixture {
+        let tree: BinderTree
+        let contents: [URL: String]
+    }
+
+    private func makeContentsPageFixture(root: URL, metadata: ProjectMetadata) -> BinderFixture {
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")
         let dedicationURL = root.appendingPathComponent("FrontMatter/03 Dedication.md")
@@ -162,6 +204,18 @@ struct EPUBExportCoordinatorTests {
             dedicationURL: FrontBackMatterTemplate.dedication.content(for: metadata),
             sceneURL: "---\nstatus: draft\ncompile: true\n---\n\nThe board was wrong."
         ]
+        return BinderFixture(tree: tree, contents: contents)
+    }
+
+    @Test("short story template assembles one hidden-heading manuscript with a single Contents entry")
+    func shortStoryTemplateProducesOneContinuousSection() async throws {
+        let root = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let metadata = ProjectMetadata(title: "Rook Takes", author: "Drew Calloway", copyrightYear: 2026)
+        let fixture = makeShortStoryFixture(root: root, metadata: metadata)
+        var exportMetadata = metadata
+        exportMetadata.compile.includeFrontMatter = true
+        exportMetadata.compile.chapterTitleFormat = "{n}"
 
         let runner = MockProcessRunner()
         await runner.script(
@@ -171,13 +225,14 @@ struct EPUBExportCoordinatorTests {
         let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
 
         _ = try await coordinator.export(
-            metadata: metadata,
-            binderTree: tree,
+            metadata: exportMetadata,
+            binderTree: fixture.tree,
             workingTree: root,
             outputDirectory: root,
             pandocExecutableURL: pandocURL,
             cssURL: nil,
-            read: { contents[$0]! }
+            epubTemplate: .shortStory,
+            read: { fixture.contents[$0]! }
         )
 
         let assembled = try #require(
@@ -185,25 +240,19 @@ struct EPUBExportCoordinatorTests {
                 .flatMap { String(data: $0.data, encoding: .utf8) }
         )
 
-        #expect(assembled.contains("[Title Page](#title-page)"))
-        #expect(assembled.contains("[Copyright](#copyright)"))
-        #expect(assembled.contains("[Dedication](#dedication)"))
-        #expect(assembled.contains("[Chapter 1](#chapter-1)"))
+        // One Contents entry for the story title, not one per chapter.
+        #expect(assembled.contains("[Rook Takes](#manuscript)"))
+        #expect(assembled.contains("[1](#chapter-1)") == false)
+        #expect(assembled.contains("[2](#chapter-2)") == false)
 
-        // Contents itself sits after Copyright's body and before Dedication's.
-        let copyrightBodyRange = try #require(assembled.range(of: "All rights reserved"))
-        let contentsRange = try #require(assembled.range(of: "# Contents"))
-        let dedicationRange = try #require(assembled.range(of: "# Dedication"))
-        #expect(copyrightBodyRange.upperBound < contentsRange.lowerBound)
-        #expect(contentsRange.upperBound < dedicationRange.lowerBound)
+        // The manuscript itself is one hidden heading with bare numbered h2 scenes underneath.
+        #expect(assembled.contains("# Rook Takes {.hidden-heading #manuscript}"))
+        #expect(assembled.contains("## 1 {#chapter-1}"))
+        #expect(assembled.contains("## 2 {#chapter-2}"))
+        #expect(assembled.contains("# Chapter") == false)
     }
 
-    @Test("short story template assembles one hidden-heading manuscript with a single Contents entry")
-    func shortStoryTemplateProducesOneContinuousSection() async throws {
-        let root = try makeTempDirectory()
-        defer { try? FileManager.default.removeItem(at: root) }
-        let metadata = ProjectMetadata(title: "Rook Takes", author: "Drew Calloway", copyrightYear: 2026)
-
+    private func makeShortStoryFixture(root: URL, metadata: ProjectMetadata) -> BinderFixture {
         let titlePageURL = root.appendingPathComponent("FrontMatter/01 Title Page.md")
         let copyrightURL = root.appendingPathComponent("FrontMatter/02 Copyright.md")
         let scene1URL = root.appendingPathComponent("Manuscript/01 Arrival/01 Triage.md")
@@ -231,49 +280,13 @@ struct EPUBExportCoordinatorTests {
             backMatter: [],
             notes: []
         )
-        var exportMetadata = metadata
-        exportMetadata.compile.includeFrontMatter = true
-        exportMetadata.compile.chapterTitleFormat = "{n}"
         let contents: [URL: String] = [
             titlePageURL: FrontBackMatterTemplate.titlePage.content(for: metadata),
             copyrightURL: FrontBackMatterTemplate.copyright.content(for: metadata),
             scene1URL: "---\nstatus: draft\ncompile: true\n---\n\nFirst scene text.",
             scene2URL: "---\nstatus: draft\ncompile: true\n---\n\nSecond scene text."
         ]
-
-        let runner = MockProcessRunner()
-        await runner.script(
-            ProcessResult(exitCode: 0, standardOutput: "", standardError: ""), forExecutableNamed: "pandoc"
-        )
-        let writer = MockAtomicFileWriter()
-        let coordinator = EPUBExportCoordinator(processRunner: runner, fileWriter: writer)
-
-        _ = try await coordinator.export(
-            metadata: exportMetadata,
-            binderTree: tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            cssURL: nil,
-            epubTemplate: .shortStory,
-            read: { contents[$0]! }
-        )
-
-        let assembled = try #require(
-            writer.writes.first { $0.url.lastPathComponent == "assembled.md" }
-                .flatMap { String(data: $0.data, encoding: .utf8) }
-        )
-
-        // One Contents entry for the story title, not one per chapter.
-        #expect(assembled.contains("[Rook Takes](#manuscript)"))
-        #expect(assembled.contains("[1](#chapter-1)") == false)
-        #expect(assembled.contains("[2](#chapter-2)") == false)
-
-        // The manuscript itself is one hidden heading with bare numbered h2 scenes underneath.
-        #expect(assembled.contains("# Rook Takes {.hidden-heading #manuscript}"))
-        #expect(assembled.contains("## 1 {#chapter-1}"))
-        #expect(assembled.contains("## 2 {#chapter-2}"))
-        #expect(assembled.contains("# Chapter") == false)
+        return BinderFixture(tree: tree, contents: contents)
     }
 
     private func makeTempDirectory() throws -> URL {

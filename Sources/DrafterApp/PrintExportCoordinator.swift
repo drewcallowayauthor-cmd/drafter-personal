@@ -18,6 +18,60 @@ final class PrintExportCoordinator {
         let pageCount: Int
     }
 
+    /// Everything `export(_:)` needs to run, bundled into one value so the entry
+    /// point stays under SwiftLint's parameter-count limit.
+    struct ExportRequest {
+        let metadata: ProjectMetadata
+        let binderTree: BinderTree
+        let workingTree: URL
+        let outputDirectory: URL
+        let pandocExecutableURL: URL
+        let typstExecutableURL: URL
+        let trimSize: TrimSize
+        /// Extra directories typst should search for fonts — how a bundled font
+        /// (§ `BundledFonts`) is found without being installed on the Mac.
+        var fontDirectoryURLs: [URL] = []
+
+        init(
+            metadata: ProjectMetadata,
+            binderTree: BinderTree,
+            workingTree: URL,
+            outputDirectory: URL,
+            pandocExecutableURL: URL,
+            typstExecutableURL: URL,
+            trimSize: TrimSize,
+            fontDirectoryURLs: [URL] = []
+        ) {
+            self.metadata = metadata
+            self.binderTree = binderTree
+            self.workingTree = workingTree
+            self.outputDirectory = outputDirectory
+            self.pandocExecutableURL = pandocExecutableURL
+            self.typstExecutableURL = typstExecutableURL
+            self.trimSize = trimSize
+            self.fontDirectoryURLs = fontDirectoryURLs
+        }
+    }
+
+    /// Fixed inputs to a single compile pass, gathered once per `export(_:)` call so
+    /// `compilePass(_:gutter:)` itself only needs the one value that varies between passes.
+    private struct PassContext {
+        let pandocService: PandocService
+        let typstService: TypstService
+        let buildDirectory: URL
+        let assembledURL: URL
+        let metadataURL: URL
+        let templateURL: URL
+        let mainTypstURL: URL
+        let outputURL: URL
+        let pandocDefaultTemplate: String
+        let trimSize: TrimSize
+        let print: ProjectMetadata.Print
+        let fontDirectoryURLs: [URL]
+        let readGeneratedTypst: (URL) throws -> String
+        let pageCounter: (URL) -> Int?
+    }
+
     private let processRunner: ProcessRunning
     private let fileWriter: AtomicFileWriting
 
@@ -27,16 +81,7 @@ final class PrintExportCoordinator {
     }
 
     func export(
-        metadata: ProjectMetadata,
-        binderTree: BinderTree,
-        workingTree: URL,
-        outputDirectory: URL,
-        pandocExecutableURL: URL,
-        typstExecutableURL: URL,
-        trimSize: TrimSize,
-        /// Extra directories typst should search for fonts — how a bundled font
-        /// (§ `BundledFonts`) is found without being installed on the Mac.
-        fontDirectoryURLs: [URL] = [],
+        _ request: ExportRequest,
         read: @escaping SceneReader = { try String(contentsOf: $0, encoding: .utf8) },
         // Both injectable so orchestration is testable without pandoc/typst actually
         // touching disk: readGeneratedTypst reads pandoc's own output file (not
@@ -46,21 +91,66 @@ final class PrintExportCoordinator {
         readGeneratedTypst: @escaping (URL) throws -> String = { try String(contentsOf: $0, encoding: .utf8) },
         pageCounter: @escaping (URL) -> Int? = { PDFDocument(url: $0)?.pageCount }
     ) async throws -> ExportResult {
-        let buildDirectory = workingTree.appendingPathComponent("Build")
+        let buildDirectory = request.workingTree.appendingPathComponent("Build")
         try FileManager.default.createDirectory(at: buildDirectory, withIntermediateDirectories: true)
 
         let assembled = try ManuscriptAssembler.assembleFull(
-            binderTree: binderTree, compile: metadata.compile, read: read
+            binderTree: request.binderTree, compile: request.metadata.compile, read: read
         )
         let assembledURL = buildDirectory.appendingPathComponent("assembled.md")
         try fileWriter.write(Data(assembled.utf8), to: assembledURL)
 
         let metadataURL = buildDirectory.appendingPathComponent("print-meta.yaml")
-        try fileWriter.write(Data(printMetadataYAML(for: metadata).utf8), to: metadataURL)
+        try fileWriter.write(Data(printMetadataYAML(for: request.metadata).utf8), to: metadataURL)
 
-        let pandocService = PandocService(processRunner: processRunner, pandocExecutableURL: pandocExecutableURL)
-        let typstService = TypstService(processRunner: processRunner, typstExecutableURL: typstExecutableURL)
+        let pandocService = PandocService(
+            processRunner: processRunner, pandocExecutableURL: request.pandocExecutableURL
+        )
+        let typstService = TypstService(
+            processRunner: processRunner, typstExecutableURL: request.typstExecutableURL
+        )
+        let pandocDefaultTemplate = try await fetchPandocDefaultTemplate(
+            pandocService: pandocService, buildDirectory: buildDirectory
+        )
 
+        let sanitizedTitle = FilenamePrefix.sanitize(request.metadata.title)
+        let outputURL = request.outputDirectory.appendingPathComponent("\(sanitizedTitle) - interior.pdf")
+
+        let context = PassContext(
+            pandocService: pandocService,
+            typstService: typstService,
+            buildDirectory: buildDirectory,
+            assembledURL: assembledURL,
+            metadataURL: metadataURL,
+            templateURL: buildDirectory.appendingPathComponent("template.typ"),
+            mainTypstURL: buildDirectory.appendingPathComponent("main.typ"),
+            outputURL: outputURL,
+            pandocDefaultTemplate: pandocDefaultTemplate,
+            trimSize: request.trimSize,
+            print: request.metadata.print,
+            fontDirectoryURLs: request.fontDirectoryURLs,
+            readGeneratedTypst: readGeneratedTypst,
+            pageCounter: pageCounter
+        )
+
+        var gutter = GutterCalculator.gutterInches(forPageCount: 1)
+        var pageCount = 0
+
+        for pass in 1...2 {
+            pageCount = try await compilePass(context, gutter: gutter)
+            let neededGutter = GutterCalculator.gutterInches(forPageCount: pageCount)
+            if neededGutter == gutter || pass == 2 {
+                break
+            }
+            gutter = neededGutter
+        }
+
+        return ExportResult(outputURL: outputURL, pageCount: pageCount)
+    }
+
+    private func fetchPandocDefaultTemplate(
+        pandocService: PandocService, buildDirectory: URL
+    ) async throws -> String {
         let templateResult = try await pandocService.run(
             arguments: ["--print-default-template=typst"], in: buildDirectory
         )
@@ -71,82 +161,66 @@ final class PrintExportCoordinator {
                 stderr: templateResult.standardError
             )
         }
-        let pandocDefaultTemplate = templateResult.standardOutput
+        return templateResult.standardOutput
+    }
 
-        let sanitizedTitle = FilenamePrefix.sanitize(metadata.title)
-        let outputURL = outputDirectory.appendingPathComponent("\(sanitizedTitle) - interior.pdf")
-        let templateURL = buildDirectory.appendingPathComponent("template.typ")
-        let mainTypstURL = buildDirectory.appendingPathComponent("main.typ")
+    private func compilePass(_ context: PassContext, gutter: Double) async throws -> Int {
+        let templateContent = TypstDocumentGenerator.fullTemplate(
+            pandocDefaultTemplate: context.pandocDefaultTemplate,
+            trimSize: context.trimSize,
+            gutterInches: gutter,
+            print: context.print
+        )
+        try fileWriter.write(Data(templateContent.utf8), to: context.templateURL)
 
-        var gutter = GutterCalculator.gutterInches(forPageCount: 1)
-        var pageCount = 0
-
-        for pass in 1...2 {
-            let templateContent = TypstDocumentGenerator.fullTemplate(
-                pandocDefaultTemplate: pandocDefaultTemplate,
-                trimSize: trimSize,
-                gutterInches: gutter,
-                print: metadata.print
+        let pandocResult = try await context.pandocService.run(
+            arguments: [
+                context.assembledURL.path,
+                "--from=markdown+smart",
+                "--to=typst",
+                "--standalone",
+                "--template=\(context.templateURL.path)",
+                "--metadata-file=\(context.metadataURL.path)",
+                "-o", context.mainTypstURL.path
+            ],
+            in: context.buildDirectory
+        )
+        guard pandocResult.succeeded else {
+            throw DrafterError.processFailed(
+                command: "pandoc", exitCode: pandocResult.exitCode, stderr: pandocResult.standardError
             )
-            try fileWriter.write(Data(templateContent.utf8), to: templateURL)
-
-            let pandocResult = try await pandocService.run(
-                arguments: [
-                    assembledURL.path,
-                    "--from=markdown+smart",
-                    "--to=typst",
-                    "--standalone",
-                    "--template=\(templateURL.path)",
-                    "--metadata-file=\(metadataURL.path)",
-                    "-o", mainTypstURL.path
-                ],
-                in: buildDirectory
-            )
-            guard pandocResult.succeeded else {
-                throw DrafterError.processFailed(
-                    command: "pandoc", exitCode: pandocResult.exitCode, stderr: pandocResult.standardError
-                )
-            }
-
-            let rawTypst = try readGeneratedTypst(mainTypstURL)
-            let patchedTypst = TypstDocumentGenerator.applyFlushFirstParagraphAfterChapterHeadings(
-                to: TypstDocumentGenerator.applyCenteredMatterStyling(
-                    to: TypstDocumentGenerator.applySceneBreakOrnament(to: rawTypst),
-                    bodyPointSize: metadata.print.bodyPointSize
-                ),
-                firstLineIndentEm: metadata.print.firstLineIndentEm
-            )
-            try fileWriter.write(Data(patchedTypst.utf8), to: mainTypstURL)
-
-            let typstResult = try await typstService.compile(
-                inputPath: mainTypstURL.path,
-                outputPath: outputURL.path,
-                fontPaths: fontDirectoryURLs.map(\.path),
-                in: buildDirectory
-            )
-            guard typstResult.succeeded else {
-                throw DrafterError.processFailed(
-                    command: "typst compile", exitCode: typstResult.exitCode, stderr: typstResult.standardError
-                )
-            }
-
-            guard let count = pageCounter(outputURL) else {
-                throw DrafterError.processFailed(
-                    command: "typst compile",
-                    exitCode: 0,
-                    stderr: "Compiled PDF at \(outputURL.path) could not be read back to check its page count."
-                )
-            }
-            pageCount = count
-
-            let neededGutter = GutterCalculator.gutterInches(forPageCount: pageCount)
-            if neededGutter == gutter || pass == 2 {
-                break
-            }
-            gutter = neededGutter
         }
 
-        return ExportResult(outputURL: outputURL, pageCount: pageCount)
+        let rawTypst = try context.readGeneratedTypst(context.mainTypstURL)
+        let patchedTypst = TypstDocumentGenerator.applyFlushFirstParagraphAfterChapterHeadings(
+            to: TypstDocumentGenerator.applyCenteredMatterStyling(
+                to: TypstDocumentGenerator.applySceneBreakOrnament(to: rawTypst),
+                bodyPointSize: context.print.bodyPointSize
+            ),
+            firstLineIndentEm: context.print.firstLineIndentEm
+        )
+        try fileWriter.write(Data(patchedTypst.utf8), to: context.mainTypstURL)
+
+        let typstResult = try await context.typstService.compile(
+            inputPath: context.mainTypstURL.path,
+            outputPath: context.outputURL.path,
+            fontPaths: context.fontDirectoryURLs.map(\.path),
+            in: context.buildDirectory
+        )
+        guard typstResult.succeeded else {
+            throw DrafterError.processFailed(
+                command: "typst compile", exitCode: typstResult.exitCode, stderr: typstResult.standardError
+            )
+        }
+
+        guard let count = context.pageCounter(context.outputURL) else {
+            throw DrafterError.processFailed(
+                command: "typst compile",
+                exitCode: 0,
+                stderr: "Compiled PDF at \(context.outputURL.path) could not be read back to check its page count."
+            )
+        }
+        return count
     }
 
     private func printMetadataYAML(for metadata: ProjectMetadata) -> String {

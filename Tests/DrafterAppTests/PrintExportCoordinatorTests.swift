@@ -44,13 +44,15 @@ struct PrintExportCoordinatorTests {
         let coordinator = PrintExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
         let result = try await coordinator.export(
-            metadata: metadata,
-            binderTree: tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            typstExecutableURL: typstURL,
-            trimSize: .fiveByEight,
+            PrintExportCoordinator.ExportRequest(
+                metadata: metadata,
+                binderTree: tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                typstExecutableURL: typstURL,
+                trimSize: .fiveByEight
+            ),
             read: { _ in "" },
             readGeneratedTypst: { _ in "" },
             pageCounter: { _ in 100 } // stays within the first gutter tier (<=150)
@@ -87,13 +89,15 @@ struct PrintExportCoordinatorTests {
         // 400 pages needs the 301-500 tier (0.5in), not the <=150 tier (0.25in) the
         // first pass assumes — this should trigger exactly one recompile.
         let result = try await coordinator.export(
-            metadata: metadata,
-            binderTree: tree,
-            workingTree: root,
-            outputDirectory: root,
-            pandocExecutableURL: pandocURL,
-            typstExecutableURL: typstURL,
-            trimSize: .fiveByEight,
+            PrintExportCoordinator.ExportRequest(
+                metadata: metadata,
+                binderTree: tree,
+                workingTree: root,
+                outputDirectory: root,
+                pandocExecutableURL: pandocURL,
+                typstExecutableURL: typstURL,
+                trimSize: .fiveByEight
+            ),
             read: { _ in "" },
             readGeneratedTypst: { _ in "" },
             pageCounter: { _ in 400 }
@@ -134,13 +138,15 @@ struct PrintExportCoordinatorTests {
 
         do {
             _ = try await coordinator.export(
-                metadata: metadata,
-                binderTree: tree,
-                workingTree: root,
-                outputDirectory: root,
-                pandocExecutableURL: pandocURL,
-                typstExecutableURL: typstURL,
-                trimSize: .fiveByEight,
+                PrintExportCoordinator.ExportRequest(
+                    metadata: metadata,
+                    binderTree: tree,
+                    workingTree: root,
+                    outputDirectory: root,
+                    pandocExecutableURL: pandocURL,
+                    typstExecutableURL: typstURL,
+                    trimSize: .fiveByEight
+                ),
                 read: { _ in "" },
                 readGeneratedTypst: { _ in "" },
                 pageCounter: { _ in 100 }
