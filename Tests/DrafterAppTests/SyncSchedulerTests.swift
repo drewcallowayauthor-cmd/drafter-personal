@@ -60,13 +60,16 @@ struct SyncSchedulerTests {
     func schedulePushAfterCommitDebounces() async throws {
         let runner = MockProcessRunner()
         await scriptIdenticalSync(runner)
-        let scheduler = makeScheduler(runner: runner, fetchInterval: .seconds(60), pushDebounceDelay: .milliseconds(40))
+        // A generous debounce delay and post-fire wait, well clear of the reschedule
+        // below, so this isn't racing the debounce's own sleep — under load, a tight
+        // margin here is exactly the kind of thing that flakes.
+        let scheduler = makeScheduler(runner: runner, fetchInterval: .seconds(60), pushDebounceDelay: .milliseconds(50))
 
         scheduler.schedulePushAfterCommit()
-        try await Task.sleep(for: .milliseconds(10))
+        try await Task.sleep(for: .milliseconds(20))
         scheduler.schedulePushAfterCommit()
 
-        try await Task.sleep(for: .milliseconds(80))
+        try await Task.sleep(for: .milliseconds(300))
 
         let invocations = await runner.invocations
         #expect(invocations.map(\.arguments.first) == ["fetch", "rev-parse", "rev-list"])
