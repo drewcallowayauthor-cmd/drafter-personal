@@ -6,6 +6,12 @@ import SwiftUI
 /// result jumps the editor to that scene and offset and dismisses the sheet (§8.3: "a
 /// results list that jumps to scene and offset"); "Replace"/"Replace All" work in place
 /// without needing to jump anywhere first.
+private struct SceneMatchGroup {
+    let sceneURL: URL
+    let sceneDisplayName: String
+    var matches: [ProjectSearchMatch]
+}
+
 struct ProjectFindReplaceSheet: View {
     @State private var viewModel: ProjectFindReplaceViewModel
     @FocusState private var isQueryFocused: Bool
@@ -111,21 +117,21 @@ struct ProjectFindReplaceSheet: View {
         .frame(maxWidth: .infinity)
     }
 
-    private var groupedMatches: [(sceneURL: URL, sceneDisplayName: String, matches: [ProjectSearchMatch])] {
-        var groups: [(sceneURL: URL, sceneDisplayName: String, matches: [ProjectSearchMatch])] = []
+    private var groupedMatches: [SceneMatchGroup] {
+        var groups: [SceneMatchGroup] = []
         for match in viewModel.matches {
             if groups.indices.last.map({ groups[$0].sceneURL }) == match.sceneURL {
                 groups[groups.count - 1].matches.append(match)
             } else {
-                groups.append((match.sceneURL, match.sceneDisplayName, [match]))
+                groups.append(SceneMatchGroup(
+                    sceneURL: match.sceneURL, sceneDisplayName: match.sceneDisplayName, matches: [match]
+                ))
             }
         }
         return groups
     }
 
-    private func sceneGroup(
-        _ group: (sceneURL: URL, sceneDisplayName: String, matches: [ProjectSearchMatch])
-    ) -> some View {
+    private func sceneGroup(_ group: SceneMatchGroup) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("\(group.sceneDisplayName) — \(group.matches.count) match\(group.matches.count == 1 ? "" : "es")")
                 .font(Theme.Font.heading(12))
