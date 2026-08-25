@@ -132,8 +132,8 @@ struct PrintExportCoordinatorTests {
         )
         let coordinator = PrintExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
-        await #expect(throws: DrafterError.self) {
-            try await coordinator.export(
+        do {
+            _ = try await coordinator.export(
                 metadata: metadata,
                 binderTree: tree,
                 workingTree: root,
@@ -145,6 +145,9 @@ struct PrintExportCoordinatorTests {
                 readGeneratedTypst: { _ in "" },
                 pageCounter: { _ in 100 }
             )
+            Issue.record("Expected export to throw")
+        } catch is DrafterError {
+            // expected
         }
     }
 

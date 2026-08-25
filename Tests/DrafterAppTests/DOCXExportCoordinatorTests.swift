@@ -262,8 +262,8 @@ struct DOCXExportCoordinatorTests {
         )
         let coordinator = DOCXExportCoordinator(processRunner: runner, fileWriter: MockAtomicFileWriter())
 
-        await #expect(throws: DrafterError.self) {
-            try await coordinator.export(
+        do {
+            _ = try await coordinator.export(
                 metadata: metadata,
                 binderTree: tree,
                 workingTree: root,
@@ -271,6 +271,9 @@ struct DOCXExportCoordinatorTests {
                 pandocExecutableURL: pandocURL,
                 read: { _ in "" }
             )
+            Issue.record("Expected export to throw")
+        } catch is DrafterError {
+            // expected
         }
     }
 
