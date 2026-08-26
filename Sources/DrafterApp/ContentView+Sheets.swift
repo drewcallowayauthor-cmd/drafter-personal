@@ -1,4 +1,5 @@
 import GitService
+import ProjectStore
 import SwiftUI
 
 extension ContentView {
@@ -80,6 +81,9 @@ extension ContentView {
                 title: "New Chapter",
                 fieldLabel: "Chapter Title",
                 confirmLabel: "Create",
+                initialText: ChapterNaming.nextChapterTitle(
+                    existingDisplayNames: (projectViewModel.binderTree?.manuscript ?? []).map(\.displayName)
+                ),
                 onSubmit: { title in
                     isNewChapterSheetPresented = false
                     Task {
