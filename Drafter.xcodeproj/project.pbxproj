@@ -20,13 +20,19 @@
 		1EF1F3D1A587125F9AAAAFEC /* TargetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E9364D9D8256FE3B2F1B21 /* TargetsViewModel.swift */; };
 		1F1B62CE1E69B65E6AD6E9CA /* OnboardingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9456F41960CAE9B8C24839B6 /* OnboardingSheet.swift */; };
 		1F28DAD6FB32998C4C2BB4E9 /* TargetsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03C68322585172671C48302 /* TargetsPanel.swift */; };
+		23F6FDD508F271510D53DB94 /* ContentView+Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3EE7AE1E50EA4744CAFD12 /* ContentView+Sheets.swift */; };
 		27D28DF0AD859C773D5CC92F /* GitHubRepoPickerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCDF12D860E0E3620B9D6A4 /* GitHubRepoPickerViewModel.swift */; };
+		2830F31CCBF90B007949CA83 /* ContentView+Binder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CAE46B3F8CE8AD1669421D8 /* ContentView+Binder.swift */; };
+		29F0EE89D8C0469AA9AA1B23 /* ContentView+Inspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74E93F89ABB924FAD6451D43 /* ContentView+Inspector.swift */; };
 		2C2AB52133FB7DDE6948971F /* Binaries in Resources */ = {isa = PBXBuildFile; fileRef = 134C08E7C62863D72B1B219F /* Binaries */; };
+		2DACB0DD676CC6106E51E490 /* CompileSheet+Fields.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB377B831207CDDA838A4B5 /* CompileSheet+Fields.swift */; };
 		322A8C566BDB75ED5577AA4B /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55AF15C5C6F22CAE6358754 /* HistoryPanel.swift */; };
 		35FC51BC0CCBEB444C5BA13B /* BundledDOCXTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C94AB7E2F29F781C3E23E7 /* BundledDOCXTemplate.swift */; };
 		3868EE0E396EFBED50EBDAF8 /* PrintExportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30F0FF9BF6B0D827F4C8170 /* PrintExportCoordinator.swift */; };
+		39B342B7FC4DD05E11ECD656 /* ProjectViewModel+Attach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083AFDDE5A68B9545B5CA1A0 /* ProjectViewModel+Attach.swift */; };
 		3E9B2B6E21B14D84F6C4AE4E /* MarkdownSyntaxScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8516B366403434E1163435 /* MarkdownSyntaxScanner.swift */; };
 		3FCB79E973C0276B59F69A63 /* ProjectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F41E00D4D6F862A45885311B /* ProjectViewModel.swift */; };
+		3FD9AF72C44A1BF60B839298 /* EPUBStylesheetManager+ShortStoryCSS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171ABA7CD3214430D23BF06F /* EPUBStylesheetManager+ShortStoryCSS.swift */; };
 		4077194C2C5FFF25EC7A1B13 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91828ACBBE1E45E6377856CC /* HistoryViewModel.swift */; };
 		42C535BABE4F71241B3DDED4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 23DA88F2F654BCCA1D222239 /* Assets.xcassets */; };
 		43DDF0962FDB581AC502612A /* OpenProjectRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7B68C4EC421C9E95E8C014 /* OpenProjectRegistry.swift */; };
@@ -45,17 +51,22 @@
 		6344F54954DA7B0507B0260B /* SnapshotCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C2A9A1649A148F51886FE0 /* SnapshotCoordinator.swift */; };
 		6426A9213EE43CE997ABEF59 /* VersionControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F56558A13F3AD8214D3C4 /* VersionControlSettingsView.swift */; };
 		66E2A70674DF412B7318B15F /* TextPromptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF75863144F24CB9B7C2A10 /* TextPromptSheet.swift */; };
+		6A1F0AEC3870B5E84ADD3DDF /* ContentView+Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79504831A571014F5A5AA31F /* ContentView+Toolbar.swift */; };
 		6ADE1838637BDC4F48722DC8 /* GitService in Frameworks */ = {isa = PBXBuildFile; productRef = 1D0B060F42F75F1B29B5E149 /* GitService */; };
+		6B8A98BACE84A203A07F0408 /* ContentView+BinderActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF80B7133A8D478D6479F4E /* ContentView+BinderActions.swift */; };
+		6CB55AEFCCC23E826729F857 /* ContentView+ProjectActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5AAE307EB94CDC1A363C25 /* ContentView+ProjectActions.swift */; };
 		6CDEFDEB25CD73D5039D92C6 /* VersionControlModePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD33531EB1EB54BA1FCE497 /* VersionControlModePicker.swift */; };
 		6FCB5BAE7A3A3992BA384D81 /* FrontBackMatterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F5231D7862887958A52E46 /* FrontBackMatterService.swift */; };
 		705EEA1FD6ABE1CF5DC7D1F1 /* RepositoryCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F73CF54267550FB452E4838 /* RepositoryCoordinator.swift */; };
 		7249EC6B172EFE16F582C6EA /* ConflictedCopyBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC79A5EFF9B37A52EC2F569 /* ConflictedCopyBanner.swift */; };
+		72968D53862F7382EF3BEB8C /* ProjectViewModel+BinderOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E568B520E46690858CE36D /* ProjectViewModel+BinderOperations.swift */; };
 		75CCD360A8749BDD14F72372 /* LocalFileVersionControlViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDB110F7CFC4DE74DBA2146 /* LocalFileVersionControlViewModel.swift */; };
 		762CE82FB103FE40D84E1A74 /* BundledBinaries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE613D19F7ECD7073EEE5A8 /* BundledBinaries.swift */; };
 		767AAE431A5293C49B6A14F4 /* NocturneButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6836DB8A06647A998A7AFA1 /* NocturneButtonStyle.swift */; };
 		784DB6F90937D68752C777CD /* SnapshotService in Frameworks */ = {isa = PBXBuildFile; productRef = 5D8F7AB539D813A94A381FBF /* SnapshotService */; };
 		79D2CBE062406A9E9741CCE1 /* NocturneSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203B4D8E606B0DCBDA1657F8 /* NocturneSheet.swift */; };
 		7B678C9739E25F3662F21FBB /* EPUBStylesheetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA105EC1FB8A7399E85FF3E8 /* EPUBStylesheetManager.swift */; };
+		7EAF63CDE647FC26D3BB9552 /* ContentView+Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C68C9CC9564AB8AB71694BFF /* ContentView+Alerts.swift */; };
 		7FB117EAE7194F8080211591 /* NewProjectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE06838147F55E0B287A2B8 /* NewProjectSheet.swift */; };
 		8900C94EB907F5F88F437BF6 /* ToolsSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D480FE0E2F9351D8DCEF9E /* ToolsSettingsViewModel.swift */; };
 		9130455EFA1CC03282EB505E /* MarkdownSyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66ECDBE593794A9E680BCFCD /* MarkdownSyntaxHighlighter.swift */; };
@@ -63,12 +74,15 @@
 		923BE9F8B69F8FA01AC5FCDC /* SyncScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADAEB7B839AFF77B538B053 /* SyncScheduler.swift */; };
 		9D2D677C341E24C4075BFCB1 /* DOCXExportCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB08B70AD4A208B9F385BE0F /* DOCXExportCoordinator.swift */; };
 		A2BEDF551A87E3B220C2DC3B /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9E64273177E09A253E5921 /* GeneralSettingsView.swift */; };
+		A574CD3275CE59EB76DE1646 /* EPUBStylesheetManager+NovelCSS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E78297D89F48AA7B05DD027 /* EPUBStylesheetManager+NovelCSS.swift */; };
 		AC0938FE64DE1BB1DD6E858C /* SceneEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A91E06A2924B668DEB67A3 /* SceneEditorViewModel.swift */; };
 		AE1967B4987AB954859EA84E /* SceneTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5BFA50CB73B50C95B11E95F /* SceneTextView.swift */; };
 		AE423B88BC7E9FE53A2E3665 /* DiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01B550F94329FC2518C481B /* DiffView.swift */; };
 		B225D229C8B4CE2D9BAE4D43 /* NoProjectWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF20872DAC0F4BDA1688E28 /* NoProjectWelcomeView.swift */; };
 		B263D2511F990DB601FACEDC /* ConflictViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E8DE6D7D0F55709E98EE30 /* ConflictViewModel.swift */; };
+		B3DAF98FE91F04FA978C1CB8 /* CompileSheet+Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FD981D843B2B3E94E4B384 /* CompileSheet+Export.swift */; };
 		B65252D6C94C8851E8D50C7A /* SceneDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0197C5FDC3390A96003A6777 /* SceneDiff.swift */; };
+		B705ACD35356956892C2AEC9 /* ContentView+Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BF08B32B3010532C515939 /* ContentView+Detail.swift */; };
 		BC2053A29F67CA4DD23E91ED /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4A61F1AB6E907691A8C988 /* SettingsViewModel.swift */; };
 		BCA1BAD2BCE3590BC1C209CD /* ConcurrentEditingWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8ED1D2E8957339A593F5D /* ConcurrentEditingWarning.swift */; };
 		BD55FCAA0A5AE2A17E32FEA9 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = AAA72335ADE927D80E731EC3 /* Fonts */; };
@@ -84,19 +98,27 @@
 		E0225B279761DA74BFC63030 /* DrafterCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4BCF0A923E7CBCD074E65881 /* DrafterCore */; };
 		E20A1E3AE855C57F90785D3E /* CommitSubjectWordDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC943CDC0968B1BCE8CB9B0C /* CommitSubjectWordDelta.swift */; };
 		E39CA1C1EC9B9A355A0BF825 /* CredentialStore in Frameworks */ = {isa = PBXBuildFile; productRef = EAF9C9A1253EE9C04B5AD9B6 /* CredentialStore */; };
+		E76976133F1FF23619F6DEE4 /* ContentView+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1DAFACF5B33CCC47F70BA7 /* ContentView+Lifecycle.swift */; };
 		E78BB68721DCA76BD5EC7E72 /* EditorSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D2E7C05D956877F6EF9FD7 /* EditorSettingsView.swift */; };
 		E9D1179B7430CEE491D4F5DC /* NocturneSegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9594BD719290E01FC6F56A3E /* NocturneSegmentedControl.swift */; };
+		EAEFA4E1B5167C7CD62A37A8 /* ProjectViewModel+GitHubSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160ED2EE8B0962505426CA42 /* ProjectViewModel+GitHubSync.swift */; };
 		EEFBCDA3B9555874D5CEA442 /* VersioningSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB111850C07F4B043278867C /* VersioningSettingsView.swift */; };
+		FF610F7BCEAEB281B176BB8A /* ProjectViewModel+ConcurrentEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA6AF74333417251CFF5379 /* ProjectViewModel+ConcurrentEditing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0197C5FDC3390A96003A6777 /* SceneDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDiff.swift; sourceTree = "<group>"; };
 		053BB3F1D546D5A2A711C561 /* OpenProjectHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenProjectHandle.swift; sourceTree = "<group>"; };
+		083AFDDE5A68B9545B5CA1A0 /* ProjectViewModel+Attach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProjectViewModel+Attach.swift"; sourceTree = "<group>"; };
 		09C94AB7E2F29F781C3E23E7 /* BundledDOCXTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledDOCXTemplate.swift; sourceTree = "<group>"; };
 		0B7B68C4EC421C9E95E8C014 /* OpenProjectRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenProjectRegistry.swift; sourceTree = "<group>"; };
+		0C1DAFACF5B33CCC47F70BA7 /* ContentView+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Lifecycle.swift"; sourceTree = "<group>"; };
+		0E5AAE307EB94CDC1A363C25 /* ContentView+ProjectActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+ProjectActions.swift"; sourceTree = "<group>"; };
 		0E8516B366403434E1163435 /* MarkdownSyntaxScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSyntaxScanner.swift; sourceTree = "<group>"; };
 		10DEF63B036795AAC61FCAF3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		134C08E7C62863D72B1B219F /* Binaries */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Binaries; path = Sources/DrafterApp/Resources/Binaries; sourceTree = SOURCE_ROOT; };
+		160ED2EE8B0962505426CA42 /* ProjectViewModel+GitHubSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProjectViewModel+GitHubSync.swift"; sourceTree = "<group>"; };
+		171ABA7CD3214430D23BF06F /* EPUBStylesheetManager+ShortStoryCSS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EPUBStylesheetManager+ShortStoryCSS.swift"; sourceTree = "<group>"; };
 		1949CB080480E33FD8ADE2CE /* MarkerWrapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerWrapping.swift; sourceTree = "<group>"; };
 		1EF75863144F24CB9B7C2A10 /* TextPromptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPromptSheet.swift; sourceTree = "<group>"; };
 		203B4D8E606B0DCBDA1657F8 /* NocturneSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneSheet.swift; sourceTree = "<group>"; };
@@ -106,29 +128,37 @@
 		2C5459DB361CBE2BA0C7BC6D /* NocturneField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneField.swift; sourceTree = "<group>"; };
 		2DCDF12D860E0E3620B9D6A4 /* GitHubRepoPickerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubRepoPickerViewModel.swift; sourceTree = "<group>"; };
 		2FC79A5EFF9B37A52EC2F569 /* ConflictedCopyBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictedCopyBanner.swift; sourceTree = "<group>"; };
+		33E568B520E46690858CE36D /* ProjectViewModel+BinderOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProjectViewModel+BinderOperations.swift"; sourceTree = "<group>"; };
 		36626D43D3CB02E14BCBEFE2 /* drafter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = drafter; path = .; sourceTree = SOURCE_ROOT; };
 		36F5231D7862887958A52E46 /* FrontBackMatterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontBackMatterService.swift; sourceTree = "<group>"; };
 		3788C129845312C2D933EB59 /* HelpWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindow.swift; sourceTree = "<group>"; };
 		4B9E64273177E09A253E5921 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		4C287E0624AB70AC07DDDBAD /* AutocommitScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutocommitScheduler.swift; sourceTree = "<group>"; };
+		4E78297D89F48AA7B05DD027 /* EPUBStylesheetManager+NovelCSS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EPUBStylesheetManager+NovelCSS.swift"; sourceTree = "<group>"; };
 		4E9C8411828D8EC064C2D5AC /* DOCX */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DOCX; path = Sources/DrafterApp/Resources/DOCX; sourceTree = SOURCE_ROOT; };
 		4F73CF54267550FB452E4838 /* RepositoryCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryCoordinator.swift; sourceTree = "<group>"; };
 		4FE613D19F7ECD7073EEE5A8 /* BundledBinaries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledBinaries.swift; sourceTree = "<group>"; };
 		57E9364D9D8256FE3B2F1B21 /* TargetsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetsViewModel.swift; sourceTree = "<group>"; };
 		5939C12979D2B080885B9F42 /* PastedTextNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastedTextNormalizer.swift; sourceTree = "<group>"; };
+		5AF80B7133A8D478D6479F4E /* ContentView+BinderActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+BinderActions.swift"; sourceTree = "<group>"; };
+		5CAE46B3F8CE8AD1669421D8 /* ContentView+Binder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Binder.swift"; sourceTree = "<group>"; };
 		5EDF65E2EFF23E92FB6969D0 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		666B4797E40ED2537E1B23CB /* ManuscriptTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManuscriptTemplate.swift; sourceTree = "<group>"; };
 		66ECDBE593794A9E680BCFCD /* MarkdownSyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSyntaxHighlighter.swift; sourceTree = "<group>"; };
 		6AC2959A30AFADB1B23E44EA /* ConflictedCopyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictedCopyViewModel.swift; sourceTree = "<group>"; };
 		6BDB110F7CFC4DE74DBA2146 /* LocalFileVersionControlViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileVersionControlViewModel.swift; sourceTree = "<group>"; };
+		74E93F89ABB924FAD6451D43 /* ContentView+Inspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Inspector.swift"; sourceTree = "<group>"; };
 		76BF8CABE99DA998009258B2 /* ResourceBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceBundle.swift; sourceTree = "<group>"; };
+		79504831A571014F5A5AA31F /* ContentView+Toolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Toolbar.swift"; sourceTree = "<group>"; };
 		7ADAEB7B839AFF77B538B053 /* SyncScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncScheduler.swift; sourceTree = "<group>"; };
 		7C1861F2A136040A5F81E1DF /* EPUBExportCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EPUBExportCoordinator.swift; sourceTree = "<group>"; };
 		7CF20872DAC0F4BDA1688E28 /* NoProjectWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoProjectWelcomeView.swift; sourceTree = "<group>"; };
 		7FCE45155DE86C1AF3EC05A5 /* NocturneTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneTag.swift; sourceTree = "<group>"; };
+		81BF08B32B3010532C515939 /* ContentView+Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Detail.swift"; sourceTree = "<group>"; };
 		8513F7713F747007CBDBF676 /* NocturneToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneToast.swift; sourceTree = "<group>"; };
 		88E8DE6D7D0F55709E98EE30 /* ConflictViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictViewModel.swift; sourceTree = "<group>"; };
 		8B2B65519D8DF951EE402E95 /* DrafterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrafterApp.swift; sourceTree = "<group>"; };
+		8B3EE7AE1E50EA4744CAFD12 /* ContentView+Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Sheets.swift"; sourceTree = "<group>"; };
 		913C1A77A095DB1F1BF78934 /* NocturneRadioRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneRadioRow.swift; sourceTree = "<group>"; };
 		91828ACBBE1E45E6377856CC /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		9456F41960CAE9B8C24839B6 /* OnboardingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSheet.swift; sourceTree = "<group>"; };
@@ -142,11 +172,15 @@
 		AB111850C07F4B043278867C /* VersioningSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersioningSettingsView.swift; sourceTree = "<group>"; };
 		B0680927730A7D2221A081E6 /* Drafter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Drafter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B55AF15C5C6F22CAE6358754 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
+		B9FD981D843B2B3E94E4B384 /* CompileSheet+Export.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompileSheet+Export.swift"; sourceTree = "<group>"; };
+		BAB377B831207CDDA838A4B5 /* CompileSheet+Fields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompileSheet+Fields.swift"; sourceTree = "<group>"; };
+		BBA6AF74333417251CFF5379 /* ProjectViewModel+ConcurrentEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProjectViewModel+ConcurrentEditing.swift"; sourceTree = "<group>"; };
 		BC4A61F1AB6E907691A8C988 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		BC903DD08580ED0894DB3E8C /* ProjectMetadataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectMetadataEditor.swift; sourceTree = "<group>"; };
 		C3D2E7C05D956877F6EF9FD7 /* EditorSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSettingsView.swift; sourceTree = "<group>"; };
 		C4D480FE0E2F9351D8DCEF9E /* ToolsSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsSettingsViewModel.swift; sourceTree = "<group>"; };
 		C5BFA50CB73B50C95B11E95F /* SceneTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneTextView.swift; sourceTree = "<group>"; };
+		C68C9CC9564AB8AB71694BFF /* ContentView+Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Alerts.swift"; sourceTree = "<group>"; };
 		C8CB6380F1AECB54739C9AA6 /* NocturneDropdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneDropdown.swift; sourceTree = "<group>"; };
 		CCD33531EB1EB54BA1FCE497 /* VersionControlModePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionControlModePicker.swift; sourceTree = "<group>"; };
 		CDE2E1D8AF27D82B5896FCF3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -208,17 +242,30 @@
 				2470E0284E5F5D3B6B802BF6 /* BundledFonts.swift */,
 				FC943CDC0968B1BCE8CB9B0C /* CommitSubjectWordDelta.swift */,
 				F0C852158984E495B3300D0D /* CompileSheet.swift */,
+				B9FD981D843B2B3E94E4B384 /* CompileSheet+Export.swift */,
+				BAB377B831207CDDA838A4B5 /* CompileSheet+Fields.swift */,
 				99A8ED1D2E8957339A593F5D /* ConcurrentEditingWarning.swift */,
 				2FC79A5EFF9B37A52EC2F569 /* ConflictedCopyBanner.swift */,
 				6AC2959A30AFADB1B23E44EA /* ConflictedCopyViewModel.swift */,
 				956CEFB9BDE0F61190FD4DD0 /* ConflictSheet.swift */,
 				88E8DE6D7D0F55709E98EE30 /* ConflictViewModel.swift */,
 				CDE2E1D8AF27D82B5896FCF3 /* ContentView.swift */,
+				C68C9CC9564AB8AB71694BFF /* ContentView+Alerts.swift */,
+				5CAE46B3F8CE8AD1669421D8 /* ContentView+Binder.swift */,
+				5AF80B7133A8D478D6479F4E /* ContentView+BinderActions.swift */,
+				81BF08B32B3010532C515939 /* ContentView+Detail.swift */,
+				74E93F89ABB924FAD6451D43 /* ContentView+Inspector.swift */,
+				0C1DAFACF5B33CCC47F70BA7 /* ContentView+Lifecycle.swift */,
+				0E5AAE307EB94CDC1A363C25 /* ContentView+ProjectActions.swift */,
+				8B3EE7AE1E50EA4744CAFD12 /* ContentView+Sheets.swift */,
+				79504831A571014F5A5AA31F /* ContentView+Toolbar.swift */,
 				F01B550F94329FC2518C481B /* DiffView.swift */,
 				FB08B70AD4A208B9F385BE0F /* DOCXExportCoordinator.swift */,
 				8B2B65519D8DF951EE402E95 /* DrafterApp.swift */,
 				7C1861F2A136040A5F81E1DF /* EPUBExportCoordinator.swift */,
 				AA105EC1FB8A7399E85FF3E8 /* EPUBStylesheetManager.swift */,
+				4E78297D89F48AA7B05DD027 /* EPUBStylesheetManager+NovelCSS.swift */,
+				171ABA7CD3214430D23BF06F /* EPUBStylesheetManager+ShortStoryCSS.swift */,
 				FC406C030281152C1E9973E1 /* FileSystemWatcher.swift */,
 				36F5231D7862887958A52E46 /* FrontBackMatterService.swift */,
 				FD151E58BF8C4AFC1D14211A /* GitHubRepoPickerSheet.swift */,
@@ -242,6 +289,10 @@
 				EAE4444DA73BCA7B87A77CB8 /* ProjectFindReplaceViewModel.swift */,
 				BC903DD08580ED0894DB3E8C /* ProjectMetadataEditor.swift */,
 				F41E00D4D6F862A45885311B /* ProjectViewModel.swift */,
+				083AFDDE5A68B9545B5CA1A0 /* ProjectViewModel+Attach.swift */,
+				33E568B520E46690858CE36D /* ProjectViewModel+BinderOperations.swift */,
+				BBA6AF74333417251CFF5379 /* ProjectViewModel+ConcurrentEditing.swift */,
+				160ED2EE8B0962505426CA42 /* ProjectViewModel+GitHubSync.swift */,
 				99A7453242B03F543FDC6A87 /* RecentProjects.swift */,
 				4F73CF54267550FB452E4838 /* RepositoryCoordinator.swift */,
 				76BF8CABE99DA998009258B2 /* ResourceBundle.swift */,
@@ -406,17 +457,30 @@
 				35FC51BC0CCBEB444C5BA13B /* BundledDOCXTemplate.swift in Sources */,
 				4A46E812300C4067A51715E9 /* BundledFonts.swift in Sources */,
 				E20A1E3AE855C57F90785D3E /* CommitSubjectWordDelta.swift in Sources */,
+				B3DAF98FE91F04FA978C1CB8 /* CompileSheet+Export.swift in Sources */,
+				2DACB0DD676CC6106E51E490 /* CompileSheet+Fields.swift in Sources */,
 				50963690E0931883ABD0041D /* CompileSheet.swift in Sources */,
 				BCA1BAD2BCE3590BC1C209CD /* ConcurrentEditingWarning.swift in Sources */,
 				BE948F024C04174CA0EBC8EF /* ConflictSheet.swift in Sources */,
 				B263D2511F990DB601FACEDC /* ConflictViewModel.swift in Sources */,
 				7249EC6B172EFE16F582C6EA /* ConflictedCopyBanner.swift in Sources */,
 				D4F8C0747DCF96ED4072A606 /* ConflictedCopyViewModel.swift in Sources */,
+				7EAF63CDE647FC26D3BB9552 /* ContentView+Alerts.swift in Sources */,
+				2830F31CCBF90B007949CA83 /* ContentView+Binder.swift in Sources */,
+				6B8A98BACE84A203A07F0408 /* ContentView+BinderActions.swift in Sources */,
+				B705ACD35356956892C2AEC9 /* ContentView+Detail.swift in Sources */,
+				29F0EE89D8C0469AA9AA1B23 /* ContentView+Inspector.swift in Sources */,
+				E76976133F1FF23619F6DEE4 /* ContentView+Lifecycle.swift in Sources */,
+				6CB55AEFCCC23E826729F857 /* ContentView+ProjectActions.swift in Sources */,
+				23F6FDD508F271510D53DB94 /* ContentView+Sheets.swift in Sources */,
+				6A1F0AEC3870B5E84ADD3DDF /* ContentView+Toolbar.swift in Sources */,
 				DD319CC1494CB109CEA3319E /* ContentView.swift in Sources */,
 				9D2D677C341E24C4075BFCB1 /* DOCXExportCoordinator.swift in Sources */,
 				AE423B88BC7E9FE53A2E3665 /* DiffView.swift in Sources */,
 				1BD5719D51C508ED042A721A /* DrafterApp.swift in Sources */,
 				1A3B1E976FAD40EE9EBA6A69 /* EPUBExportCoordinator.swift in Sources */,
+				A574CD3275CE59EB76DE1646 /* EPUBStylesheetManager+NovelCSS.swift in Sources */,
+				3FD9AF72C44A1BF60B839298 /* EPUBStylesheetManager+ShortStoryCSS.swift in Sources */,
 				7B678C9739E25F3662F21FBB /* EPUBStylesheetManager.swift in Sources */,
 				E78BB68721DCA76BD5EC7E72 /* EditorSettingsView.swift in Sources */,
 				5ADA6CD699DD1AC610EEF0A2 /* FileSystemWatcher.swift in Sources */,
@@ -450,6 +514,10 @@
 				4CAADD44B90F9181E0CE6380 /* ProjectFindReplaceSheet.swift in Sources */,
 				01BC536AC387EEFF8FB05A6E /* ProjectFindReplaceViewModel.swift in Sources */,
 				0290CC584ED68F72D8778DD2 /* ProjectMetadataEditor.swift in Sources */,
+				39B342B7FC4DD05E11ECD656 /* ProjectViewModel+Attach.swift in Sources */,
+				72968D53862F7382EF3BEB8C /* ProjectViewModel+BinderOperations.swift in Sources */,
+				FF610F7BCEAEB281B176BB8A /* ProjectViewModel+ConcurrentEditing.swift in Sources */,
+				EAEFA4E1B5167C7CD62A37A8 /* ProjectViewModel+GitHubSync.swift in Sources */,
 				3FCB79E973C0276B59F69A63 /* ProjectViewModel.swift in Sources */,
 				571599FBCB3543DE749362D7 /* RecentProjects.swift in Sources */,
 				705EEA1FD6ABE1CF5DC7D1F1 /* RepositoryCoordinator.swift in Sources */,
@@ -479,56 +547,8 @@
 		A63D441747A9CF423DDE75C0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -539,7 +559,6 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -557,7 +576,6 @@
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.drafter.Drafter;
 				PRODUCT_NAME = Drafter;
-				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
@@ -565,63 +583,8 @@
 		D6C31F4B1E8778A29C0C2CAA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"DEBUG=1",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -632,7 +595,6 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -650,7 +612,6 @@
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.drafter.Drafter;
 				PRODUCT_NAME = Drafter;
-				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
