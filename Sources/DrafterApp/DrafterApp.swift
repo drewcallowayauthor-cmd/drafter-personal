@@ -36,8 +36,21 @@ extension Notification.Name {
     static let drafterRequestProjectFindReplace = Notification.Name("DrafterRequestProjectFindReplace")
 }
 
+/// Makes closing the main window quit Drafter, instead of leaving the app running
+/// with no windows (the macOS default). Drafter is a single-project, single-window
+/// editor — a headless "still open" state with only the Dock icon left is just a
+/// confusing way to keep the process alive. Autosave already flushed to disk on the
+/// window losing focus (see `ContentView`'s `scenePhase` handler), so terminating
+/// here doesn't lose edits.
+final class DrafterAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+}
+
 @main
 struct DrafterApp: App {
+    @NSApplicationDelegateAdaptor(DrafterAppDelegate.self) private var appDelegate
     @Environment(\.openWindow) private var openWindow
 
     init() {
