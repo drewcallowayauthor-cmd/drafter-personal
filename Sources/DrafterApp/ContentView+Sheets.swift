@@ -89,7 +89,7 @@ extension ContentView {
                     Task {
                         if let sceneURL = await projectViewModel.createChapter(title: title) {
                             selectedSceneURL = sceneURL
-                            expandedChapterURLs.insert(sceneURL.deletingLastPathComponent())
+                            binderExpansion.reveal(sceneURL.deletingLastPathComponent())
                         }
                     }
                 },

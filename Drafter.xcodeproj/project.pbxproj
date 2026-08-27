@@ -48,6 +48,7 @@
 		59FE0C6B9B390A8AE8F0EA63 /* PastedTextNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5939C12979D2B080885B9F42 /* PastedTextNormalizer.swift */; };
 		5ADA6CD699DD1AC610EEF0A2 /* FileSystemWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC406C030281152C1E9973E1 /* FileSystemWatcher.swift */; };
 		5D9C46C976AE39E9E7D58A50 /* NocturneRadioRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913C1A77A095DB1F1BF78934 /* NocturneRadioRow.swift */; };
+		5FBBDB79775A0304A893D674 /* BinderChapterExpansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1A4AF262FB30E9C4898086 /* BinderChapterExpansion.swift */; };
 		6344F54954DA7B0507B0260B /* SnapshotCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C2A9A1649A148F51886FE0 /* SnapshotCoordinator.swift */; };
 		6426A9213EE43CE997ABEF59 /* VersionControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F56558A13F3AD8214D3C4 /* VersionControlSettingsView.swift */; };
 		66E2A70674DF412B7318B15F /* TextPromptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF75863144F24CB9B7C2A10 /* TextPromptSheet.swift */; };
@@ -132,6 +133,7 @@
 		36626D43D3CB02E14BCBEFE2 /* drafter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = drafter; path = .; sourceTree = SOURCE_ROOT; };
 		36F5231D7862887958A52E46 /* FrontBackMatterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontBackMatterService.swift; sourceTree = "<group>"; };
 		3788C129845312C2D933EB59 /* HelpWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpWindow.swift; sourceTree = "<group>"; };
+		4B1A4AF262FB30E9C4898086 /* BinderChapterExpansion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinderChapterExpansion.swift; sourceTree = "<group>"; };
 		4B9E64273177E09A253E5921 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		4C287E0624AB70AC07DDDBAD /* AutocommitScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutocommitScheduler.swift; sourceTree = "<group>"; };
 		4E78297D89F48AA7B05DD027 /* EPUBStylesheetManager+NovelCSS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EPUBStylesheetManager+NovelCSS.swift"; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 			children = (
 				2B6FA38DD82FE38BA6FD8355 /* AppPreferences.swift */,
 				4C287E0624AB70AC07DDDBAD /* AutocommitScheduler.swift */,
+				4B1A4AF262FB30E9C4898086 /* BinderChapterExpansion.swift */,
 				4FE613D19F7ECD7073EEE5A8 /* BundledBinaries.swift */,
 				09C94AB7E2F29F781C3E23E7 /* BundledDOCXTemplate.swift */,
 				2470E0284E5F5D3B6B802BF6 /* BundledFonts.swift */,
@@ -453,6 +456,7 @@
 			files = (
 				53803A1419B60052037A4309 /* AppPreferences.swift in Sources */,
 				BD60D776D7289664B9EDBEB0 /* AutocommitScheduler.swift in Sources */,
+				5FBBDB79775A0304A893D674 /* BinderChapterExpansion.swift in Sources */,
 				762CE82FB103FE40D84E1A74 /* BundledBinaries.swift in Sources */,
 				35FC51BC0CCBEB444C5BA13B /* BundledDOCXTemplate.swift in Sources */,
 				4A46E812300C4067A51715E9 /* BundledFonts.swift in Sources */,

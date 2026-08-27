@@ -48,7 +48,7 @@ extension ContentView {
         isProjectFindReplacePresented = false
         pendingJumpSceneURL = match.sceneURL
         pendingJump = SceneTextJumpRequest(range: match.range)
-        expandedChapterURLs.insert(match.sceneURL.deletingLastPathComponent())
+        binderExpansion.reveal(match.sceneURL.deletingLastPathComponent())
         selectedSceneURL = match.sceneURL
     }
 
@@ -133,8 +133,8 @@ extension ContentView {
             // `binderTree` is populated before `workingTreeRoot` in `ProjectViewModel`
             // (both set synchronously in the same open call), so it already reflects
             // the newly opened project here.
-            expandedChapterURLs = Set(
-                (projectViewModel.binderTree?.manuscript ?? []).filter { !$0.isLooseFile }.map(\.url)
+            binderExpansion.replaceAll(
+                with: (projectViewModel.binderTree?.manuscript ?? []).filter { !$0.isLooseFile }.map(\.url)
             )
         }
         .onChange(of: projectViewModel.binderTree) { _, newTree in

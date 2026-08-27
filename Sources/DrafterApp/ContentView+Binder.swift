@@ -19,7 +19,7 @@ extension ContentView {
                                     )
                                 }
                         } else {
-                            DisclosureGroup(isExpanded: isChapterExpandedBinding(chapter.url)) {
+                            ChapterDisclosure(chapterURL: chapter.url, expansion: binderExpansion) {
                                 ForEach(chapter.scenes) { scene in
                                     Text(scene.displayName).tag(scene.url)
                                         .foregroundStyle(Theme.Color.text)
@@ -132,15 +132,6 @@ extension ContentView {
         Button(isChapter ? "Delete Chapter…" : "Delete…", role: .destructive) {
             deleteTarget = BinderDeleteTarget(url: url, displayName: currentTitle, isChapter: isChapter)
         }
-    }
-
-    func isChapterExpandedBinding(_ chapterURL: URL) -> Binding<Bool> {
-        Binding(
-            get: { expandedChapterURLs.contains(chapterURL) },
-            set: { isExpanded in
-                if isExpanded { expandedChapterURLs.insert(chapterURL) } else { expandedChapterURLs.remove(chapterURL) }
-            }
-        )
     }
 
     /// A Notes row: a markdown note opens in the editor like any other scene; a

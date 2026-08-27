@@ -36,8 +36,10 @@ struct ContentView: View {
     /// Which Manuscript chapters' `DisclosureGroup`s are expanded — reset to "all
     /// expanded" whenever a project opens (§8.1: the binder should show its contents
     /// immediately, not require expanding every chapter by hand), then left to the
-    /// user's own expand/collapse choices for the rest of the session.
-    @State var expandedChapterURLs: Set<URL> = []
+    /// user's own expand/collapse choices for the rest of the session. Held in a
+    /// side store (never read in `body`) so a long chapter list doesn't trip the
+    /// macOS `List` + `DisclosureGroup` overlap bug — see `BinderChapterExpansion`.
+    @State var binderExpansion = BinderChapterExpansion()
     /// Non-nil while the binder's "Rename…" prompt is up.
     @State var renameTarget: BinderRenameTarget?
     /// Non-nil while the binder's delete confirmation is up.
