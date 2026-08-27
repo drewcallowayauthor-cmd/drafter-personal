@@ -33,6 +33,14 @@ struct ProjectViewModelLocalFileModeTests {
         let history = try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("History").path)
         #expect(history.count == 1)
 
+        // §9.2: the standard Front/Back Matter files are seeded at creation and show
+        // up in the binder without needing a manual "Generate Front/Back Matter".
+        let frontMatter = try FileManager.default.contentsOfDirectory(
+            atPath: root.appendingPathComponent("FrontMatter").path
+        )
+        #expect(!frontMatter.isEmpty)
+        #expect(viewModel.binderTree?.frontMatter.isEmpty == false)
+
         await viewModel.closeProject()
     }
 

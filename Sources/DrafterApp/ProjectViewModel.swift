@@ -181,6 +181,7 @@ final class ProjectViewModel {
                 compile: ProjectMetadata.Compile(chapterTitleFormat: manuscriptTemplate.defaultChapterTitleFormat)
             )
             let project = try Project.create(root: root, metadata: metadata, fileWriter: LiveAtomicFileWriter())
+            await Self.seedFrontBackMatter(metadata: metadata, root: root, project: project)
 
             switch versionControl {
             case .git:
@@ -217,6 +218,19 @@ final class ProjectViewModel {
             await reset()
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// §9.2: seed the standard Front/Back Matter files at creation so a new project
+    /// opens with a title page, copyright page, etc. already in place. `generateMissing`
+    /// is additive — the "Generate Front/Back Matter" menu item and "Regenerate from
+    /// Template" (which re-pulls updated metadata) both still work exactly as before.
+    private static func seedFrontBackMatter(metadata: ProjectMetadata, root: URL, project: Project) async {
+        _ = try? FrontBackMatterService.generateMissing(
+            metadata: metadata,
+            workingTree: root,
+            fileWriter: LiveAtomicFileWriter()
+        )
+        try? await project.refreshBinderTree()
     }
 
     /// §5.9's "Add Existing Project" path — clones one of the repos from

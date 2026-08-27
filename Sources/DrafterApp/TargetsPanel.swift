@@ -40,20 +40,26 @@ struct TargetsPanel: View {
 
             if !totals.perChapter.isEmpty {
                 Rectangle().fill(Theme.Color.divider).frame(height: 1)
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(totals.perChapter, id: \.chapter) { entry in
-                        HStack {
-                            Text(entry.chapter)
-                                .font(Theme.Font.body(11))
-                                .foregroundStyle(Theme.Color.text)
-                                .lineLimit(1)
-                            Spacer()
-                            Text("\(entry.words)")
-                                .font(Theme.Font.body(11))
-                                .foregroundStyle(Theme.Color.neutral500)
+                // Bounded + scrollable: a 30–50 chapter project would otherwise push
+                // this list past the panel's height and squeeze the History section
+                // (and any progress bar above) off screen.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(totals.perChapter, id: \.chapter) { entry in
+                            HStack {
+                                Text(entry.chapter)
+                                    .font(Theme.Font.body(11))
+                                    .foregroundStyle(Theme.Color.text)
+                                    .lineLimit(1)
+                                Spacer()
+                                Text("\(entry.words)")
+                                    .font(Theme.Font.body(11))
+                                    .foregroundStyle(Theme.Color.neutral500)
+                            }
                         }
                     }
                 }
+                .frame(maxHeight: 220)
             }
         }
         .padding(14)
