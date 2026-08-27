@@ -577,7 +577,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.drafter.Drafter;
 				PRODUCT_NAME = Drafter;
 				SWIFT_VERSION = 6.0;
@@ -613,7 +613,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.drafter.Drafter;
 				PRODUCT_NAME = Drafter;
 				SWIFT_VERSION = 6.0;
