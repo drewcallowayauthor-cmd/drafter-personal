@@ -88,7 +88,7 @@ extension EPUBStylesheetManager {
            does the job in the reference's own real paragraph. `8rem` matches the
            reference's own `.chapter-title-page-padding` value exactly. */
         section.chapter-title::before {
-          content: "\00a0";
+          content: "\\00a0";
           display: block;
           line-height: 8rem;
           margin: 0;
